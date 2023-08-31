@@ -106,7 +106,7 @@ export function subscribeToDOMEEvent(
     const DOMEEventsContract = new ethers.Contract(domeEventsContractAddress, domeEventsContractABI, provider);
     debugLog("Contract with address " + domeEventsContractAddress + " loaded");
     debugLog("User subscribed to event of type " + eventType);
-    DOMEEventsContract.on(eventType, (index, timestamp, origin, eventType, dataLocation, metadata) => {
+    DOMEEventsContract.on("EventDOMEv1", (index, timestamp, origin, eventType, dataLocation, metadata) => {
         const eventContent = {
           id: index,
           publisherAddress: origin,
@@ -115,7 +115,9 @@ export function subscribeToDOMEEvent(
           eventDataLocation: dataLocation,
           eventRelevantMetadata: metadata
         }
-        debugLog("Event emitted: " + eventType + " with args: " + JSON.stringify(eventContent));
-        axios.post(notificationEndpoint, JSON.stringify(eventContent))
+        if(eventContent.eventType == eventType){
+          debugLog("Event emitted: " + eventType + " with args: " + JSON.stringify(eventContent));
+          axios.post(notificationEndpoint, JSON.stringify(eventContent))
+        }
     });
 }

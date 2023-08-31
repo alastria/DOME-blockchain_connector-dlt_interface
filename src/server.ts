@@ -44,7 +44,7 @@ app.use(session({
     cookie: { 
         secure: false,            //setting this false for http connections
     },
-    name: "rpProxyCookie"
+    name: "sessionCookieDOME"
 }))
 
 
