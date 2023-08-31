@@ -77,12 +77,13 @@ export async function publishDOMEEvent(
       userEthereumAddress
   );
 
-  const tx = domeEventsContractWithSigner.publishDomeEvent(
+  //TODO: Consider using our own Timestamp instead of the smart contract one for more flexibility
+  //TODO: Consider using our own ID instead of the smart contract one for more flexibility
+  const tx = domeEventsContractWithSigner.emitNewEvent(
+    userEthereumAddress,
     eventType,
-    eventTimeStamp,
     eventDataLocation,
     eventRelevantMetadata,
-    userEthereumAddress
   );
   await tx.wait();
   debugLog("Transaction executed:\n" + tx);
