@@ -17,7 +17,6 @@ router.post("/api/v1/publishEvent", async (req: any, resp: any) => {
     req.body.eventType,
     req.body.eventDataLocation,
     req.body.eventRelevantMetadata,
-    req.session.provider,
     req.session.userEthereumAddress,
     req.session.rpcAddress
   );
@@ -25,7 +24,7 @@ router.post("/api/v1/publishEvent", async (req: any, resp: any) => {
 });
 
 router.post('/api/v1/subscribe', async (req: any, resp: any) => {
-  subscribeToDOMEEvent(req.body.domeEventType, req.body.notificationEndpoint, req.body.provider);
+  subscribeToDOMEEvent(req.body.eventType, req.session.rpcAddress, req.body.notificationEndpoint);
   resp.status(200).send("OK");
 })
 

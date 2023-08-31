@@ -1,4 +1,3 @@
-//TODO: write correct address and ABI.
 export const domeEventsContractAddress =
   "0x313d5008857cc4D29d383A3F5D5Cf8fBc0E91979";
 export const domeEventsContractABI =

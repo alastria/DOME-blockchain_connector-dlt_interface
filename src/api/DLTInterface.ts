@@ -2,8 +2,11 @@ import { debug } from "debug";
 const debugLog = debug("DLTInterface:API");
 
 import { ethers } from "ethers";
-import { domeEventsContractABI as domeEventsContractABI, domeEventsContractAddress as domeEventsContractAddress } from "../utils/const";
-import axios  from "axios"
+import {
+  domeEventsContractABI as domeEventsContractABI,
+  domeEventsContractAddress as domeEventsContractAddress,
+} from "../utils/const";
+import axios from "axios";
 
 //TODO: Make it generic for any DLT technology.
 //TODO: use a proper authenticated session.
@@ -39,22 +42,19 @@ export function connectToNode(
  * Publish DOME event as a blockchain event.
  *
  * @param eventType the name of the dome event
- * @param eventTimeStamp the exact time when the event is built
  * @param eventDataLocation the storage or location of the data associated whit the event.
  * @param eventRelevantMetadata additional information or metadata relevant to the event.
- * @param provider the blockchain node to connect to.
  * @param userEthereumAddress the user's Ethereum address.
  * @param rpcAddress the address of the blockchain node
  */
 export async function publishDOMEEvent(
-
   eventType: string,
   eventDataLocation: string,
   eventRelevantMetadata: Array<string>,
-  provider: ethers.providers.JsonRpcProvider,
   userEthereumAddress: string,
   rpcAddress: string
 ) {
+  const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
   debugLog("Connected to node " + rpcAddress);
 
   //TODO: Securize PrivateKey
@@ -66,11 +66,12 @@ export async function publishDOMEEvent(
     domeEventsContractABI,
     wallet
   );
-  debugLog("Ethereum address of event publisher is " + wallet.getAddress());
+  debugLog("Ethereum address of event publisher is " + await wallet.getAddress());
   debugLog(
     "Ethereum address of user that requested event publishing is " +
       userEthereumAddress
   );
+  debugLog("Event type published is " + eventType)
 
   //TODO: Consider using our own Timestamp instead of the smart contract one for more flexibility
   //TODO: Consider using our own ID instead of the smart contract one for more flexibility
@@ -78,7 +79,7 @@ export async function publishDOMEEvent(
     userEthereumAddress,
     eventType,
     eventDataLocation,
-    eventRelevantMetadata,
+    eventRelevantMetadata
   );
   await tx.wait();
   debugLog("Transaction executed:\n" + tx);
@@ -86,22 +87,35 @@ export async function publishDOMEEvent(
 
 /**
  * Subscribe to DOME Events.
- * 
- * @param domeEventType the event type of the events of interest for the user
+ *
+ * @param eventType the event type of the events of interest for the user
+ * @param rpcAddress the blockchain node address to be used for event subscription.
  * @param notificationEndpoint the user's endpoint to be notified to of the events of interest.
  *                             The notification is sent as a POST.
- * @param provider the blockchain node to be used for event subscription. 
- * @param req the HTTP request.
  */
-export function subscribeToDOMEEvent(domeEventType: string, notificationEndpoint: string, provider: ethers.providers.JsonRpcProvider) {
-    // provider = new ethers.providers.InfuraProvider(
-    //     "goerli",
-    //     "8bc45627f563458abd4193d30c143117"
-    // );
+export function subscribeToDOMEEvent(
+  eventType: string,
+  rpcAddress: string,
+  notificationEndpoint: string
+) {
+  const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
+  // const provider = new ethers.providers.InfuraProvider(
+  //     "goerli",
+  //     "8bc45627f563458abd4193d30c143117"
+  // );
     const DOMEEventsContract = new ethers.Contract(domeEventsContractAddress, domeEventsContractABI, provider);
-    debugLog("Contract with address " + domeEventsContractAddress + " loaded")
-    DOMEEventsContract.on(domeEventType, (eventArgs) => {
-        debugLog("Event emitted: " + domeEventType + " with args: " + JSON.stringify(eventArgs));
-        axios.post(notificationEndpoint, JSON.stringify(eventArgs))
+    debugLog("Contract with address " + domeEventsContractAddress + " loaded");
+    debugLog("User subscribed to event of type " + eventType);
+    DOMEEventsContract.on(eventType, (index, timestamp, origin, eventType, dataLocation, metadata) => {
+        const eventContent = {
+          id: index,
+          publisherAddress: origin,
+          eventType: eventType,
+          eventTimestamp: timestamp,
+          eventDataLocation: dataLocation,
+          eventRelevantMetadata: metadata
+        }
+        debugLog("Event emitted: " + eventType + " with args: " + JSON.stringify(eventContent));
+        axios.post(notificationEndpoint, JSON.stringify(eventContent))
     });
 }
