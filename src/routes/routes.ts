@@ -15,7 +15,6 @@ router.post("/api/v1/configureNode", async (req: any, resp: any) => {
 router.post("/api/v1/publishEvent", async (req: any, resp: any) => {
   publishDOMEEvent(
     req.body.eventType,
-    req.body.eventTimeStamp,
     req.body.eventDataLocation,
     req.body.eventRelevantMetadata,
     req.session.provider,

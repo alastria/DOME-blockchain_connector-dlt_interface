@@ -49,7 +49,6 @@ export function connectToNode(
 export async function publishDOMEEvent(
 
   eventType: string,
-  eventTimeStamp: string,
   eventDataLocation: string,
   eventRelevantMetadata: Array<string>,
   provider: ethers.providers.JsonRpcProvider,
@@ -62,10 +61,6 @@ export async function publishDOMEEvent(
   const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
   //TODO: Use Alexander's contracts for event publication.
   //TODO: Use constants from a utils file for these.
-  const domeEventsContractAddress = "CONTRACT_ADDRESS";
-  const domeEventsContractABI = [
-    "function publishDomeEvent(string domeEventType, string domeEventTimeStamp, string domeEventDataLocation, string domeEventRelevantMetadata)",
-  ];
   const domeEventsContractWithSigner = new ethers.Contract(
     domeEventsContractAddress,
     domeEventsContractABI,
@@ -79,7 +74,7 @@ export async function publishDOMEEvent(
 
   //TODO: Consider using our own Timestamp instead of the smart contract one for more flexibility
   //TODO: Consider using our own ID instead of the smart contract one for more flexibility
-  const tx = domeEventsContractWithSigner.emitNewEvent(
+  const tx = await domeEventsContractWithSigner.emitNewEvent(
     userEthereumAddress,
     eventType,
     eventDataLocation,
