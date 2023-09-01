@@ -42,15 +42,15 @@ export function connectToNode(
  * Publish DOME event as a blockchain event.
  *
  * @param eventType the name of the dome event
- * @param eventDataLocation the storage or location of the data associated whit the event.
- * @param eventRelevantMetadata additional information or metadata relevant to the event.
+ * @param dataLocation the storage or location of the data associated whit the event.
+ * @param relevantMetadata additional information or metadata relevant to the event.
  * @param userEthereumAddress the user's Ethereum address.
  * @param rpcAddress the address of the blockchain node
  */
 export async function publishDOMEEvent(
   eventType: string,
-  eventDataLocation: string,
-  eventRelevantMetadata: Array<string>,
+  dataLocation: string,
+  relevantMetadata: Array<string>,
   userEthereumAddress: string,
   rpcAddress: string
 ) {
@@ -76,8 +76,8 @@ export async function publishDOMEEvent(
   const tx = await domeEventsContractWithSigner.emitNewEvent(
     userEthereumAddress,
     eventType,
-    eventDataLocation,
-    eventRelevantMetadata
+    dataLocation,
+    relevantMetadata
   );
   await tx.wait();
   debugLog("Transaction executed:\n" + JSON.stringify(tx));
@@ -109,9 +109,9 @@ export function subscribeToDOMEEvent(
           id: index,
           publisherAddress: origin,
           eventType: eventType,
-          eventTimestamp: timestamp,
-          eventDataLocation: dataLocation,
-          eventRelevantMetadata: metadata
+          timestamp: timestamp,
+          dataLocation: dataLocation,
+          relevantMetadata: metadata
         }
         if(eventContent.eventType == eventType){
           debugLog("Event emitted: " + eventType + " with args: " + JSON.stringify(eventContent));
