@@ -1,68 +1,12 @@
 ---
 openapi: 3.0.1
 info:
-  title: defaultTitle
-  description: defaultDescription
+  title: Blockchain Interface DOME 
+  description: The component to be used when interacting with the blockchain layer in DOME. 
   version: "0.1"
 servers:
 - url: http://localhost:8080
 paths:
-  /api/v1/publishEvent:
-    post:
-      description: Auto generated using Swagger Inspector
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/v1_publishEvent_body'
-            examples:
-              "0":
-                value: "{\r\n    \"eventType\": \"Transfer\",\r\n    \"eventTimeStamp\": \"\",\r\n    \"eventDataLocation\": \"\",\r\n    \"eventRelevantMetadata\": [\"veryRelevant1\", \"veryRelevant2\"]\r\n}"
-      responses:
-        "200":
-          description: Auto generated using Swagger Inspector
-          content:
-            text/html; charset=utf-8:
-              schema:
-                type: string
-              examples: {}
-      servers:
-      - url: http://localhost:8080
-    servers:
-    - url: http://localhost:8080
-  /api/v1/subscribe:
-    post:
-      description: Auto generated using Swagger Inspector
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/v1_subscribe_body'
-            examples:
-              "0":
-                value: "{\r\n    \"domeEventType\": \"Transfer\",\r\n    \"notificationEndpoint\": \"http://localhost:8080/api/v1/testSubscribedUser\"\r\n}"
-      responses:
-        default:
-          description: Auto generated using Swagger Inspector
-      servers:
-      - url: http://localhost:8080
-    servers:
-    - url: http://localhost:8080
-  /api/v1/check:
-    get:
-      description: Auto generated using Swagger Inspector
-      responses:
-        "200":
-          description: Auto generated using Swagger Inspector
-          content:
-            text/html; charset=utf-8:
-              schema:
-                type: string
-              examples: {}
-      servers:
-      - url: http://localhost:8080
-    servers:
-    - url: http://localhost:8080
   /api/v1/configureNode:
     post:
       description: Auto generated using Swagger Inspector
@@ -73,7 +17,7 @@ paths:
               $ref: '#/components/schemas/v1_configureNode_body'
             examples:
               "0":
-                value: "{\r\n    \"rpcAddress\": \"127.0.0.1:7545\",\r\n    \"publicKeyHex\": \"x\"\r\n}"
+                value: "{\r\n    \"rpcAddress\": \"https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6\",\r\n    \"publicKeyHex\": \"0xb794f5ea0ba39494ce839613fffba74279579268\"\r\n}"
       responses:
         "200":
           description: Auto generated using Swagger Inspector
@@ -86,6 +30,57 @@ paths:
       - url: http://localhost:8080
     servers:
     - url: http://localhost:8080
+
+
+  /api/v1/subscribe:
+    post:
+      description: Auto generated using Swagger Inspector
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/v1_subscribe_body'
+            examples:
+              "0":
+                value: "{\r\n    \"eventType\": \"ProductAdded\",\r\n    \"notificationEndpoint\": \"http://localhost:8080/api/v1/testSubscribedUser\"\r\n}"
+      responses:
+        "200":
+          description: Auto generated using Swagger Inspector
+          content:
+            text/html; charset=utf-8:
+              schema:
+                type: string
+              examples: {}
+      servers:
+      - url: http://localhost:8080
+    servers:
+    - url: http://localhost:8080
+
+
+  /api/v1/publishEvent:
+    post:
+      description: Auto generated using Swagger Inspector
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/v1_publishEvent_body'
+            examples:
+              "0":
+                value: "{\r\n    \"eventType\": \"ProductAdded\",\r\n    \"eventDataLocation\": \"x\",\r\n    \"eventRelevantMetadata\": [\"veryRelevant1\", \"veryRelevant2\"]\r\n}"
+      responses:
+        "200":
+          description: Auto generated using Swagger Inspector
+          content:
+            text/html; charset=utf-8:
+              schema:
+                type: string
+              examples: {}
+      servers:
+      - url: http://localhost:8080
+    servers:
+    - url: http://localhost:8080
+
 components:
   schemas:
     v1_publishEvent_body:
@@ -97,16 +92,14 @@ components:
             type: string
         eventType:
           type: string
-        eventTimeStamp:
-          type: string
         eventDataLocation:
           type: string
     v1_subscribe_body:
       type: object
       properties:
-        domeEventType:
-          type: string
         notificationEndpoint:
+          type: string
+        eventType:
           type: string
     v1_configureNode_body:
       type: object

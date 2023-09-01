@@ -59,8 +59,6 @@ export async function publishDOMEEvent(
 
   //TODO: Securize PrivateKey
   const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
-  //TODO: Use Alexander's contracts for event publication.
-  //TODO: Use constants from a utils file for these.
   const domeEventsContractWithSigner = new ethers.Contract(
     domeEventsContractAddress,
     domeEventsContractABI,
@@ -82,7 +80,7 @@ export async function publishDOMEEvent(
     eventRelevantMetadata
   );
   await tx.wait();
-  debugLog("Transaction executed:\n" + tx);
+  debugLog("Transaction executed:\n" + JSON.stringify(tx));
 }
 
 /**
