@@ -96,11 +96,7 @@ export function subscribeToDOMEEvent(
   rpcAddress: string,
   notificationEndpoint: string
 ) {
-  const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
-  // const provider = new ethers.providers.InfuraProvider(
-  //     "goerli",
-  //     "8bc45627f563458abd4193d30c143117"
-  // );
+    const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
     const DOMEEventsContract = new ethers.Contract(domeEventsContractAddress, domeEventsContractABI, provider);
     debugLog("Contract with address " + domeEventsContractAddress + " loaded");
     debugLog("User subscribed to event of type " + eventType);
