@@ -62,6 +62,7 @@ export async function publishDOMEEvent(
 
   //TODO: Securize PrivateKey
   const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
+  debugLog("Wallet created with private key " + process.env.PRIVATE_KEY!);
   const domeEventsContractWithSigner = new ethers.Contract(
     domeEventsContractAddress,
     domeEventsContractABI,
