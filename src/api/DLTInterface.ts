@@ -68,6 +68,7 @@ export async function publishDOMEEvent(
     wallet
   );
   debugLog("Ethereum address of event publisher is " + await wallet.getAddress());
+  debugLog("\nWallet chainID: " + JSON.stringify(await wallet.getChainId()));
   debugLog(
     "Ethereum address of user that requested event publishing is " +
       userEthereumAddress
