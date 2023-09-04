@@ -8,7 +8,7 @@ router.get("/api/v1/check", async (req: any, resp: any) => {
 });
 
 router.post("/api/v1/configureNode", async (req: any, resp: any) => {
-  connectToNode(req.body.rpcAddress, req.body.publicKeyHex, req);
+  await connectToNode(req.body.rpcAddress, req.body.publicKeyHex, req);
   resp.status(200).send("OK");
 });
 

@@ -20,13 +20,14 @@ import axios from "axios";
  * @param userEthereumAddress the user's Ethereum address.
  * @param req the HTTP request.
  */
-export function connectToNode(
+export async function connectToNode(
   rpcAddress: string,
   userEthereumAddress: string,
   req: any
 ) {
   const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
-  debugLog("Provider:" + provider);
+  debugLog("Provider:\n" + JSON.stringify(provider));
+  debugLog("\nProvider network: " + JSON.stringify(await provider.getNetwork()));
   debugLog("Connected to blockchain node with address " + rpcAddress);
   debugLog("User public key is " + userEthereumAddress);
 
@@ -56,6 +57,8 @@ export async function publishDOMEEvent(
 ) {
   const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
   debugLog("Connected to node " + rpcAddress);
+  debugLog("Provider:\n" + JSON.stringify(provider));
+  debugLog("\nProvider network: " + JSON.stringify(await provider.getNetwork()));
 
   //TODO: Securize PrivateKey
   const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
@@ -69,7 +72,9 @@ export async function publishDOMEEvent(
     "Ethereum address of user that requested event publishing is " +
       userEthereumAddress
   );
-  debugLog("Event type published is " + eventType)
+  debugLog("Event type published is " + eventType);
+  debugLog("Event dataLocation is " + JSON.stringify(dataLocation));
+  debugLog("Event revelantMetadata is " + JSON.stringify(relevantMetadata));
 
   //TODO: Consider using our own Timestamp instead of the smart contract one for more flexibility
   //TODO: Consider using our own ID instead of the smart contract one for more flexibility
