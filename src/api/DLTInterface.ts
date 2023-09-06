@@ -120,6 +120,8 @@ export function subscribeToDOMEEvent(
     debugLog(" > Contract with address " + domeEventsContractAddress + " loaded");
     debugLog(" > User subscribed to event of type " + eventType);
 
+    let eventTypeFilter = eventType;
+
     debugLog(" > Listening to events...");
     DOMEEventsContract.on("EventDOMEv1", (index, timestamp, origin, eventType, dataLocation, metadata) => {
 
@@ -143,7 +145,8 @@ export function subscribeToDOMEEvent(
 
         debugLog(" > Event emitted: " + eventType + " with args: " + JSON.stringify(eventContent));
 
-        if (eventContent.eventType == eventType) {
+        debugLog(" > Checking EventType " + eventContent.eventType +  " with the interest for the user " + eventTypeFilter);
+        if (eventContent.eventType == eventTypeFilter) {
             const headers = {
                 'Content-Type': 'application/json', // Set the Content-Type header to JSON
             };
