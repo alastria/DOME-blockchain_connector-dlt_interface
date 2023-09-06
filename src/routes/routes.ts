@@ -1,18 +1,22 @@
 import { connectToNode, subscribeToDOMEEvent, publishDOMEEvent } from "../api/DLTInterface";
+import {debug} from "debug";
 
 const express = require("express")
 const router = express.Router();
+const debugLog = debug("Routes:");
 
 router.get("/api/v1/check", async (req: any, resp: any) => {
   resp.status(200).send("OK");
 });
 
 router.post("/api/v1/configureNode", async (req: any, resp: any) => {
+  debugLog("Entry call from origin:", req.headers.origin);
   await connectToNode(req.body.rpcAddress, req.body.publicKeyHex, req);
   resp.status(200).send("OK");
 });
 
 router.post("/api/v1/publishEvent", async (req: any, resp: any) => {
+  debugLog("Entry call from origin:", req.headers.origin);
   publishDOMEEvent(
     req.body.eventType,
     req.body.dataLocation,
@@ -24,6 +28,7 @@ router.post("/api/v1/publishEvent", async (req: any, resp: any) => {
 });
 
 router.post('/api/v1/subscribe', async (req: any, resp: any) => {
+  debugLog("Entry call from origin:", req.headers.origin);
   subscribeToDOMEEvent(req.body.eventType, req.session.rpcAddress, req.body.notificationEndpoint);
   resp.status(200).send("OK");
 })

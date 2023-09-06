@@ -15,7 +15,6 @@ import axios from "axios";
 
 /**
  * Configures a blockchain node as the one to be used for the user's session. The session is managed at cookie level.
-
  * @param rpcAddress the address of the blockchain node.
  * @param userEthereumAddress the user's Ethereum address.
  * @param req the HTTP request.
@@ -25,18 +24,20 @@ export async function connectToNode(
   userEthereumAddress: string,
   req: any
 ) {
+  debugLog(">>> Connecting to blockchain node...");
+  // Entry parameters in method.
+  debugLog("  > rpcAddress: " + rpcAddress);
+  debugLog("  > userEthereumAddress: " + userEthereumAddress);
   const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
-  debugLog("Provider:\n" + JSON.stringify(provider));
-  debugLog("\nProvider network: " + JSON.stringify(await provider.getNetwork()));
-  debugLog("Connected to blockchain node with address " + rpcAddress);
-  debugLog("User public key is " + userEthereumAddress);
-
+  debugLog("  > Provider: " + JSON.stringify(provider));
+  debugLog("  > Provider Network: " + JSON.stringify(await provider.getNetwork()));
+  // Registry req parameters in session.
+  debugLog("  > req.session: " + JSON.stringify(req.session));
+  debugLog("  > req.headers: " + JSON.stringify(req.headers));
   req.session.provider = provider;
   req.session.userEthereumAddress = userEthereumAddress;
   req.session.rpcAddress = rpcAddress;
-  debugLog(
-    "Stored blockchain node configuration for this user's session (provider and public key)."
-  );
+  debugLog("  > Stored blockchain node configuration for this user's session (provider and public key).");
 }
 
 /**
@@ -53,41 +54,49 @@ export async function publishDOMEEvent(
   dataLocation: string,
   relevantMetadata: Array<string>,
   userEthereumAddress: string,
-  rpcAddress: string
+  rpcAddress: string,
 ) {
-  const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
-  debugLog("Connected to node " + rpcAddress);
-  debugLog("Provider:\n" + JSON.stringify(provider));
-  debugLog("\nProvider network: " + JSON.stringify(await provider.getNetwork()));
 
-  //TODO: Securize PrivateKey
-  const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
-  debugLog("Wallet created with private key " + process.env.PRIVATE_KEY!);
-  const domeEventsContractWithSigner = new ethers.Contract(
-    domeEventsContractAddress,
-    domeEventsContractABI,
-    wallet
-  );
-  debugLog("Ethereum address of event publisher is " + await wallet.getAddress());
-  debugLog("\nWallet chainID: " + JSON.stringify(await wallet.getChainId()));
-  debugLog(
-    "Ethereum address of user that requested event publishing is " +
-      userEthereumAddress
-  );
-  debugLog("Event type published is " + eventType);
-  debugLog("Event dataLocation is " + JSON.stringify(dataLocation));
-  debugLog("Event revelantMetadata is " + JSON.stringify(relevantMetadata));
+  debugLog(">>> Publishing event to blockchain node...");
 
-  //TODO: Consider using our own Timestamp instead of the smart contract one for more flexibility
-  //TODO: Consider using our own ID instead of the smart contract one for more flexibility
-  const tx = await domeEventsContractWithSigner.emitNewEvent(
+  debugLog("  > Entry Data:", {
     userEthereumAddress,
     eventType,
     dataLocation,
     relevantMetadata
+  });
+
+  const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
+
+  //TODO: Securize PrivateKey
+  const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
+
+  const domeEventsContractWithSigner = new ethers.Contract(
+      domeEventsContractAddress,
+      domeEventsContractABI,
+      wallet
   );
-  await tx.wait();
-  debugLog("Transaction executed:\n" + JSON.stringify(tx));
+  debugLog("  > Ethereum Contract: ", domeEventsContractWithSigner.address);
+  debugLog("  > Ethereum Remittent: ", userEthereumAddress);
+
+  //TODO: Consider using our own Timestamp instead of the smart contract one for more flexibility
+  //TODO: Consider using our own ID instead of the smart contract one for more flexibility
+  try {
+    debugLog("  > Publishing event to blockchain node...");
+
+    const tx = await domeEventsContractWithSigner.emitNewEvent(
+        userEthereumAddress,
+        eventType,
+        dataLocation,
+        relevantMetadata
+    );
+    debugLog("  > Transaction waiting to be mined...");
+    await tx.wait();
+    debugLog("  > Transaction executed:\n" + JSON.stringify(tx));
+  } catch (error) {
+    // Handle the error here
+    debugLog("  > !! Error publishing event to blockchain node: " + error);
+  }
 }
 
 /**
