@@ -70,6 +70,7 @@ export async function publishDOMEEvent(
 
     //TODO: Secure PrivateKey
     const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
+    debugLog("  > Ethereum Address of event publisher: ", wallet.address);
 
     const domeEventsContractWithSigner = new ethers.Contract(
         domeEventsContractAddress,
@@ -164,5 +165,4 @@ export function subscribeToDOMEEvent(
         }
 
     });
-
 }

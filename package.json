@@ -27,6 +27,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/debug": "^4.1.8"
+    "@types/debug": "^4.1.8",
+    "@types/jest": "^29.5.4",
+    "ts-jest": "^29.1.1"
   }
 }
