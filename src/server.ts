@@ -86,6 +86,9 @@ app.use((req: any, res: any, next: any) => {
     });
 });
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
     console.log(`DLT Interface API listening at http://localhost:${port}`)
 })
+
+module.exports = {app, server, session}
+
