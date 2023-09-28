@@ -90,5 +90,5 @@ const server = app.listen(port, () => {
     console.log(`DLT Interface API listening at http://localhost:${port}`)
 })
 
-module.exports = {app, server, session}
+module.exports = {app, server}
 

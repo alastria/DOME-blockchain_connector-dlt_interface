@@ -56,7 +56,6 @@ export async function publishDOMEEvent(
     userEthereumAddress: string,
     rpcAddress: string,
 ) {
-
     debugLog(">>> Publishing event to blockchain node...");
 
     debugLog("  > Entry Data:", {
