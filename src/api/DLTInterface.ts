@@ -119,7 +119,7 @@ export function subscribeToDOMEEvents(
     const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
     const DOMEEventsContract = new ethers.Contract(domeEventsContractAddress, domeEventsContractABI, provider);
     debugLog(" > Contract with address " + domeEventsContractAddress + " loaded");
-    debugLog(" > User subscribed to events of types " + eventTypes.join(", "));
+    debugLog(" > User requests to subscribe to events..." + eventTypes.join(", "));
     debugLog(" > Listening to events...");
 
     DOMEEventsContract.on("EventDOMEv1", (index, timestamp, origin, eventType, dataLocation, metadata) => {
