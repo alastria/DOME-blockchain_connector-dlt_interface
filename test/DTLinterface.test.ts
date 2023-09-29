@@ -5,7 +5,7 @@ const api = supertest(app);
 describe("GET /api/v1/check", () => {
     it("Return HTTP 200 OK", async () => {
         const response = await api.get('/api/v1/check');
-        expect(response.status).toBe(200);
+        expect(response.status).toEqual(200);
         expect(response.header['content-type']).toMatch(/text\/html/);
         expect(response.text).toBe("OK");
     });
@@ -21,7 +21,7 @@ describe("POST /api/v1/configureNode", () => {
                 "rpcAddress": "https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6",
                 "userEthereumAddress": "0xb794f5ea0ba39494ce839613fffba74279579268"
             });
-        expect(response.status).toBe(200);
+        expect(response.status).toEqual(200);
         expect(response.header['content-type']).toMatch(/text\/html/);
         expect(response.text).toBe("OK");
     });
@@ -37,7 +37,7 @@ describe("POST /api/v1/subscribe", () => {
                 "eventType": ["productAdded"],
                 "notificationEndpoint": "http://localhost:8080/api/v1/testSubscribedUser"
             });
-        expect(response.status).toBe(200);
+        expect(response.status).toEqual(200);
         expect(response.header['content-type']).toMatch(/text\/html/);
         expect(response.text).toBe("OK");
     });
@@ -51,7 +51,7 @@ describe("POST /api/v1/subscribe", () => {
                 "eventType": ["productAdded1", "productAdded2"],
                 "notificationEndpoint": "http://localhost:8080/api/v1/testSubscribedUser"
             });
-        expect(response.status).toBe(200);
+        expect(response.status).toEqual(200);
         expect(response.header['content-type']).toMatch(/text\/html/);
         expect(response.text).toBe("OK");
     });
@@ -68,7 +68,7 @@ describe("POST /api/v1/publishEvent", () => {
             .post('/api/v1/publishEvent')
             .set('Cookie', 'sessionCookieDOME=s%3AQwxoPWOFYQVp4bYGyz4CDjj8AcU67_w3.yLBgEFEVhz3WOy3NdW8whyvC58Xd0DDyTDLhCXwAOps')
             .send(requestBody);
-        expect(response.status).toBe(200);
+        expect(response.status).toEqual(200);
         expect(response.header['content-type']).toMatch(/text\/html/);
         expect(response.text).toBe("OK");
     });
