@@ -1,6 +1,7 @@
-import { connectToNode, subscribeToDOMEEvent, publishDOMEEvent } from "../api/DLTInterface";
-import {debug} from "debug";
+import { connectToNode, subscribeToDOMEEvents, publishDOMEEvent } from "../api/DLTInterface";
 import express from "express";
+import debug from "debug";
+
 
 const router = express.Router();
 const debugLog = debug("Routes: ");
@@ -40,7 +41,7 @@ router.post("/api/v1/publishEvent", async (req: any, resp: any) => {
 router.post('/api/v1/subscribe', async (req: any, resp: any) => {
   debugLog("Entry call from origin: ", req.headers.origin);
   try {
-    subscribeToDOMEEvent(req.body.eventType, req.session.rpcAddress, req.body.notificationEndpoint);
+    subscribeToDOMEEvents(req.body.eventType, req.session.rpcAddress, req.body.notificationEndpoint);
     resp.status(200).send("OK");
   } catch (error) {
     debugLog("Error: ", error);
