@@ -73,3 +73,5 @@ describe("POST /api/v1/publishEvent", () => {
         expect(response.text).toBe("OK");
     });
 });
+
+
