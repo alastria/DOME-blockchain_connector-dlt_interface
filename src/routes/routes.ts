@@ -1,6 +1,7 @@
-import { connectToNode, subscribeToDOMEEvent, publishDOMEEvent } from "../api/DLTInterface";
-import {debug} from "debug";
+import { connectToNode, subscribeToDOMEEvents, publishDOMEEvent } from "../api/DLTInterface";
 import express from "express";
+import debug from "debug";
+
 
 const router = express.Router();
 const debugLog = debug("Routes: ");
