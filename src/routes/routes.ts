@@ -41,7 +41,7 @@ router.post("/api/v1/publishEvent", async (req: any, resp: any) => {
 router.post('/api/v1/subscribe', async (req: any, resp: any) => {
   debugLog("Entry call from origin: ", req.headers.origin);
   try {
-    subscribeToDOMEEvent(req.body.eventType, req.session.rpcAddress, req.body.notificationEndpoint);
+    subscribeToDOMEEvents(req.body.eventType, req.session.rpcAddress, req.body.notificationEndpoint);
     resp.status(201).send("OK");
   } catch (error) {
     debugLog("Error: ", error);
