@@ -48,9 +48,7 @@ describe("POST /api/v1/subscribe", () => {
 describe("POST /api/v1/publishEvent", () => {
     it("Event publication", async () => {
         let resp = await configureNode();
-        const cookies = resp.headers['set-cookie'];
-        const cookie = cookies[0].match(/%3A(.*);\sPath/)[1];
-        // await subscribeSingleEvent(cookie);
+        await subscribeSingleEvent();
 
         const requestBody = {
             eventType: 'productAdded',
