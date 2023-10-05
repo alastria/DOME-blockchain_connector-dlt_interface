@@ -5,7 +5,7 @@ const api = supertest(app);
 describe("GET /api/v1/check", () => {
     it("Return HTTP 200 OK", async () => {
         const response = await api.get('/api/v1/check');
-        expect(response.status).toEqual(201);
+        expect(response.status).toEqual(200);
         expect(response.header['content-type']).toMatch(/text\/html/);
         expect(response.text).toBe("OK");
     });
