@@ -6,6 +6,10 @@ import debug from "debug";
 const router = express.Router();
 const debugLog = debug("Routes: ");
 
+router.get("/", async (req: any, resp: any) => {
+  resp.status(200).send("OK");
+});
+
 router.get("/api/v1/check", async (req: any, resp: any) => {
   resp.status(200).send("OK");
 });

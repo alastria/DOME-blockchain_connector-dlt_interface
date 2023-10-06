@@ -76,6 +76,7 @@ export async function publishDOMEEvent(
         domeEventsContractABI,
         wallet
     );
+
     debugLog("  > Ethereum Contract: ", domeEventsContractWithSigner.address);
     debugLog("  > Ethereum Remittent: ", userEthereumAddress);
 
@@ -83,7 +84,7 @@ export async function publishDOMEEvent(
     //TODO: Consider using our own ID instead of the smart contract one for more flexibility
     try {
         debugLog("  > Publishing event to blockchain node...");
-
+        //
         const tx = await domeEventsContractWithSigner.emitNewEvent(
             userEthereumAddress,
             eventType,
@@ -123,6 +124,7 @@ export function subscribeToDOMEEvents(
 
     DOMEEventsContract.on("EventDOMEv1", (index, timestamp, origin, eventType, dataLocation, metadata) => {
         if (eventTypes.includes(eventType)) {
+            //ADD condition here.
             debugLog(" > User subscribing to event: " + eventType);
             const eventContent = {
                 id: index,
