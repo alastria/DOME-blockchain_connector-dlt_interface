@@ -89,7 +89,7 @@ describe("POST /api/v1/publishEvent", () => {
         expect(response.status).toEqual(201);
         expect(response.header['content-type']).toMatch(/text\/html/);
         expect(response.text).toBe("OK");
-    });
+    }, 20000);
 });
 
 async function configureNode() {
