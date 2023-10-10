@@ -56,34 +56,31 @@ export async function publishDOMEEvent(
     userEthereumAddress: string,
     rpcAddress: string,
 ) {
-
-    debugLog(">>> Publishing event to blockchain node...");
-
-    debugLog("  > Entry Data:", {
-        userEthereumAddress,
-        eventType,
-        dataLocation,
-        relevantMetadata
-    });
-
-    const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
-
-    //TODO: Secure PrivateKey
-    const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
-    debugLog("  > Ethereum Address of event publisher: ", wallet.address);
-
-    const domeEventsContractWithSigner = new ethers.Contract(
-        domeEventsContractAddress,
-        domeEventsContractABI,
-        wallet
-    );
-    debugLog("  > Ethereum Contract: ", domeEventsContractWithSigner.address);
-    debugLog("  > Ethereum Remittent: ", userEthereumAddress);
-
-    //TODO: Consider using our own Timestamp instead of the smart contract one for more flexibility
-    //TODO: Consider using our own ID instead of the smart contract one for more flexibility
     try {
-        debugLog("  > Publishing event to blockchain node...");
+        debugLog(">>> Publishing event to blockchain node...");
+
+        debugLog(">>> Publishing event to blockchain node...");
+
+        debugLog("  > Entry Data:", {
+            userEthereumAddress,
+            eventType,
+            dataLocation,
+            relevantMetadata
+        });
+
+        const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
+
+        //TODO: Secure PrivateKey
+        const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
+        debugLog("  > Ethereum Address of event publisher: ", wallet.address);
+
+        const domeEventsContractWithSigner = new ethers.Contract(
+            domeEventsContractAddress,
+            domeEventsContractABI,
+            wallet
+        );
+        debugLog("  > Ethereum Contract: ", domeEventsContractWithSigner.address);
+        debugLog("  > Ethereum Remittent: ", userEthereumAddress);
 
         const tx = await domeEventsContractWithSigner.emitNewEvent(
             userEthereumAddress,
@@ -95,8 +92,8 @@ export async function publishDOMEEvent(
         await tx.wait();
         debugLog("  > Transaction executed:\n" + JSON.stringify(tx));
     } catch (error) {
-        // Handle the error here
         debugLog("  > !! Error publishing event to blockchain node: " + error);
+        throw error;
     }
 }
 
@@ -107,61 +104,68 @@ export async function publishDOMEEvent(
  * @param rpcAddress the blockchain node address to be used for event subscription.
  * @param notificationEndpoint the user's endpoint to be notified to of the events of interest.
  *                             The notification is sent as a POST.
+ * @param userEthereumAddress the user's Ethereum address.
  */
 export function subscribeToDOMEEvents(
     eventTypes: string[],
     rpcAddress: string,
-    notificationEndpoint: string
+    notificationEndpoint: string,
+    userEthereumAddress: string
 ) {
 
-    debugLog(">>> Subscribing to DOME Events...");
+    try {
+        debugLog(">>> Subscribing to DOME Events...");
+        const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
+        const DOMEEventsContract = new ethers.Contract(domeEventsContractAddress, domeEventsContractABI, provider);
+        debugLog(" > Contract with address " + domeEventsContractAddress + " loaded");
+        debugLog(" > User requests to subscribe to events..." + eventTypes.join(", "));
+        debugLog(" > Listening to events...");
 
-    const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
-    const DOMEEventsContract = new ethers.Contract(domeEventsContractAddress, domeEventsContractABI, provider);
-    debugLog(" > Contract with address " + domeEventsContractAddress + " loaded");
-    debugLog(" > User requests to subscribe to events..." + eventTypes.join(", "));
-    debugLog(" > Listening to events...");
+        DOMEEventsContract.on("EventDOMEv1", (index, timestamp, origin, eventType, dataLocation, metadata) => {
+            if (eventTypes.includes(eventType)) {
+                const eventContent = {
+                    id: index,
+                    publisherAddress: origin,
+                    eventType: eventType,
+                    timestamp: timestamp,
+                    dataLocation: dataLocation,
+                    relevantMetadata: metadata
+                }
 
-    DOMEEventsContract.on("EventDOMEv1", (index, timestamp, origin, eventType, dataLocation, metadata) => {
-        if (eventTypes.includes(eventType)) {
-            debugLog(" > User subscribing to event: " + eventType);
-            const eventContent = {
-                id: index,
-                publisherAddress: origin,
-                eventType: eventType,
-                timestamp: timestamp,
-                dataLocation: dataLocation,
-                relevantMetadata: metadata
-            }
 
-            debugLog(" > Event Content:", {
-                index,
-                timestamp,
-                origin,
-                eventType,
-                dataLocation,
-                metadata
-            });
 
-            debugLog(" > Event emitted: " + eventType + " with args: " + JSON.stringify(eventContent));
-
-            debugLog(" > Checking EventType " + eventContent.eventType + " with the interest for the user " + eventType);
-
-            const headers = {
-                'Content-Type': 'application/json', // Set the Content-Type header to JSON
-            };
-            debugLog(" > Sending notification to endpoint: " + notificationEndpoint);
-            debugLog(" > Notification Content: " + JSON.stringify(eventContent));
-            axios.post(notificationEndpoint, JSON.stringify(eventContent), { headers })
-                .then(response => {
-                    debugLog(" > Response from notification endpoint: " + response.status);
-                })
-                .catch(error => {
-                    debugLog(" > Error from notification endpoint: " + error);
+                debugLog(" > Event Content:", {
+                    index,
+                    timestamp,
+                    origin,
+                    eventType,
+                    dataLocation,
+                    metadata
                 });
-        } else {
-            debugLog(" > This event is not of interest for the user.");
-        }
 
-    });
+                debugLog(" > Event emitted: " + eventType + " with args: " + JSON.stringify(eventContent));
+
+
+                if (eventContent.publisherAddress != userEthereumAddress) {
+                    const headers = {
+                        'Content-Type': 'application/json', // Set the Content-Type header to JSON
+                    };
+                    debugLog(" > Sending notification to endpoint: " + notificationEndpoint);
+                    debugLog(" > Notification Content: " + JSON.stringify(eventContent));
+                    axios.post(notificationEndpoint, JSON.stringify(eventContent), { headers })
+                        .then(response => {
+                            debugLog(" > Response from notification endpoint: " + response.status);
+                        })
+                        .catch(error => {
+                            debugLog(" > Error from notification endpoint: " + error);
+                        });
+                } else {
+                    debugLog(" > This event is not of interest for the user.");
+                }
+            }
+        });
+    } catch (error) {
+        debugLog(" > !! Error subscribing to DOME Events: " + error);
+        throw error;
+    }
 }
