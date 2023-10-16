@@ -5,6 +5,7 @@ import {
     domeEventsContractAddress as domeEventsContractAddress,
 } from "../utils/const";
 import axios from "axios";
+import { saveSession } from '../db/sessions';
 
 const debugLog = debug("DLT Interface Service: ");
 
@@ -34,9 +35,11 @@ export async function connectToNode(
     // Registry req parameters in session.
     debugLog("  > req.session: " + JSON.stringify(req.session));
     debugLog("  > req.headers: " + JSON.stringify(req.headers));
-    req.session.provider = provider;
     req.session.userEthereumAddress = userEthereumAddress;
     req.session.rpcAddress = rpcAddress;
+    debugLog("  > Saving this session.. " + JSON.stringify(req.session));
+    saveSession(req.session);
+    req.session.provider = provider;
     debugLog("  > Stored blockchain node configuration for this user's session (provider and public key).");
 }
 
@@ -131,8 +134,6 @@ export function subscribeToDOMEEvents(
                     dataLocation: dataLocation,
                     relevantMetadata: metadata
                 }
-
-
 
                 debugLog(" > Event Content:", {
                     index,

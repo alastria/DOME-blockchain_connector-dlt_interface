@@ -1,6 +1,8 @@
 import { connectToNode, subscribeToDOMEEvents, publishDOMEEvent } from "../api/DLTInterface";
 import express from "express";
 import debug from "debug";
+import { getSessionByEthAddress } from '../db/sessions';
+
 
 
 const router = express.Router();
@@ -14,7 +16,7 @@ router.post("/api/v1/configureNode", async (req: any, resp: any) => {
   debugLog("Entry call from origin: ", req.headers.origin);
   try {
     await connectToNode(req.body.rpcAddress, req.body.userEthereumAddress, req);
-    resp.status(200).send("OK");
+    resp.status(201).send("OK");
   } catch (error) {
     debugLog("Error: ", error);
     resp.status(400).send("Error: ", error);
@@ -23,15 +25,16 @@ router.post("/api/v1/configureNode", async (req: any, resp: any) => {
 
 router.post("/api/v1/publishEvent", async (req: any, resp: any) => {
   debugLog("Entry call from origin: ", req.headers.origin);
+
   try {
     await publishDOMEEvent(
-        req.body.eventType,
-        req.body.dataLocation,
-        req.body.relevantMetadata,
-        req.session.userEthereumAddress,
-        req.session.rpcAddress
+      req.body.eventType,
+      req.body.dataLocation,
+      req.body.relevantMetadata,
+      req.session.userEthereumAddress,
+      req.session.rpcAddress
     );
-    resp.status(200).send("OK");
+    resp.status(201).send("OK");
   } catch (error) {
     debugLog("Error: ", error);
     resp.status(400).send("Error: ", error);
@@ -42,11 +45,29 @@ router.post('/api/v1/subscribe', async (req: any, resp: any) => {
   debugLog("Entry call from origin: ", req.headers.origin);
   try {
     subscribeToDOMEEvents(req.body.eventType, req.session.rpcAddress, req.body.notificationEndpoint, req.session.userEthereumAddress);
-    resp.status(200).send("OK");
+    resp.status(201).send("OK");
   } catch (error) {
     debugLog("Error: ", error);
     resp.status(400).send("Error: ", error);
   }
 })
+
+
+router.get('/getSessionByEthAddress', async (req, resp) => {
+
+  try {
+    const userAddress = req.body.userEthereumAddress;
+    const session = await getSessionByEthAddress(userAddress, req);
+    if (session == 0) {
+      return resp.status(404).send("Session not found");
+    }else{
+      return resp.status(200).send("OK");
+    }
+  } catch (error) {
+    debugLog("Error: ", error);
+    resp.status(400);
+  }
+})
+
 
 export = router;
