@@ -1,5 +1,5 @@
-import {debug} from "debug";
-import {ethers} from "ethers";
+import { debug } from "debug";
+import { ethers } from "ethers";
 import {
     domeEventsContractABI as domeEventsContractABI,
     domeEventsContractAddress as domeEventsContractAddress,
@@ -70,6 +70,7 @@ export async function publishDOMEEvent(
 
     //TODO: Secure PrivateKey
     const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
+    debugLog("  > Ethereum Address of event publisher: ", wallet.address);
 
     const domeEventsContractWithSigner = new ethers.Contract(
         domeEventsContractAddress,
@@ -107,8 +108,8 @@ export async function publishDOMEEvent(
  * @param notificationEndpoint the user's endpoint to be notified to of the events of interest.
  *                             The notification is sent as a POST.
  */
-export function subscribeToDOMEEvent(
-    eventType: string,
+export function subscribeToDOMEEvents(
+    eventTypes: string[],
     rpcAddress: string,
     notificationEndpoint: string
 ) {
@@ -118,41 +119,40 @@ export function subscribeToDOMEEvent(
     const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
     const DOMEEventsContract = new ethers.Contract(domeEventsContractAddress, domeEventsContractABI, provider);
     debugLog(" > Contract with address " + domeEventsContractAddress + " loaded");
-    debugLog(" > User subscribed to event of type " + eventType);
-
-    let eventTypeFilter = eventType;
-
+    debugLog(" > User requests to subscribe to events..." + eventTypes.join(", "));
     debugLog(" > Listening to events...");
+
     DOMEEventsContract.on("EventDOMEv1", (index, timestamp, origin, eventType, dataLocation, metadata) => {
+        if (eventTypes.includes(eventType)) {
+            debugLog(" > User subscribing to event: " + eventType);
+            const eventContent = {
+                id: index,
+                publisherAddress: origin,
+                eventType: eventType,
+                timestamp: timestamp,
+                dataLocation: dataLocation,
+                relevantMetadata: metadata
+            }
 
-        const eventContent = {
-            id: index,
-            publisherAddress: origin,
-            eventType: eventType,
-            timestamp: timestamp,
-            dataLocation: dataLocation,
-            relevantMetadata: metadata
-        }
+            debugLog(" > Event Content:", {
+                index,
+                timestamp,
+                origin,
+                eventType,
+                dataLocation,
+                metadata
+            });
 
-        debugLog(" > Event Content:", {
-            index,
-            timestamp,
-            origin,
-            eventType,
-            dataLocation,
-            metadata
-        });
+            debugLog(" > Event emitted: " + eventType + " with args: " + JSON.stringify(eventContent));
 
-        debugLog(" > Event emitted: " + eventType + " with args: " + JSON.stringify(eventContent));
+            debugLog(" > Checking EventType " + eventContent.eventType + " with the interest for the user " + eventType);
 
-        debugLog(" > Checking EventType " + eventContent.eventType +  " with the interest for the user " + eventTypeFilter);
-        if (eventContent.eventType == eventTypeFilter) {
             const headers = {
                 'Content-Type': 'application/json', // Set the Content-Type header to JSON
             };
             debugLog(" > Sending notification to endpoint: " + notificationEndpoint);
             debugLog(" > Notification Content: " + JSON.stringify(eventContent));
-            axios.post(notificationEndpoint, JSON.stringify(eventContent), {headers})
+            axios.post(notificationEndpoint, JSON.stringify(eventContent), { headers })
                 .then(response => {
                     debugLog(" > Response from notification endpoint: " + response.status);
                 })
@@ -164,5 +164,4 @@ export function subscribeToDOMEEvent(
         }
 
     });
-
 }

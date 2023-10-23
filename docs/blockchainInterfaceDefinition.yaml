@@ -42,7 +42,7 @@ paths:
               $ref: '#/components/schemas/v1_subscribe_body'
             examples:
               "0":
-                value: "{\r\n    \"eventType\": \"ProductAdded\",\r\n    \"notificationEndpoint\": \"http://localhost:8080/api/v1/testSubscribedUser\"\r\n}"
+                value: "{\r\n   \"eventTypes\": [\"ProductAdded1\", \"ProductAdded2\"],\r\n    \"notificationEndpoint\": \"http://localhost:8080/api/v1/testSubscribedUser\"\r\n}"
       responses:
         "200":
           description: Auto generated using Swagger Inspector
@@ -99,8 +99,10 @@ components:
       properties:
         notificationEndpoint:
           type: string
-        eventType:
-          type: string
+        eventTypes:
+          type: array
+          items:
+            type: string
     v1_configureNode_body:
       type: object
       properties:
