@@ -9,22 +9,15 @@ import {
 
 describe('Configure Bblockchain node', () => {
     it('should configure the session with the provided blockchain node', async () => {
-        // Create a mock session object
         const session = {
             provider: ' {"_isProvider":true,"_events":[],"_emitted":{"block":-2},"disableCcipRead":false,"formatter":{"formats":{"transaction":{},"transactionRequest":{},"receiptLog":{},"receipt":{},"block":{},"blockWithTransactions":{},"filter":{},"filterLog":{}}},"anyNetwork":false,"_networkPromise":{},"_maxInternalBlockNumber":-1024,"_lastBlockNumber":-2,"_maxFilterBlockRange":10,"_pollingInterval":4000,"_fastQueryDate":0,"connection":{"url":"https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6"},"_nextId":42}',
             userEthereumAddress: '0xb794f5ea0ba39494ce839613fffba74279579268',
             rpcAddress: 'https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6',
         };
-
         const userEthereumAddress = '0xb794f5ea0ba39494ce839613fffba74279579268';
         const rpcAddress = 'https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6';
-
-        // Create a mock req object with the session
         const req = { session };
-
         await connectToNode(rpcAddress, userEthereumAddress, req);
-
-        // Verify that session properties are set correctly
         expect(session.provider).toBeInstanceOf(ethers.providers.JsonRpcProvider);
         expect(session.userEthereumAddress).toBe(userEthereumAddress);
         expect(session.rpcAddress).toBe(rpcAddress);
@@ -93,10 +86,8 @@ describe('subscribeToDOMEEvents', () => {
     const mockWallet = new ethers.Wallet(process.env.PRIVATE_KEY!, mockProvider);
     const mockContract = new ethers.Contract(domeEventsContractAddress, domeEventsContractABI, mockWallet);
 
-   
     ethers.Wallet.mockImplementation(() => mockWallet);
     ethers.Contract.mockImplementation(() => mockContract);
-
     await publishDOMEEvent(eventType, dataLocation, relevantMetadata, userEthereumAddress, rpcAddress);
 
     expect(ethers.providers.JsonRpcProvider).toHaveBeenCalledWith(rpcAddress);
@@ -104,33 +95,3 @@ describe('subscribeToDOMEEvents', () => {
     expect(ethers.Contract).toHaveBeenCalledWith(domeEventsContractAddress, domeEventsContractABI, mockWallet);
   });
   });
-  
-  // describe('publishDOMEEvent', () => {
-  //   it('publishes a DOME event to the blockchain', async () => {
-
-
-
-  //     const eventType = 'eventType1';
-  //     const dataLocation = 'TestLocation';
-  //     const relevantMetadata = ['Metadata1', 'Metadata2'];
-  //     const userEthereumAddress = '0xb794f5ea0ba39494ce839613fffba74279579268';
-  //     const rpcAddress = 'https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6';
-  
-  //     const mockProvider = new ethers.providers.JsonRpcProvider(rpcAddress);
-  //     const mockWallet = new ethers.Wallet(process.env.PRIVATE_KEY!, mockProvider);
-  
-  //     const mockContract = {
-  //       address: domeEventsContractAddress,
-  //       emitNewEvent: jest.fn().mockResolvedValue({}),
-  //     };
-  
-  //     const ethersMock = jest.spyOn(ethers, 'Contract').mockReturnValue(mockContract);
-  
-  //     await publishDOMEEvent(eventType, dataLocation, relevantMetadata, userEthereumAddress, rpcAddress);
-  
-  //     expect(ethers.providers.JsonRpcProvider).toHaveBeenCalledWith(rpcAddress);
-  //     expect(ethers.Wallet).toHaveBeenCalledWith(expect.any(String), mockProvider);
-  //     expect(ethers.Contract).toHaveBeenCalledWith(domeEventsContractAddress, expect.any(Array), mockWallet);
-  //     expect(mockContract.emitNewEvent).toHaveBeenCalledWith(userEthereumAddress, eventType, dataLocation, relevantMetadata);
-  //   });
-  // });
