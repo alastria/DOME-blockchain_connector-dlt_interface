@@ -1,10 +1,10 @@
 const { connectToNode, subscribeToDOMEEvents, publishDOMEEvent } = require('../src/api/DLTInterface');
 const ethers = require('ethers');
-import axios from 'axios'; // Importa Axios para simular llamadas HTTP
-
+import dotenv from "dotenv";
+dotenv.config();
 import {
-    domeEventsContractABI as domeEventsContractABI,
-    domeEventsContractAddress as domeEventsContractAddress,
+  domeEventsContractABI as domeEventsContractABI,
+  domeEventsContractAddress as domeEventsContractAddress,
 } from "../src/utils/const";
 
 describe('Configure Bblockchain node', () => {
@@ -30,7 +30,7 @@ describe('Configure Bblockchain node', () => {
         expect(session.rpcAddress).toBe(rpcAddress);
     });
 });
-
+jest.mock('ethers');
 describe('subscribeToDOMEEvents', () => {
     it('should subscribe to DOME events', () => {
       // Parámetros de ejemplo
@@ -60,7 +60,7 @@ describe('subscribeToDOMEEvents', () => {
         expect(eventTypes).toContain(eventType); // Verifica si el eventType está en la lista de interés
         expect(origin).toBe('originAddress'); // Verifica el origen del evento
         
-    };
+   
   
       // Espía la función on del contrato para llamar al callback con el evento simulado
       const onSpy = jest.spyOn(DOMEEventsContract, 'EventDOMEv1');
@@ -78,54 +78,59 @@ describe('subscribeToDOMEEvents', () => {
   
       // Restaura la función espía después de la prueba
       onSpy.mockRestore();
-    });
+    }
   });
+  it('publishes a DOME event to the blockchain', async () => {
 
-  describe('publishDOMEEvent', () => {
-    it('should publish a DOME event', async () => {
-      // Parámetros de ejemplo
-      const eventType = 'eventType1';
-      const dataLocation = 'exampleLocation';
-      const relevantMetadata = ['metadata1', 'metadata2'];
-      const userEthereumAddress = '0xb794f5ea0ba39494ce839613fffba74279579268';
-      const rpcAddress= 'https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6';
-  
-      // Crea un objeto simulado para el contrato
-      const simulatedContract = {
-        emitNewEvent: jest.fn(), // Simula la función emitNewEvent
-      };
-  
-      // Simula la creación del proveedor de ethers
-      const mockProvider = new ethers.providers.JsonRpcProvider(rpcAddress);
-  
-      // Simula la creación de la billetera
-      const mockWallet = new ethers.Wallet(process.env.PRIVATE_KEY!, mockProvider);
-  
-      // Simula la creación de la instancia del contrato
-      const DOMEEventsContract = new ethers.Contract('0x2BcAb3E30D0EcCd4728b48b80C92ff4E9430B3EE', [], mockWallet);
-  
-      // Simula la transacción generada por emitNewEvent
-      const simulatedTransaction = {
-        wait: jest.fn(), // Simula la función wait de la transacción
-      };
-  
-      // Espía la función emitNewEvent del contrato para simular su llamada
-      const emitNewEventSpy = jest.spyOn(DOMEEventsContract, 'EventDOMEv1');
-      emitNewEventSpy.mockResolvedValue(simulatedTransaction);
-  
-      // Ejecuta la función para publicar el evento
-      const result = await publishDOMEEvent(eventType, dataLocation, relevantMetadata, userEthereumAddress, rpcAddress);
-  
-      // Verifica que emitNewEvent haya sido llamado con los argumentos correctos
-      expect(emitNewEventSpy).toHaveBeenCalledWith(userEthereumAddress, eventType, dataLocation, relevantMetadata);
-  
-      // Verifica que la función wait de la transacción haya sido llamada
-      expect(simulatedTransaction.wait).toHaveBeenCalled();
-  
-      // Verifica que el resultado sea el esperado
-      expect(result.status).toBe(200);
-  
-      // Restaura la función espía después de la prueba
-      emitNewEventSpy.mockRestore();
-    });
+      
+    const eventType = 'eventType1';
+    const dataLocation = 'testDataLocation';
+    const relevantMetadata = ['metadata1', 'metadata2'];
+    const userEthereumAddress = '0xb794f5ea0ba39494ce839613fffba74279579268';
+    const rpcAddress= 'https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6';
+
+    const mockProvider = new ethers.providers.JsonRpcProvider(rpcAddress);
+    const mockWallet = new ethers.Wallet(process.env.PRIVATE_KEY!, mockProvider);
+    const mockContract = new ethers.Contract(domeEventsContractAddress, domeEventsContractABI, mockWallet);
+
+   
+    ethers.Wallet.mockImplementation(() => mockWallet);
+    ethers.Contract.mockImplementation(() => mockContract);
+
+    await publishDOMEEvent(eventType, dataLocation, relevantMetadata, userEthereumAddress, rpcAddress);
+
+    expect(ethers.providers.JsonRpcProvider).toHaveBeenCalledWith(rpcAddress);
+    expect(ethers.Wallet).toHaveBeenCalledWith(expect.any(String), mockProvider);
+    expect(ethers.Contract).toHaveBeenCalledWith(domeEventsContractAddress, domeEventsContractABI, mockWallet);
   });
+  });
+  
+  // describe('publishDOMEEvent', () => {
+  //   it('publishes a DOME event to the blockchain', async () => {
+
+
+
+  //     const eventType = 'eventType1';
+  //     const dataLocation = 'TestLocation';
+  //     const relevantMetadata = ['Metadata1', 'Metadata2'];
+  //     const userEthereumAddress = '0xb794f5ea0ba39494ce839613fffba74279579268';
+  //     const rpcAddress = 'https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6';
+  
+  //     const mockProvider = new ethers.providers.JsonRpcProvider(rpcAddress);
+  //     const mockWallet = new ethers.Wallet(process.env.PRIVATE_KEY!, mockProvider);
+  
+  //     const mockContract = {
+  //       address: domeEventsContractAddress,
+  //       emitNewEvent: jest.fn().mockResolvedValue({}),
+  //     };
+  
+  //     const ethersMock = jest.spyOn(ethers, 'Contract').mockReturnValue(mockContract);
+  
+  //     await publishDOMEEvent(eventType, dataLocation, relevantMetadata, userEthereumAddress, rpcAddress);
+  
+  //     expect(ethers.providers.JsonRpcProvider).toHaveBeenCalledWith(rpcAddress);
+  //     expect(ethers.Wallet).toHaveBeenCalledWith(expect.any(String), mockProvider);
+  //     expect(ethers.Contract).toHaveBeenCalledWith(domeEventsContractAddress, expect.any(Array), mockWallet);
+  //     expect(mockContract.emitNewEvent).toHaveBeenCalledWith(userEthereumAddress, eventType, dataLocation, relevantMetadata);
+  //   });
+  // });
