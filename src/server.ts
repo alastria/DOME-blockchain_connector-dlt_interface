@@ -10,8 +10,6 @@ import session from "express-session";
 const app = express()
 const port = 8080
 
-
-
 // Logging
 app.use(morgan("dev"))
 
@@ -22,18 +20,46 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 /** RULES OF OUR API */
+// router.use((req: any, res: any, next: any) => {
+//     // set the CORS policy
+//     res.header('Access-Control-Allow-Origin', '*');
+//     // set the CORS headers
+//     res.header('Access-Control-Allow-Headers', 'origin, X-Requested-With,Content-Type,Accept, Authorization');
+//     // set the CORS method headers
+//     if (req.method === 'OPTIONS') {
+//         res.header('Access-Control-Allow-Methods', 'GET PATCH DELETE POST');
+//         return res.status(200).json({});
+//     }
+//     next();
+// });
+
 router.use((req: any, res: any, next: any) => {
-    // set the CORS policy
-    res.header('Access-Control-Allow-Origin', '*');
-    // set the CORS headers
-    res.header('Access-Control-Allow-Headers', 'origin, X-Requested-With,Content-Type,Accept, Authorization');
-    // set the CORS method headers
-    if (req.method === 'OPTIONS') {
-        res.header('Access-Control-Allow-Methods', 'GET PATCH DELETE POST');
-        return res.status(200).json({});
+
+    // Define an array of allowed origins (replace with your actual origins)
+    const allowedOrigins = ['*'];
+
+    // Check if the request origin is in the allowed origins
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+        res.header('Access-Control-Allow-Origin', origin);
     }
+
+    // Set the allowed headers and methods
+    res.header(
+        'Access-Control-Allow-Headers',
+        'Origin, X-Requested-With, Content-Type, Accept, Authorization'
+    );
+    res.header('Access-Control-Allow-Methods', 'GET, PATCH, DELETE, POST');
+
+    // Handle preflight requests (OPTIONS)
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
+    // Continue with the request
     next();
 });
+
 
 /** ExpressJS session */
 app.use(session({
