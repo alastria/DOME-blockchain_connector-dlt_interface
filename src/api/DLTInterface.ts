@@ -7,6 +7,7 @@ import {
 import axios from "axios";
 
 const debugLog = debug("DLT Interface Service: ");
+const errorLog = debug("DLT Interface Service:error ");
 
 //TODO: Make it generic for any DLT technology.
 //TODO: use a proper authenticated session.
@@ -24,25 +25,35 @@ export async function connectToNode(
     userEthereumAddress: string,
     req: any
 ) {
+    if(rpcAddress === null || rpcAddress === undefined){
+        throw new IllegalArgumentError("The rpc address is null.");
+    }
+    if(userEthereumAddress === null || userEthereumAddress === undefined){
+        throw new IllegalArgumentError("The ethereum address is null.");
+    }
+
+    debugLog(">>> Connecting to blockchain node...");
+    // Entry parameters in method.
+    debugLog("  > rpcAddress: " + rpcAddress);
+    debugLog("  > userEthereumAddress: " + userEthereumAddress);
+
+    let provider;
     try {
-        debugLog(">>> Connecting to blockchain node...");
-        // Entry parameters in method.
-        debugLog("  > rpcAddress: " + rpcAddress);
-        debugLog("  > userEthereumAddress: " + userEthereumAddress);
-        const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
-        debugLog("  > Provider: " + JSON.stringify(provider));
-        debugLog("  > Provider Network: " + JSON.stringify(await provider.getNetwork()));
-        // Registry req parameters in session.
-        debugLog("  > req.session: " + JSON.stringify(req.session));
-        debugLog("  > req.headers: " + JSON.stringify(req.headers));
-        req.session.provider = provider;
-        req.session.userEthereumAddress = userEthereumAddress;
-        req.session.rpcAddress = rpcAddress;
-        debugLog("  > Stored blockchain node configuration for this user's session (provider and public key).");
+        provider = new ethers.providers.JsonRpcProvider(rpcAddress);
     } catch (error) {
-        debugLog("Error connecting to blockchain node:" + error);
+        errorLog(" > !! Error connecting to the blockchain:\n " + error);
         throw error;
     }
+
+    debugLog("  > Provider: " + JSON.stringify(provider));
+    debugLog("  > Provider Network: " + JSON.stringify(await provider.getNetwork()));
+    // Registry req parameters in session.
+    debugLog("  > req.session: " + JSON.stringify(req.session));
+    debugLog("  > req.headers: " + JSON.stringify(req.headers));
+    req.session.provider = provider;
+    req.session.userEthereumAddress = userEthereumAddress;
+    req.session.rpcAddress = rpcAddress;
+    debugLog("  > Stored blockchain node configuration for this user's session (provider and public key).");
 }
 
 /**
@@ -61,6 +72,19 @@ export async function publishDOMEEvent(
     userEthereumAddress: string,
     rpcAddress: string,
 ) {
+    if(eventType === null || eventType === undefined){
+        throw new IllegalArgumentError("The eventType is null.");
+    }
+    if(dataLocation === null || dataLocation === undefined){
+        throw new IllegalArgumentError("The dataLocation is null.");
+    }
+    if(userEthereumAddress === null || userEthereumAddress === undefined){
+        throw new IllegalArgumentError("The user ethereum address is null.");
+    }
+    if(rpcAddress === null || rpcAddress === undefined){
+        throw new IllegalArgumentError("The rpc address is null.");
+    }
+    
     try{
         debugLog(">>> Publishing event to blockchain node...");
 
@@ -70,7 +94,7 @@ export async function publishDOMEEvent(
             dataLocation,
             relevantMetadata
         });
-
+    
         const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
 
         //TODO: Secure PrivateKey
@@ -87,24 +111,19 @@ export async function publishDOMEEvent(
 
         //TODO: Consider using our own Timestamp instead of the smart contract one for more flexibility
         //TODO: Consider using our own ID instead of the smart contract one for more flexibility
-        try {
-            debugLog("  > Publishing event to blockchain node...");
+        debugLog("  > Publishing event to blockchain node...");
 
-            const tx = await domeEventsContractWithSigner.emitNewEvent(
-                userEthereumAddress,
-                eventType,
-                dataLocation,
-                relevantMetadata
-            );
-            debugLog("  > Transaction waiting to be mined...");
-            await tx.wait();
-            debugLog("  > Transaction executed:\n" + JSON.stringify(tx));
-        } catch (error) {
-            debugLog("  > !! Error publishing event to blockchain node: " + error);
-            throw error;
-        }
+        const tx = await domeEventsContractWithSigner.emitNewEvent(
+            userEthereumAddress,
+            eventType,
+            dataLocation,
+            relevantMetadata
+        );
+        debugLog("  > Transaction waiting to be mined...");
+        await tx.wait();
+        debugLog("  > Transaction executed:\n" + JSON.stringify(tx));
     } catch (error){
-        debugLog("  > !! Error in publishDOMEEvent: " + error);
+        errorLog(" > !! Error in publishDOMEEvent:\n " + error);
         throw error;
     }
 }
