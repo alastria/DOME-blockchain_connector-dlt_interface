@@ -41,7 +41,7 @@ export async function connectToNode(
     try {
         provider = new ethers.providers.JsonRpcProvider(rpcAddress);
     } catch (error) {
-        errorLog(" > !! Error connecting to the blockchain:\n " + error);
+        errorLog(" > !! Error connecting to the blockchain");
         throw error;
     }
 
@@ -123,7 +123,7 @@ export async function publishDOMEEvent(
         await tx.wait();
         debugLog("  > Transaction executed:\n" + JSON.stringify(tx));
     } catch (error){
-        errorLog(" > !! Error in publishDOMEEvent:\n " + error);
+        errorLog(" > !! Error in publishDOMEEvent");
         throw error;
     }
 }
@@ -131,7 +131,7 @@ export async function publishDOMEEvent(
 /**
  * Subscribe to DOME Events.
  *
- * @param eventType the event type of the events of interest for the user
+ * @param eventType the event type of the events of interest for the user.
  * @param rpcAddress the blockchain node address to be used for event subscription.
  * @param notificationEndpoint the user's endpoint to be notified to of the events of interest.
  *                             The notification is sent as a POST.
@@ -141,6 +141,18 @@ export function subscribeToDOMEEvents(
     rpcAddress: string,
     notificationEndpoint: string
 ) {
+    if(eventTypes === null || eventTypes === undefined){
+        throw new IllegalArgumentError("The eventType is null.");
+    }
+    if(eventTypes.length === 0){
+        throw new IllegalArgumentError("No eventTypes indicated for subscription.");
+    }
+    if(rpcAddress === null || rpcAddress === undefined){
+        throw new IllegalArgumentError("The rpc address is null.");
+    }
+    if(notificationEndpoint === null || notificationEndpoint === undefined){
+        throw new IllegalArgumentError("The notificationEndpoint is null.");
+    }
 
     try{
         debugLog(">>> Subscribing to DOME Events...");
@@ -186,7 +198,8 @@ export function subscribeToDOMEEvents(
                         debugLog(" > Response from notification endpoint: " + response.status);
                     })
                     .catch(error => {
-                        debugLog(" > Error from notification endpoint: " + error);
+                        errorLog(" > !! Error from notification endpoint:\n" + error);
+                        throw new NotificationEndpointError("Can't connect to the notification endpoint.");
                     });
             } else {
                 debugLog(" > This event is not of interest for the user.");
@@ -194,7 +207,7 @@ export function subscribeToDOMEEvents(
 
         });
     } catch(error){
-        debugLog(" > !! Error subscribing to DOME Events: " + error);
+        errorLog(" > !! Error subscribing to DOME Events");
         throw error;
     }
 }
