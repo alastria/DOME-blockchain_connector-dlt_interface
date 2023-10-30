@@ -68,7 +68,7 @@ app.use(session({
     secret: "verySecretSecret",
     resave: false,
     saveUninitialized: true,
-    cookie: { 
+    cookie: {
         secure: false,            //setting this false for http connections
     },
     name: "sessionCookieDOME"
@@ -81,11 +81,11 @@ app.use("/", router)
 
 /** Error handling */
 app.use((req: any, res: any, next: any) => {
-    const error = new Error('not found');
-    return res.status(404).json({
-        message: error.message
-    });
+    const error = new Error("Not Found");
+    return res.status(404).json({ message: error.message });
 });
+
+
 
 app.listen(port, () => {
     console.log(`DLT Interface API listening at http://localhost:${port}`)
