@@ -7,6 +7,7 @@ import {
 import axios from "axios";
 
 const debugLog = debug("DLT Interface Service: ");
+const errorLog = debug("DLT Interface Service:error ");
 
 //TODO: Make it generic for any DLT technology.
 //TODO: use a proper authenticated session.
@@ -24,11 +25,26 @@ export async function connectToNode(
     userEthereumAddress: string,
     req: any
 ) {
+    if(rpcAddress === null || rpcAddress === undefined){
+        throw new IllegalArgumentError("The rpc address is null.");
+    }
+    if(userEthereumAddress === null || userEthereumAddress === undefined){
+        throw new IllegalArgumentError("The ethereum address is null.");
+    }
+
     debugLog(">>> Connecting to blockchain node...");
     // Entry parameters in method.
     debugLog("  > rpcAddress: " + rpcAddress);
     debugLog("  > userEthereumAddress: " + userEthereumAddress);
-    const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
+
+    let provider;
+    try {
+        provider = new ethers.providers.JsonRpcProvider(rpcAddress);
+    } catch (error) {
+        errorLog(" > !! Error connecting to the blockchain");
+        throw error;
+    }
+
     debugLog("  > Provider: " + JSON.stringify(provider));
     debugLog("  > Provider Network: " + JSON.stringify(await provider.getNetwork()));
     // Registry req parameters in session.
@@ -56,9 +72,20 @@ export async function publishDOMEEvent(
     userEthereumAddress: string,
     rpcAddress: string,
 ) {
-    try {
-        debugLog(">>> Publishing event to blockchain node...");
-
+    if(eventType === null || eventType === undefined){
+        throw new IllegalArgumentError("The eventType is null.");
+    }
+    if(dataLocation === null || dataLocation === undefined){
+        throw new IllegalArgumentError("The dataLocation is null.");
+    }
+    if(userEthereumAddress === null || userEthereumAddress === undefined){
+        throw new IllegalArgumentError("The user ethereum address is null.");
+    }
+    if(rpcAddress === null || rpcAddress === undefined){
+        throw new IllegalArgumentError("The rpc address is null.");
+    }
+    
+    try{
         debugLog(">>> Publishing event to blockchain node...");
 
         debugLog("  > Entry Data:", {
@@ -67,7 +94,6 @@ export async function publishDOMEEvent(
             dataLocation,
             relevantMetadata
         });
-
         const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
 
         //TODO: Secure PrivateKey
@@ -82,6 +108,7 @@ export async function publishDOMEEvent(
         debugLog("  > Ethereum Contract: ", domeEventsContractWithSigner.address);
         debugLog("  > Ethereum Remittent: ", userEthereumAddress);
 
+        debugLog("  > Publishing event to blockchain node...");
         const tx = await domeEventsContractWithSigner.emitNewEvent(
             userEthereumAddress,
             eventType,
@@ -91,8 +118,8 @@ export async function publishDOMEEvent(
         debugLog("  > Transaction waiting to be mined...");
         await tx.wait();
         debugLog("  > Transaction executed:\n" + JSON.stringify(tx));
-    } catch (error) {
-        debugLog("  > !! Error publishing event to blockchain node: " + error);
+    } catch (error){
+        errorLog(" > !! Error in publishDOMEEvent");
         throw error;
     }
 }
@@ -100,7 +127,7 @@ export async function publishDOMEEvent(
 /**
  * Subscribe to DOME Events.
  *
- * @param eventType the event type of the events of interest for the user
+ * @param eventType the event type of the events of interest for the user.
  * @param rpcAddress the blockchain node address to be used for event subscription.
  * @param notificationEndpoint the user's endpoint to be notified to of the events of interest.
  *                             The notification is sent as a POST.
@@ -112,9 +139,22 @@ export function subscribeToDOMEEvents(
     notificationEndpoint: string,
     userEthereumAddress: string
 ) {
+    if(eventTypes === null || eventTypes === undefined){
+        throw new IllegalArgumentError("The eventType is null.");
+    }
+    if(eventTypes.length === 0){
+        throw new IllegalArgumentError("No eventTypes indicated for subscription.");
+    }
+    if(rpcAddress === null || rpcAddress === undefined){
+        throw new IllegalArgumentError("The rpc address is null.");
+    }
+    if(notificationEndpoint === null || notificationEndpoint === undefined){
+        throw new IllegalArgumentError("The notificationEndpoint is null.");
+    }
 
-    try {
+    try{
         debugLog(">>> Subscribing to DOME Events...");
+
         const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
         const DOMEEventsContract = new ethers.Contract(domeEventsContractAddress, domeEventsContractABI, provider);
         debugLog(" > Contract with address " + domeEventsContractAddress + " loaded");
@@ -132,8 +172,6 @@ export function subscribeToDOMEEvents(
                     relevantMetadata: metadata
                 }
 
-
-
                 debugLog(" > Event Content:", {
                     index,
                     timestamp,
@@ -144,6 +182,7 @@ export function subscribeToDOMEEvents(
                 });
 
                 debugLog(" > Event emitted: " + eventType + " with args: " + JSON.stringify(eventContent));
+                debugLog(" > Checking EventType " + eventContent.eventType + " with the interest for the user " + eventType);
 
 
                 if (eventContent.publisherAddress != userEthereumAddress) {
@@ -157,7 +196,8 @@ export function subscribeToDOMEEvents(
                             debugLog(" > Response from notification endpoint: " + response.status);
                         })
                         .catch(error => {
-                            debugLog(" > Error from notification endpoint: " + error);
+                            errorLog(" > !! Error from notification endpoint:\n" + error);
+                            throw new NotificationEndpointError("Can't connect to the notification endpoint.");
                         });
                 } else {
                     debugLog(" > This event is not of interest for the user.");
@@ -165,7 +205,7 @@ export function subscribeToDOMEEvents(
             }
         });
     } catch (error) {
-        debugLog(" > !! Error subscribing to DOME Events: " + error);
+        errorLog(" > !! Error subscribing to DOME Events");
         throw error;
     }
 }
