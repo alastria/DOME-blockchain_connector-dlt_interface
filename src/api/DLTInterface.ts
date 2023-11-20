@@ -17,25 +17,26 @@ const errorLog = debug("DLT Interface Service:error ");
 /**
  * Configures a blockchain node as the one to be used for the user's session. The session is managed at cookie level.
  * @param rpcAddress the address of the blockchain node.
- * @param userEthereumAddress the user's Ethereum address.
+ * @param organizationID the user's Ethereum address.
  * @param req the HTTP request.
  */
 export async function connectToNode(
   rpcAddress: string,
-  userEthereumAddress: string,
+  organizationID: string,
+  //previousEntityHash: string, 
   req: any
 ) {
   if (rpcAddress === null || rpcAddress === undefined) {
     throw new IllegalArgumentError("The rpc address is null.");
   }
-  if (userEthereumAddress === null || userEthereumAddress === undefined) {
+  if (organizationID === null || organizationID === undefined) {
     throw new IllegalArgumentError("The ethereum address is null.");
   }
 
   debugLog(">>> Connecting to blockchain node...");
   // Entry parameters in method.
   debugLog("  > rpcAddress: " + rpcAddress);
-  debugLog("  > userEthereumAddress: " + userEthereumAddress);
+  debugLog("  > organizationID: " + organizationID);
 
   let provider;
   try {
@@ -53,7 +54,7 @@ export async function connectToNode(
   debugLog("  > req.session: " + JSON.stringify(req.session));
   debugLog("  > req.headers: " + JSON.stringify(req.headers));
   req.session.provider = provider;
-  req.session.userEthereumAddress = userEthereumAddress;
+  req.session.organizationID = organizationID;
   req.session.rpcAddress = rpcAddress;
   debugLog(
     "  > Stored blockchain node configuration for this user's session (provider and public key)."
@@ -66,14 +67,15 @@ export async function connectToNode(
  * @param eventType the name of the dome event
  * @param dataLocation the storage or location of the data associated with the event.
  * @param relevantMetadata additional information or metadata relevant to the event.
- * @param userEthereumAddress the user's Ethereum address.
+ * @param organizationID the user's Ethereum address.
  * @param rpcAddress the address of the blockchain node
  */
 export async function publishDOMEEvent(
   eventType: string,
   dataLocation: string,
   relevantMetadata: Array<string>,
-  userEthereumAddress: string,
+  organizationID: string,
+  previousEntityHash: string, 
   rpcAddress: string
 ) {
   if (eventType === null || eventType === undefined) {
@@ -82,8 +84,11 @@ export async function publishDOMEEvent(
   if (dataLocation === null || dataLocation === undefined) {
     throw new IllegalArgumentError("The dataLocation is null.");
   }
-  if (userEthereumAddress === null || userEthereumAddress === undefined) {
+  if (organizationID === null || organizationID === undefined) {
     throw new IllegalArgumentError("The user ethereum address is null.");
+  }
+  if (previousEntityHash === null || previousEntityHash === undefined) {
+    throw new IllegalArgumentError("The previousEntityHash is null.");
   }
   if (rpcAddress === null || rpcAddress === undefined) {
     throw new IllegalArgumentError("The rpc address is null.");
@@ -93,7 +98,7 @@ export async function publishDOMEEvent(
     debugLog(">>> Publishing event to blockchain node...");
 
     debugLog("  > Entry Data:", {
-      userEthereumAddress,
+      organizationID,
       eventType,
       dataLocation,
       relevantMetadata,
@@ -111,11 +116,11 @@ export async function publishDOMEEvent(
       wallet
     );
     debugLog("  > Ethereum Contract: ", domeEventsContractWithSigner.address);
-    debugLog("  > Ethereum Remittent: ", userEthereumAddress);
+    debugLog("  > Ethereum Remittent: ", organizationID);
 
     debugLog("  > Publishing event to blockchain node...");
     const tx = await domeEventsContractWithSigner.emitNewEvent(
-      userEthereumAddress,
+      organizationID,
       eventType,
       dataLocation,
       relevantMetadata
@@ -136,13 +141,13 @@ export async function publishDOMEEvent(
  * @param rpcAddress the blockchain node address to be used for event subscription.
  * @param notificationEndpoint the user's endpoint to be notified to of the events of interest.
  *                             The notification is sent as a POST.
- * @param userEthereumAddress the user's Ethereum address.
+ * @param organizationID the user's Ethereum address.
  */
 export function subscribeToDOMEEvents(
   eventTypes: string[],
   rpcAddress: string,
   notificationEndpoint: string,
-  userEthereumAddress: string
+  organizationID: string
 ) {
   if (eventTypes === null || eventTypes === undefined) {
     throw new IllegalArgumentError("The eventType is null.");
@@ -209,7 +214,7 @@ export function subscribeToDOMEEvents(
               eventType
           );
 
-          if (eventContent.publisherAddress != userEthereumAddress) {
+          if (eventContent.publisherAddress != organizationID) {
             const headers = {
               "Content-Type": "application/json", // Set the Content-Type header to JSON
             };
