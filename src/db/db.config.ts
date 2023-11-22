@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
-
-const mongoURI = 'mongodb://mongodb:27017/DLTInterface';
+import { mongoURI as mongoURI } from "../utils/const";
 
 export const connectToDatabase = async () => {
     try {

@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const collectionSchema = new mongoose.Schema({
     userEthereumAddress: String,
-    rpcAddress: String,
+    rpcAddress: String
 });
 
 const Sessions = mongoose.model('sessions', collectionSchema);
