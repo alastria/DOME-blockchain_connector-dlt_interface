@@ -8,7 +8,7 @@ const debugLog = debug("Routes: ");
 const errorLog = debug("Routes:error ");
 
 router.get("/health", async (req: any, resp: any) => {
-  const heathCheckResponse = {
+  const healthCheckResponse = {
     status: "UP",
     checks: [
       {
@@ -17,7 +17,7 @@ router.get("/health", async (req: any, resp: any) => {
       }
     ]
   };
-  resp.status(200).json(heathCheckResponse);
+  resp.status(200).json(healthCheckResponse);
 });
 
 router.post("/api/v1/configureNode", async (req: any, resp: any) => {
