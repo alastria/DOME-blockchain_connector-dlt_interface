@@ -17,13 +17,12 @@ const errorLog = debug("DLT Interface Service:error ");
 /**
  * Configures a blockchain node as the one to be used for the user's session. The session is managed at cookie level.
  * @param rpcAddress the address of the blockchain node.
- * @param organizationID the user's Ethereum address.
+ * @param organizationID the organizationID hash
  * @param req the HTTP request.
  */
 export async function connectToNode(
     rpcAddress: string,
     organizationID: string,
-    //previousEntityHash: string, 
     req: any
 ) {
     if (rpcAddress === null || rpcAddress === undefined) {
@@ -67,7 +66,7 @@ export async function connectToNode(
  * @param eventType the name of the dome event
  * @param dataLocation the storage or location of the data associated with the event.
  * @param relevantMetadata additional information or metadata relevant to the event.
- * @param organizationID the user's Ethereum address.
+ * @param organizationID the organizationID hash
  * @param rpcAddress the address of the blockchain node
  */
 export async function publishDOMEEvent(
@@ -142,7 +141,7 @@ export async function publishDOMEEvent(
  * @param rpcAddress the blockchain node address to be used for event subscription.
  * @param notificationEndpoint the user's endpoint to be notified to of the events of interest.
  *                             The notification is sent as a POST.
- * @param organizationID the user's Ethereum address.
+ * @param organizationID the organizationID hash
  */
 export function subscribeToDOMEEvents(
     eventTypes: string[],
