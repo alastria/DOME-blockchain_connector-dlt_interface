@@ -29,7 +29,7 @@ export async function connectToNode(
         throw new IllegalArgumentError("The rpc address is null.");
     }
     if (iss === null || iss === undefined) {
-        throw new IllegalArgumentError("The ethereum address is null.");
+        throw new IllegalArgumentError("The the identifier is null.");
     }
 
     debugLog(">>> Connecting to blockchain node...");
@@ -85,7 +85,7 @@ export async function publishDOMEEvent(
         throw new IllegalArgumentError("The dataLocation is null.");
     }
     if (iss === null || iss === undefined) {
-        throw new IllegalArgumentError("The user ethereum address is null.");
+        throw new IllegalArgumentError("The user the identifier is null.");
     }
     if (previousEntityHash === null || previousEntityHash === undefined) {
         throw new IllegalArgumentError("The previousEntityHash is null.");
