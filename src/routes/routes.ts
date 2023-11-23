@@ -14,7 +14,7 @@ router.get("/api/v1/check", async (req: any, resp: any) => {
 router.post("/api/v1/configureNode", async (req: any, resp: any) => {
   debugLog("Entry call from origin: ", req.headers.origin);
   try {
-    await connectToNode(req.body.rpcAddress, req.body.organizationID, req);
+    await connectToNode(req.body.rpcAddress, req.body.iss, req);
     resp.status(200).send("OK");
   } catch (error: any) {
     if(error == IllegalArgumentError){
@@ -35,7 +35,7 @@ router.post("/api/v1/publishEvent", async (req: any, resp: any) => {
         req.body.dataLocation,
         req.body.relevantMetadata,
         req.body.previousEntityHash,
-        req.session.organizationID,
+        req.session.iss,
         req.session.rpcAddress
     );
     resp.status(200).send("OK");
@@ -53,7 +53,7 @@ router.post("/api/v1/publishEvent", async (req: any, resp: any) => {
 router.post('/api/v1/subscribe', async (req: any, resp: any) => {
   debugLog("Entry call from origin: ", req.headers.origin);
   try {
-    subscribeToDOMEEvents(req.body.eventTypes, req.session.rpcAddress, req.body.notificationEndpoint, req.session.organizationID);
+    subscribeToDOMEEvents(req.body.eventTypes, req.session.rpcAddress, req.body.notificationEndpoint, req.session.iss);
     resp.status(200).send("OK");
   } catch (error: any) {
     if(error == NotificationEndpointError){
