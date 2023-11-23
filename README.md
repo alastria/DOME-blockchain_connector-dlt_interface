@@ -34,7 +34,7 @@ You can see the OpenAPI specification at `/docs`
 
 
 # Acknowledgments
-Thanks to DOME project teams, [Alastria](https://alastria.io/), and [IN2](https://digitelts.es/) for their contributions to our project and their expertise at a proceedings and technical level. We are honored to have work with such professional and king partners, and we look forward to future collaborations together.
+Thanks to DOME project teams, [Alastria](https://alastria.io/), and [IN2](https://digitelts.es/) for their contributions to our project and their expertise at a proceedings and technical level. We are honored to have work with such professional and kind partners, and we look forward to future collaborations together.
 
 # Authors
 - [DigitelTS](https://digitelts.com/), [Alejandro Nieto](mailto:alejandro.nieto@madisonmk.com)
