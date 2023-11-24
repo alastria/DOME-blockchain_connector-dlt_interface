@@ -1,11 +1,12 @@
 import mongoose from 'mongoose';
 
-const collectionSchema = new mongoose.Schema({
+
+const sessionCollectionSchema = new mongoose.Schema({
     userEthereumAddress: String,
     rpcAddress: String
 });
 
-const Sessions = mongoose.model('sessions', collectionSchema);
+const Sessions = mongoose.model('sessions', sessionCollectionSchema);
 
 export function saveSession(data: any) {
     const newUserSession = new Sessions(data);
