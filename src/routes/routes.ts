@@ -43,6 +43,7 @@ router.post("/api/v1/publishEvent", async (req: any, resp: any) => {
       req.body.eventType,
       req.body.dataLocation,
       req.body.relevantMetadata,
+      req.body.entityIDHash,
       req.session.userEthereumAddress,
       req.session.rpcAddress
     );

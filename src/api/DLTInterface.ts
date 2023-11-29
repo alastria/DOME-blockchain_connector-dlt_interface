@@ -68,13 +68,16 @@ export async function connectToNode(
  * @param relevantMetadata additional information or metadata relevant to the event.
  * @param userEthereumAddress the user's Ethereum address.
  * @param rpcAddress the address of the blockchain node
+ * @param entityIDHash entity identifier hash
  */
 export async function publishDOMEEvent(
   eventType: string,
   dataLocation: string,
   relevantMetadata: Array<string>,
   userEthereumAddress: string,
-  rpcAddress: string
+  rpcAddress: string, 
+  entityIDHash: string
+
 ) {
   if (eventType === null || eventType === undefined) {
     throw new IllegalArgumentError("The eventType is null.");
@@ -88,6 +91,9 @@ export async function publishDOMEEvent(
   if (rpcAddress === null || rpcAddress === undefined) {
     throw new IllegalArgumentError("The rpc address is null.");
   }
+  if (entityIDHash === null || entityIDHash === undefined) {
+    throw new IllegalArgumentError("Th entity identifier hash is null.");
+  }
 
   try {
     debugLog(">>> Publishing event to blockchain node...");
@@ -97,6 +103,7 @@ export async function publishDOMEEvent(
       eventType,
       dataLocation,
       relevantMetadata,
+      entityIDHash
     });
 
     const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
@@ -118,7 +125,8 @@ export async function publishDOMEEvent(
       userEthereumAddress,
       eventType,
       dataLocation,
-      relevantMetadata
+      relevantMetadata,
+      entityIDHash
     );
     debugLog("  > Transaction waiting to be mined...");
     await tx.wait();
@@ -176,7 +184,7 @@ export function subscribeToDOMEEvents(
 
     DOMEEventsContract.on(
       "EventDOMEv1",
-      (index, timestamp, origin, eventType, dataLocation, metadata) => {
+      (index, timestamp, origin, eventType, dataLocation, metadata, entityIDHash) => {
         if (eventTypes.includes(eventType)) {
           const eventContent = {
             id: index,
@@ -185,6 +193,7 @@ export function subscribeToDOMEEvents(
             timestamp: timestamp,
             dataLocation: dataLocation,
             relevantMetadata: metadata,
+            entityIDHash: entityIDHash
           };
 
           debugLog(" > Event Content:", {
