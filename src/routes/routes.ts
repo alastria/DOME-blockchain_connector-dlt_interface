@@ -1,7 +1,8 @@
 import { connectToNode, subscribeToDOMEEvents, publishDOMEEvent } from "../api/DLTInterface";
 import express from "express";
 import debug from "debug";
-
+import { IllegalArgumentError } from "../exceptions/IllegalArgumentError";
+import { NotificationEndpointError } from "../exceptions/NotificationEndpointError";
 
 const router = express.Router();
 const debugLog = debug("Routes: ");
