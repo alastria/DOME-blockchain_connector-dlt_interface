@@ -6,6 +6,9 @@ import {
 } from "../utils/const";
 import axios from "axios";
 
+import { IllegalArgumentError } from "../exceptions/IllegalArgumentError";
+import { NotificationEndpointError } from "../exceptions/NotificationEndpointError";
+
 const debugLog = debug("DLT Interface Service: ");
 const errorLog = debug("DLT Interface Service:error ");
 
@@ -29,7 +32,7 @@ export async function connectToNode(
         throw new IllegalArgumentError("The rpc address is null.");
     }
     if (iss === null || iss === undefined) {
-        throw new IllegalArgumentError("The the identifier is null.");
+        throw new IllegalArgumentError("The iss identifier is null.");
     }
 
     debugLog(">>> Connecting to blockchain node...");
@@ -87,10 +90,10 @@ export async function publishDOMEEvent(
         throw new IllegalArgumentError("The dataLocation is null.");
     }
     if (iss === null || iss === undefined) {
-        throw new IllegalArgumentError("The user the identifier is null.");
+        throw new IllegalArgumentError("The iss identifier is null.");
     }
     if (entityIDHash === null || entityIDHash === undefined) {
-        throw new IllegalArgumentError("Th entity identifier hash is null.");
+        throw new IllegalArgumentError("The entity identifier hash is null.");
     }
     if (previousEntityHash === null || previousEntityHash === undefined) {
         throw new IllegalArgumentError("The previousEntityHash is null.");
