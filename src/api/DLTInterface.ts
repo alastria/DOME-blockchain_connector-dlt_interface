@@ -100,10 +100,10 @@ export async function publishDOMEEvent(
 
     debugLog("  > Entry Data:", {
       userEthereumAddress,
+      entityIDHash,
       eventType,
       dataLocation,
-      relevantMetadata,
-      entityIDHash
+      relevantMetadata
     });
 
     const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
@@ -123,10 +123,10 @@ export async function publishDOMEEvent(
     debugLog("  > Publishing event to blockchain node...");
     const tx = await domeEventsContractWithSigner.emitNewEvent(
       userEthereumAddress,
+      entityIDHash
       eventType,
       dataLocation,
-      relevantMetadata,
-      entityIDHash
+      relevantMetadata
     );
     debugLog("  > Transaction waiting to be mined...");
     await tx.wait();
@@ -184,7 +184,7 @@ export function subscribeToDOMEEvents(
 
     DOMEEventsContract.on(
       "EventDOMEv1",
-      (index, timestamp, origin, eventType, dataLocation, metadata, entityIDHash) => {
+      (index, timestamp, origin, entityIDHash, eventType, dataLocation, metadata) => {
         if (eventTypes.includes(eventType)) {
           const eventContent = {
             id: index,
@@ -203,6 +203,7 @@ export function subscribeToDOMEEvents(
             eventType,
             dataLocation,
             metadata,
+            entityIDHash
           });
 
           debugLog(
