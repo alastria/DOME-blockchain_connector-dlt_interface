@@ -43,8 +43,9 @@ router.post("/api/v1/publishEvent", async (req: any, resp: any) => {
         req.body.eventType,
         req.body.dataLocation,
         req.body.relevantMetadata,
-        req.body.previousEntityHash,
         req.session.iss,
+        req.body.entityId,
+        req.body.previousEntityHash,
         req.session.rpcAddress
     );
     resp.status(200).send("OK");

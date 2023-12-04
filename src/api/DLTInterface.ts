@@ -68,12 +68,14 @@ export async function connectToNode(
  * @param relevantMetadata additional information or metadata relevant to the event.
  * @param iss the organization identifier hash
  * @param rpcAddress the address of the blockchain node
+ * @param entityIDHash entity identifier hash
  */
 export async function publishDOMEEvent(
     eventType: string,
     dataLocation: string,
     relevantMetadata: Array<string>,
     iss: string,
+    entityIDHash: string,
     previousEntityHash: string,
     rpcAddress: string
 ) {
@@ -87,6 +89,9 @@ export async function publishDOMEEvent(
     if (iss === null || iss === undefined) {
         throw new IllegalArgumentError("The user the identifier is null.");
     }
+    if (entityIDHash === null || entityIDHash === undefined) {
+        throw new IllegalArgumentError("Th entity identifier hash is null.");
+    }
     if (previousEntityHash === null || previousEntityHash === undefined) {
         throw new IllegalArgumentError("The previousEntityHash is null.");
     }
@@ -99,6 +104,7 @@ export async function publishDOMEEvent(
 
         debugLog("  > Entry Data:", {
             iss,
+            entityIDHash,
             previousEntityHash,
             eventType,
             dataLocation,
@@ -122,7 +128,7 @@ export async function publishDOMEEvent(
         debugLog("  > Publishing event to blockchain node...");
         const tx = await domeEventsContractWithSigner.emitNewEvent(
             iss,
-            previousEntityHash,
+            entityIDHash,
             eventType,
             dataLocation,
             relevantMetadata
@@ -188,6 +194,7 @@ export function subscribeToDOMEEvents(
                     const eventContent = {
                         id: index,
                         publisherAddress: origin,
+                        entityIDHash: entityIDHash,
                         previousEntityIDHash: entityIDHash,
                         eventType: eventType,
                         timestamp: timestamp,
