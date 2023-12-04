@@ -99,6 +99,7 @@ export async function publishDOMEEvent(
 
         debugLog("  > Entry Data:", {
             iss,
+            previousEntityHash,
             eventType,
             dataLocation,
             relevantMetadata,
@@ -121,6 +122,7 @@ export async function publishDOMEEvent(
         debugLog("  > Publishing event to blockchain node...");
         const tx = await domeEventsContractWithSigner.emitNewEvent(
             iss,
+            previousEntityHash,
             eventType,
             dataLocation,
             relevantMetadata
@@ -181,11 +183,12 @@ export function subscribeToDOMEEvents(
 
         DOMEEventsContract.on(
             "EventDOMEv1",
-            (index, timestamp, origin, eventType, dataLocation, metadata) => {
+            (index, timestamp, origin, entityIDHash, eventType, dataLocation, metadata) => {
                 if (eventTypes.includes(eventType)) {
                     const eventContent = {
                         id: index,
                         publisherAddress: origin,
+                        previousEntityIDHash: entityIDHash,
                         eventType: eventType,
                         timestamp: timestamp,
                         dataLocation: dataLocation,
@@ -196,6 +199,7 @@ export function subscribeToDOMEEvents(
                         index,
                         timestamp,
                         origin,
+                        entityIDHash,
                         eventType,
                         dataLocation,
                         metadata,
