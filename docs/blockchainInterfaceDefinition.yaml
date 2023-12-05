@@ -80,7 +80,14 @@ paths:
             text/html; charset=utf-8:
               schema:
                 type: string
-              examples: {}
+              example: OK.
+        "400":
+          description: Auto generated using Swagger Inspector
+          content:
+            text/html; charset=utf-8:
+              schema:
+                type: string
+              example: Error connecting to the blockchain node.
       servers:
       - url: http://localhost:8080
     servers:
