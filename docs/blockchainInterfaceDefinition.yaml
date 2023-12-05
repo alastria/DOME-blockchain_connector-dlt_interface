@@ -7,6 +7,29 @@ info:
 servers:
 - url: http://localhost:8080
 paths:
+  /health:
+    get:
+      description: Auto generated using Swagger Inspector
+      responses:
+        "200":
+          description: Auto generated using Swagger Inspector
+          content:
+            text/html; charset=utf-8:
+              schema:
+                type: string
+              example: {
+                        status: "UP",
+                        checks: [
+                                  {
+                                    name: "Blockchain connector health check",
+                                    status: "UP"
+                                  }
+                                ]
+                      }
+      servers:
+      - url: http://localhost:8080
+    servers:
+    - url: http://localhost:8080
   /api/v1/configureNode:
     post:
       description: Auto generated using Swagger Inspector
