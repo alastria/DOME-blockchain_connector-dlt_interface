@@ -97,7 +97,7 @@ paths:
               $ref: '#/components/schemas/v1_publishEvent_body'
             examples:
               "0":
-                value: "{\r\n    \"eventType\": \"ProductAdded\",\r\n    \"eventDataLocation\": \"x\",\r\n    \"eventRelevantMetadata\": [\"veryRelevant1\", \"veryRelevant2\"]\r\n}"
+                value: "{\r\n    \"eventType\": \"ProductAdded\",\r\n    \"eventDataLocation\": \"x\",\r\n    \"relevantMetadata\": [\"veryRelevant1\", \"veryRelevant2\"],\r\n \"entityId\": \"0x626c756500000000000000000000000000000000000000000000000000000000\",\r\n \"previousEntityHash\": \"0x626c756500000000000000000000000000000000000000000000000000000000\"}"
       responses:
         "200":
           description: Auto generated using Swagger Inspector
@@ -105,7 +105,14 @@ paths:
             text/html; charset=utf-8:
               schema:
                 type: string
-              examples: {}
+              example: "OK"
+        "400":
+          description: Auto generated using Swagger Inspector
+          content:
+            text/html; charset=utf-8:
+              schema:
+                type: string
+              example: Error connecting to the blockchain node.
       servers:
       - url: http://localhost:8080
     servers:
@@ -122,7 +129,7 @@ components:
             type: string
         eventType:
           type: string
-        eventDataLocation:
+        dataLocation:
           type: string
     v1_subscribe_body:
       type: object
