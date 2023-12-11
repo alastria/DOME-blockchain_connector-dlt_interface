@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const collectionSchema = new mongoose.Schema({
-    userEthereumAddress: String,
+    iss: String,
     rpcAddress: String
 });
 
@@ -18,14 +18,14 @@ export function saveSession(data: any) {
         });
 };
 
-export async function getSessionByEthAddress(ethAddress: string, req: any) {
+export async function getSessionByISS(iss: string, req: any) {
     console.log(" > Getting user session..");
     try {
-        let session = await Sessions.find({ userEthereumAddress: ethAddress }).limit(1);
+        let session = await Sessions.find({ iss: iss }).limit(1);
         if (session === undefined || session.length === 0) {
             return 0;
         } else {
-            req.session.userEthereumAddress = session[0].userEthereumAddress;
+            req.session.iss = session[0].iss;
             req.session.rpcAddress = session[0].rpcAddress;
             return 1;
         }
