@@ -72,7 +72,6 @@ describe("POST /api/v1/subscribe", () => {
 });
 
 describe("POST /api/v1/publishEvent", () => {
-    //Solve timeout
     it("Event publication", async () => {
         await configureNode();
         await subscribeSingleEvent();
