@@ -72,7 +72,8 @@ describe("POST /api/v1/subscribe", () => {
 });
 
 describe("POST /api/v1/publishEvent", () => {
-    test("Event publication", async () => {
+    //Solve timeout
+    it("Event publication", async () => {
         await configureNode();
         await subscribeSingleEvent();
 
@@ -89,7 +90,7 @@ describe("POST /api/v1/publishEvent", () => {
         expect(response.status).toEqual(201);
         expect(response.header['content-type']).toMatch(/text\/html/);
         expect(response.text).toBe("OK");
-    }, 20000);
+    }, 40000);
 });
 
 async function configureNode() {

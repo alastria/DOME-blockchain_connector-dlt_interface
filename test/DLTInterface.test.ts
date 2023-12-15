@@ -61,8 +61,6 @@ describe('subscribeToDOMEEvents', () => {
     }
   });
   it('publishes a DOME event to the blockchain', async () => {
-
-
     const eventType = 'eventType1';
     const dataLocation = 'testDataLocation';
     const relevantMetadata = ['metadata1', 'metadata2'];
