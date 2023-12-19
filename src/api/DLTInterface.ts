@@ -371,7 +371,7 @@ export async function getActiveDOMEEventsByDate(
     let eventTimestampHex = event.args![1]._hex;
     eventJson.args![0] = BigNumber.from(eventIndexHex).toNumber();
     eventJson.args![1] = BigNumber.from(eventTimestampHex).toNumber() * 1000;
-    ActiveDOMEEvents.push(eventJson.args);
+    allActiveDOMEEvents.push(eventJson.args);
   });
 
   debugLog("The active DOME Events to be returned are the following:\n");
