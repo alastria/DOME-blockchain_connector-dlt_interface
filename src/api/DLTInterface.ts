@@ -363,14 +363,18 @@ export async function getActiveDOMEEventsByDate(
     }
   }
 
-  debugLog(await allActiveEvents);
-  let allActiveDOMEEvents = [];
-  allActiveDOMEEvents.push(await allActiveEvents.forEach((event) => {
+  let allActiveDOMEEvents: object[] = [];
+  await allActiveEvents.forEach((event) => {
     let eventJson = JSON.parse(JSON.stringify(event));
+    console.log(JSON.stringify(event));
     let eventIndexHex = event.args![0]._hex;
     let eventTimestampHex = event.args![1]._hex;
-    eventJson.args![0] = BigNumber.from(eventIndexHex).toNumber(); 
-    eventJson.args![1] = BigNumber.from(eventTimestampHex).toNumber() * 1000; 
-    return eventJson.args!}))
+    eventJson.args![0] = BigNumber.from(eventIndexHex).toNumber();
+    eventJson.args![1] = BigNumber.from(eventTimestampHex).toNumber() * 1000;
+    ActiveDOMEEvents.push(eventJson.args);
+  });
+
+  debugLog("The active DOME Events to be returned are the following:\n");
+  debugLog(await allActiveEvents);
   return allActiveDOMEEvents;
 }
