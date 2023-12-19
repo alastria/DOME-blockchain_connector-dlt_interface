@@ -337,7 +337,7 @@ export async function getActiveDOMEEventsByDate(
       debugLog(
         "  > The dates of the events with the same EntityIDHash are the following:\n"
       );
-      await eventsWithSameEntityIDHash.forEach((eventWithSameID) => {
+      eventsWithSameEntityIDHash.forEach((eventWithSameID) => {
         let eventWithSameIDDateHexBigNumber = eventWithSameID.args![1]._hex;
         let eventWithSameIDDateMilisecondsFromEpoch =
           BigNumber.from(eventWithSameIDDateHexBigNumber).toNumber() * 1000;
@@ -364,7 +364,7 @@ export async function getActiveDOMEEventsByDate(
   }
 
   let allActiveDOMEEvents: object[] = [];
-  await allActiveEvents.forEach((event) => {
+  allActiveEvents.forEach((event) => {
     let eventJson = JSON.parse(JSON.stringify(event));
     console.log(JSON.stringify(event));
     let eventIndexHex = event.args![0]._hex;
