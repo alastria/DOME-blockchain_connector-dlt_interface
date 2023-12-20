@@ -351,15 +351,12 @@ export async function getActiveDOMEEventsByDate(
           eventsWithSameEntityIDHash.length +
           " from the list of event dates showed just before."
       );
+    alreadyCheckedIDEntityHashes.set(entityIDHashToFilterWith, true);
 
-      if (
-        !allActiveEvents.find(
-          (event: any) => event.args[3] === entityIDHashToFilterWith
-        )
-      ) {
+
+      
         allActiveEvents.push(activeEvent);
         debugLog("  > Updated the list of active events:\n" + allActiveEvents);
-      }
     }
   }
 
