@@ -7,6 +7,29 @@ info:
 servers:
 - url: http://localhost:8080
 paths:
+  /health:
+    get:
+      description: Auto generated using Swagger Inspector
+      responses:
+        "200":
+          description: Auto generated using Swagger Inspector
+          content:
+            text/html; charset=utf-8:
+              schema:
+                type: string
+              example: {
+                        status: "UP",
+                        checks: [
+                                  {
+                                    name: "Blockchain connector health check",
+                                    status: "UP"
+                                  }
+                                ]
+                      }
+      servers:
+      - url: http://localhost:8080
+    servers:
+    - url: http://localhost:8080
   /api/v1/configureNode:
     post:
       description: Auto generated using Swagger Inspector
@@ -17,7 +40,7 @@ paths:
               $ref: '#/components/schemas/v1_configureNode_body'
             examples:
               "0":
-                value: "{\r\n    \"rpcAddress\": \"https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6\",\r\n    \"publicKeyHex\": \"0xb794f5ea0ba39494ce839613fffba74279579268\"\r\n}"
+                value: "{\r\n    \"rpcAddress\": \"https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6\",\r\n    \"iss\": \"0xb794f5ea0ba39494ce839613fffba742795792680x626c756500000000000000000000000000000000000000000000000000000000\"\r\n}"
       responses:
         "200":
           description: Auto generated using Swagger Inspector
@@ -25,7 +48,14 @@ paths:
             text/html; charset=utf-8:
               schema:
                 type: string
-              examples: {}
+              example: OK
+        "400":
+          description: Error 
+          content:
+            text/html; charset=utf-8:
+              schema:
+                type: string
+              example: Error connecting to the blockchain node.
       servers:
       - url: http://localhost:8080
     servers:
@@ -50,7 +80,14 @@ paths:
             text/html; charset=utf-8:
               schema:
                 type: string
-              examples: {}
+              example: OK.
+        "400":
+          description: Auto generated using Swagger Inspector
+          content:
+            text/html; charset=utf-8:
+              schema:
+                type: string
+              example: Error connecting to the blockchain node.
       servers:
       - url: http://localhost:8080
     servers:
@@ -67,7 +104,7 @@ paths:
               $ref: '#/components/schemas/v1_publishEvent_body'
             examples:
               "0":
-                value: "{\r\n    \"eventType\": \"ProductAdded\",\r\n    \"eventDataLocation\": \"x\",\r\n    \"eventRelevantMetadata\": [\"veryRelevant1\", \"veryRelevant2\"]\r\n}"
+                value: "{\r\n    \"eventType\": \"ProductAdded\",\r\n    \"eventDataLocation\": \"x\",\r\n    \"relevantMetadata\": [\"veryRelevant1\", \"veryRelevant2\"],\r\n \"entityId\": \"0x626c756500000000000000000000000000000000000000000000000000000000\",\r\n \"previousEntityHash\": \"0x626c756500000000000000000000000000000000000000000000000000000000\"}"
       responses:
         "200":
           description: Auto generated using Swagger Inspector
@@ -75,7 +112,14 @@ paths:
             text/html; charset=utf-8:
               schema:
                 type: string
-              examples: {}
+              example: "OK"
+        "400":
+          description: Auto generated using Swagger Inspector
+          content:
+            text/html; charset=utf-8:
+              schema:
+                type: string
+              example: Error connecting to the blockchain node.
       servers:
       - url: http://localhost:8080
     servers:
@@ -92,7 +136,7 @@ components:
             type: string
         eventType:
           type: string
-        eventDataLocation:
+        dataLocation:
           type: string
     v1_subscribe_body:
       type: object
@@ -106,7 +150,7 @@ components:
     v1_configureNode_body:
       type: object
       properties:
-        publicKeyHex:
+        iss:
           type: string
         rpcAddress:
           type: string
