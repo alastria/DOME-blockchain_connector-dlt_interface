@@ -4,21 +4,42 @@
 
 replicaCount: 2
 
-containers:
-  - name: dlt-adapter
-    image:
-      repository:  quay.io/digitelts/dlt-adapter:1.2.1
-      pullPolicy: latest 
-      tag: "" 
-    ports:
-      containerPort: 8080
-    env:
-      - name: PRIVATE_KEY
-        value: "0xe2afef2c880b138d741995ba56936e389b0b5dd2943e21e4363cc70d81c89346"
+image:
+  repository:  quay.io/digitelts/dlt-adapter
+  pullPolicy: Always 
+  tag: "" 
+port: 8080
 
 service:
   type: ClusterIP
   port: 80
+
+livenessProbe:
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 30
+readinessProbe:
+  initialDelaySeconds: 31
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 30
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+## configuration for prometheus monitoring
+prometheus:
+  # -- should prometheus scrape be enabled
+  enabled: false
+  # -- path for prometheus scrape
+  path: /prometheus
+  # -- port prometheus scrape is available at
+  port: 8081
 
 imagePullSecrets: []
 nameOverride: ""
@@ -46,7 +67,6 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
-
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user.
@@ -59,12 +79,7 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
+
 
 nodeSelector: {}
 
@@ -72,11 +87,3 @@ tolerations: []
 
 affinity: {}
 
-## configuration for prometheus monitoring
-prometheus:
-  # -- should prometheus scrape be enabled
-  enabled: false
-  # -- path for prometheus scrape
-  path: /prometheus
-  # -- port prometheus scrape is available at
-  port: 8081
