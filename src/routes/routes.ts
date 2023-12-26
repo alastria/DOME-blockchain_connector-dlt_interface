@@ -18,7 +18,7 @@ router.get("/health", async (req: any, resp: any) => {
       }
     ]
   };
-  resp.status(200).json(healthCheckResponse);
+  await resp.json(healthCheckResponse).status(200);
 });
 
 router.post("/api/v1/configureNode", async (req: any, resp: any) => {
@@ -33,7 +33,7 @@ router.post("/api/v1/configureNode", async (req: any, resp: any) => {
     }
 
     errorLog("Error:\n ", error);
-    resp.status(400).send("Error connecting to the blockchain node.");
+    resp.send("Error connecting to the blockchain node.").status(400);
   }
 });
 
@@ -57,7 +57,7 @@ router.post("/api/v1/publishEvent", async (req: any, resp: any) => {
     }
 
     errorLog("Error:\n ", error);
-    resp.status(400).send("Error connecting to the blockchain node.");
+    resp.send("Error connecting to the blockchain node.").status(400);
   }
 });
 
@@ -73,7 +73,7 @@ router.post('/api/v1/subscribe', async (req: any, resp: any) => {
     }
 
     debugLog("Error:\n ", error);
-    resp.status(400).send("Error connecting to the blockchain node.");
+    resp.send("Error connecting to the blockchain node.").status(400);
   }
 })
 
