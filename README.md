@@ -25,6 +25,7 @@ You can see the OpenAPI specification at `/docs`
 ## Installing
 - Clone the DLT Adapter project `git clone git@github.com:alastria/DOME-blockchain_connector-dlt_interface.git`
 - Put the private key of the Ethereum account that is going to be publishing the events through the blockchain node in the `.env` file.
+- Put the secret to be used to generated the cookies in the `.env` file.
 - Create the Docker image of the component by using the Dockerfile at the root directory of the project.
 - Execute the image in a docker container.
 - The REST API will be available at http://localhost:8080/
