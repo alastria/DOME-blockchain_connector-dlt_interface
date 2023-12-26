@@ -57,7 +57,7 @@ app.use(session({
     resave: false,
     saveUninitialized: true,
     cookie: {
-        secure: true,            //setting this false for http connections
+        secure: false,            //setting this false for http connections
     },
     name: "sessionCookieDOME"
 }))
