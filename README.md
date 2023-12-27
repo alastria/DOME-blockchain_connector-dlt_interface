@@ -1,3 +1,14 @@
+[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=digitelts_dlt-adapter)](https://sonarcloud.io/summary/new_code?id=digitelts_dlt-adapter)
+
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=digitelts_dlt-adapter&metric=bugs)](https://sonarcloud.io/summary/new_code?id=digitelts_dlt-adapter)[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=digitelts_dlt-adapter&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=digitelts_dlt-adapter)
+
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=digitelts_dlt-adapter&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=digitelts_dlt-adapter)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=digitelts_dlt-adapter&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=digitelts_dlt-adapter)
+
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=digitelts_dlt-adapter&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=digitelts_dlt-adapter)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=digitelts_dlt-adapter&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=digitelts_dlt-adapter)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=digitelts_dlt-adapter&metric=coverage)](https://sonarcloud.io/summary/new_code?id=digitelts_dlt-adapter)
+
 # Introduction
 The DLT Adapter, also referred to as the DLT Interface is a component used by the Blockchain Connector to interact with the Blockchain technology in a transparent way. It is provided as a REST API.
 
