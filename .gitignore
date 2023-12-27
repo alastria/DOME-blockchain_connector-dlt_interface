@@ -51,3 +51,7 @@ Thumbs.db
 *.wmv
 
 package-lock.json
+privatekey
+helmCharts/mycharttest
+.scannerwork
+project.json
