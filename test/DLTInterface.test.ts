@@ -7,28 +7,25 @@ import {
   domeEventsContractAddress as domeEventsContractAddress,
 } from "../src/utils/const";
 
-describe('Configure Bblockchain node', () => {
+describe('Configure blockchain node', () => {
+
   it('should configure the session with the provided blockchain node', async () => {
-    const session = {
-      provider: ' {"_isProvider":true,"_events":[],"_emitted":{"block":-2},"disableCcipRead":false,"formatter":{"formats":{"transaction":{},"transactionRequest":{},"receiptLog":{},"receipt":{},"block":{},"blockWithTransactions":{},"filter":{},"filterLog":{}}},"anyNetwork":false,"_networkPromise":{},"_maxInternalBlockNumber":-1024,"_lastBlockNumber":-2,"_maxFilterBlockRange":10,"_pollingInterval":4000,"_fastQueryDate":0,"connection":{"url":"https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6"},"_nextId":42}',
-      userEthereumAddress: '0xb794f5ea0ba39494ce839613fffba74279579268',
-      rpcAddress: 'https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6',
-    };
-    const userEthereumAddress = '0xb794f5ea0ba39494ce839613fffba74279579268';
+    let session = {iss: "", rpcAddress: ""};
+    const iss = '0x43b27fef24cfe8a0b797ed8a36de2884f9963c0c2a0da640e3ec7ad6cd0c493d';
     const rpcAddress = 'https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6';
-    const req = { session };
-    await connectToNode(rpcAddress, userEthereumAddress, req);
-    expect(session.provider).toBeInstanceOf(ethers.providers.JsonRpcProvider);
-    expect(session.userEthereumAddress).toBe(userEthereumAddress);
-    expect(session.rpcAddress).toBe(rpcAddress);
+    let req = { session };
+    await connectToNode(rpcAddress, iss, req);
+    expect(req.session.iss).toBe(iss);
+    expect(req.session.rpcAddress).toBe(rpcAddress);
   });
 });
+
 jest.mock('ethers');
 describe('subscribeToDOMEEvents', () => {
   it('should subscribe to DOME events', () => {
     const eventTypes = ['eventType1', 'eventType2'];
-    const rpcAddress = 'rpcAddress';
-    const notificationEndpoint = 'notificationEndpoint';
+    const rpcAddress = 'https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6';
+    const notificationEndpoint = 'http://marketplace-blockchain-connector-core-digitelts.com/notifications/blockchain-node';
 
     const simulatedEvent = {
       index: 1,
