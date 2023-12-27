@@ -20,24 +20,23 @@ describe('Express Server Tests', () => {
         expect(response.message).toBe(undefined)
         expect(response.body.message).toBe("not found")
     });
-
-    it('Should respond with "OK" message', async () => {
-        const response = await api.get('/');
-        expect(response.status).toBe(200);
-        expect(response.text).toBe("OK")
-    });
-});
-
-
-
-describe("GET /api/v1/check", () => {
     it("Return HTTP 200 OK", async () => {
-        const response = await api.get('/api/v1/check');
+        const healthCheckResponse = {
+            status: "UP",
+            checks: [
+            {
+                name: "Blockchain connector health check",
+                status: "UP",
+            },
+            ],
+        };
+        const response = await api.get('/health');
         expect(response.status).toEqual(200);
-        expect(response.header['content-type']).toMatch(/text\/html/);
-        expect(response.text).toBe("OK");
+        expect(response.header['content-type']).toMatch(/application\/json/);
+        expect(response.body).toEqual(healthCheckResponse);
     });
 });
+
 
 describe("POST /api/v1/configureNode", () => {
 
@@ -80,6 +79,8 @@ describe("POST /api/v1/publishEvent", () => {
             eventType: 'productAdded',
             dataLocation: 'x',
             relevantMetadata: ['veryRelevant1', 'veryRelevant2'],
+            entityId: "0x626c756500000000000000000000000000000000000000000000000000000001",
+            previousEntityHash:"0x626c756500000000000000000000000000000000000000000000000000000000"
         };
         const response = await api
             .post('/api/v1/publishEvent')
@@ -99,7 +100,7 @@ async function configureNode() {
         .withCredentials()
         .send({
             "rpcAddress": "https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6",
-            "userEthereumAddress": "0xb794f5ea0ba39494ce839613fffba74279579268"
+            "iss": "0x43b27fef24cfe8a0b797ed8a36de2884f9963c0c2a0da640e3ec7ad6cd0c493d"
         });
     console.log(response.headers['set-cookie'])
 
