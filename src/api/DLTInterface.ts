@@ -94,7 +94,6 @@ export async function publishDOMEEvent(
 
   try {
     debugLog(">>> Publishing event to blockchain node...");
-    
 
     debugLog("  > Entry Data:", {
       iss,
@@ -143,7 +142,7 @@ export async function publishDOMEEvent(
  * @param rpcAddress the blockchain node address to be used for event subscription.
  * @param notificationEndpoint the user's endpoint to be notified to of the events of interest.
  *                             The notification is sent as a POST.
- * @param handler an optional function to handle the events. 
+ * @param handler an optional function to handle the events.
  * @param ownIss the organization identifier hash
  */
 export function subscribeToDOMEEvents(
@@ -151,7 +150,7 @@ export function subscribeToDOMEEvents(
   rpcAddress: string,
   ownIss: string,
   notificationEndpoint?: string,
-  handler?: (event: object) => void 
+  handler?: (event: object) => void
 ) {
   if (eventTypes === null || eventTypes === undefined) {
     throw new IllegalArgumentError("The eventType is null.");
@@ -162,7 +161,6 @@ export function subscribeToDOMEEvents(
   if (rpcAddress === null || rpcAddress === undefined) {
     throw new IllegalArgumentError("The rpc address is null.");
   }
-
 
   try {
     debugLog(">>> Subscribing to DOME Events...");
@@ -192,51 +190,52 @@ export function subscribeToDOMEEvents(
         dataLocation,
         metadata
       ) => {
-        if (eventTypes.includes(eventType)) {
-          const eventContent = {
-            id: index,
-            publisherAddress: origin,
-            entityIDHash: entityIDHash,
-            previousEntityIDHash: entityIDHash,
-            eventType: eventType,
-            timestamp: timestamp,
-            dataLocation: dataLocation,
-            relevantMetadata: metadata,
-          };
+        if (!eventTypes.includes(eventType)) {
+          return;
+        }
+        const eventContent = {
+          id: index,
+          publisherAddress: origin,
+          entityIDHash: entityIDHash,
+          previousEntityIDHash: entityIDHash,
+          eventType: eventType,
+          timestamp: timestamp,
+          dataLocation: dataLocation,
+          relevantMetadata: metadata,
+        };
 
-          debugLog(" > Event Content:", {
-            index,
-            timestamp,
-            origin,
-            entityIDHash,
-            eventType,
-            dataLocation,
-            metadata,
-          });
+        debugLog(" > Event Content:", {
+          index,
+          timestamp,
+          origin,
+          entityIDHash,
+          eventType,
+          dataLocation,
+          metadata,
+        });
 
-          debugLog(
-            " > Event emitted: " +
-              eventType +
-              " with args: " +
-              JSON.stringify(eventContent)
-          );
-          debugLog(
-            " > Checking EventType " +
-              eventContent.eventType +
-              " with the interest for the user " +
-              eventType
-          );
+        debugLog(
+          " > Event emitted: " +
+            eventType +
+            " with args: " +
+            JSON.stringify(eventContent)
+        );
+        debugLog(
+          " > Checking EventType " +
+            eventContent.eventType +
+            " with the interest for the user " +
+            eventType
+        );
 
-          if (eventContent.publisherAddress != ownIss) {
-            if(notificationEndpoint != undefined){
-              notifyEndpointDOMEEventsHandler(eventContent, notificationEndpoint);
-            }
-            if(handler != undefined){
-                handler(eventContent);
-            }
-          } else {
-            debugLog(" > This event is not of interest for the user.");
-          }
+        if (eventContent.publisherAddress === ownIss) {
+          debugLog(" > This event is not of interest for the user.");
+          return;
+        }
+        if (notificationEndpoint != undefined) {
+          notifyEndpointDOMEEventsHandler(eventContent, notificationEndpoint);
+        }
+        if (handler != undefined) {
+          handler(eventContent);
         }
       }
     );
@@ -249,31 +248,28 @@ export function subscribeToDOMEEvents(
 /**
  * Event handler for DOME events that notifies a specified endpoint.
  * @param event the DOME event to be handled.
- * @param notificationEndpoint the endpoint to be notified of the event. 
+ * @param notificationEndpoint the endpoint to be notified of the event.
  */
-function notifyEndpointDOMEEventsHandler(event: object, notificationEndpoint: string) {
-            const headers = {
-              "Content-Type": "application/json", // Set the Content-Type header to JSON
-            };
-            debugLog(
-              " > Sending notification to endpoint: " + notificationEndpoint
-            );
-            debugLog(
-              " > Notification Content: " + JSON.stringify(event)
-            );
-            axios
-              .post(notificationEndpoint, JSON.stringify(event), {
-                headers,
-              })
-              .then((response) => {
-                debugLog(
-                  " > Response from notification endpoint: " + response.status
-                );
-              })
-              .catch((error) => {
-                errorLog(" > !! Error from notification endpoint:\n" + error);
-                throw new NotificationEndpointError(
-                  "Can't connect to the notification endpoint."
-                );
-              });
+function notifyEndpointDOMEEventsHandler(
+  event: object,
+  notificationEndpoint: string
+) {
+  const headers = {
+    "Content-Type": "application/json", // Set the Content-Type header to JSON
+  };
+  debugLog(" > Sending notification to endpoint: " + notificationEndpoint);
+  debugLog(" > Notification Content: " + JSON.stringify(event));
+  axios
+    .post(notificationEndpoint, JSON.stringify(event), {
+      headers,
+    })
+    .then((response) => {
+      debugLog(" > Response from notification endpoint: " + response.status);
+    })
+    .catch((error) => {
+      errorLog(" > !! Error from notification endpoint:\n" + error);
+      throw new NotificationEndpointError(
+        "Can't connect to the notification endpoint."
+      );
+    });
 }

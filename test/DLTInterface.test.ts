@@ -3,9 +3,7 @@ const ethers = require('ethers');
 import dotenv from "dotenv";
 dotenv.config();
 import {describe, expect, it} from '@jest/globals'
-import { createHash } from "crypto";
-import { randomBytes } from "crypto";
-import { NotificationEndpointError } from "../src/exceptions/NotificationEndpointError";
+import { createHash, randomBytes } from "crypto";
 import { Set } from "typescript";
 import { sleep } from "../src/utils/funcs";
 
