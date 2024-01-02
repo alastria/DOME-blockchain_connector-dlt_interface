@@ -25,7 +25,7 @@
   "scripts": {
     "dev": "nodemon src/server.ts",
     "build": "rm -rf build/ && prettier --write source/ && tsc",
-    "test": "jest --coverage "
+    "test": "jest --coverage --forceExit"
   },
   "author": "",
   "license": "ISC"
