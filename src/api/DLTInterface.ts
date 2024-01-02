@@ -144,13 +144,13 @@ export async function publishDOMEEvent(
  * @param notificationEndpoint the user's endpoint to be notified to of the events of interest.
  *                             The notification is sent as a POST.
  * @param handler an optional function to handle the events. 
- * @param iss the organization identifier hash
+ * @param ownIss the organization identifier hash
  */
 export function subscribeToDOMEEvents(
   eventTypes: string[],
   rpcAddress: string,
-  notificationEndpoint: string,
-  iss: string,
+  ownIss: string,
+  notificationEndpoint?: string,
   handler?: (event: object) => void 
 ) {
   if (eventTypes === null || eventTypes === undefined) {
@@ -162,9 +162,7 @@ export function subscribeToDOMEEvents(
   if (rpcAddress === null || rpcAddress === undefined) {
     throw new IllegalArgumentError("The rpc address is null.");
   }
-  if (notificationEndpoint === null || notificationEndpoint === undefined) {
-    throw new IllegalArgumentError("The notificationEndpoint is null.");
-  }
+
 
   try {
     debugLog(">>> Subscribing to DOME Events...");
@@ -229,8 +227,10 @@ export function subscribeToDOMEEvents(
               eventType
           );
 
-          if (eventContent.publisherAddress != iss) {
-            notifyEndpointDOMEEventsHandler(eventContent, notificationEndpoint);
+          if (eventContent.publisherAddress != ownIss) {
+            if(notificationEndpoint != undefined){
+              notifyEndpointDOMEEventsHandler(eventContent, notificationEndpoint);
+            }
             if(handler != undefined){
                 handler(eventContent);
             }

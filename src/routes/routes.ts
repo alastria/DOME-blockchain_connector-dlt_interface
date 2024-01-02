@@ -76,8 +76,8 @@ router.post("/api/v1/subscribe", (req: any, resp: any) => {
       subscribeToDOMEEvents(
         req.body.eventTypes,
         req.session.rpcAddress,
+        req.session.iss,
         req.body.notificationEndpoint,
-        req.session.iss
       );
       resp.status(201).send("OK");
     } catch (error: any) {

@@ -7,10 +7,11 @@ import { createHash } from "crypto";
 import { randomBytes } from "crypto";
 import { NotificationEndpointError } from "../src/exceptions/NotificationEndpointError";
 import { Set } from "typescript";
+import { sleep } from "../src/utils/funcs";
 
 const eventTypesOfInterest = ['eventType1', 'eventType2'];
 const rpcAddress = 'https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6';
-const notificationEndpoint = 'http://marketplace-blockchain-connector-core-digitelts.com/notifications/blockchain-node';
+const notificationEndpoint = undefined;
 const ownIss = "0x61b27fef24cfe8a0b797ed8a36de2884f9963c0c2a0da640e3ec7ad6cd0c351e"
 const iss = "0x43b27fef24cfe8a0b797ed8a36de2884f9963c0c2a0da640e3ec7ad6cd0c493d";
 
@@ -36,7 +37,7 @@ describe('DOME events subscription', () => {
 
     const correctEventTypeOne = {
       origin: iss,
-      entityIDHash: createHash('sha256').update(entityIdOne).digest('hex'),
+      entityIDHash: "0x" + createHash('sha256').update(entityIdOne).digest('hex'),
       previousEntityHash: "0x743c956500000000001000000070000000600000000000300000000050000000",
       eventType: 'eventType1',
       dataLocation: 'dataLocation1',
@@ -45,7 +46,7 @@ describe('DOME events subscription', () => {
     
     const correctEventTypeTwo = {
       origin: iss,
-      entityIDHash: createHash('sha256').update(entityIdTwo).digest('hex'),
+      entityIDHash: "0x" + createHash('sha256').update(entityIdTwo).digest('hex'),
       previousEntityHash: "0x843c956500000000001000000070000000600000000000300000000050000000",
       eventType: 'eventType2',
       dataLocation: correctEventTypeOne.dataLocation,
@@ -54,22 +55,23 @@ describe('DOME events subscription', () => {
 
     const ownIssAsOriginEvent = {
       origin: ownIss,
-      entityIDHash: createHash('sha256').update(entityIdThree).digest('hex'),
+      entityIDHash: "0x" + createHash('sha256').update(entityIdThree).digest('hex'),
       previousEntityHash: "0x843c956500000000001000000070000000600000000000300000000050000000",
       eventType: correctEventTypeTwo.eventType,
       dataLocation: correctEventTypeOne.dataLocation,
       metadata: [],
     };
 
+    let entityIDHashesOfReceivedEvents = new Set<string>();
+    subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)});
     await publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.dataLocation, correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIDHash, correctEventTypeOne.previousEntityHash, rpcAddress);
     await publishDOMEEvent(correctEventTypeTwo.eventType, correctEventTypeTwo.dataLocation, correctEventTypeTwo.metadata, iss, correctEventTypeTwo.entityIDHash, correctEventTypeTwo.previousEntityHash, rpcAddress);
-    let entityIDHashesOfReceivedEvents = new Set<string>();
-    expect(() => subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrow(NotificationEndpointError);
+    await sleep(2000);
 
     expect(entityIDHashesOfReceivedEvents).toContain(correctEventTypeOne.entityIDHash);
     expect(entityIDHashesOfReceivedEvents).toContain(correctEventTypeTwo.entityIDHash);
     expect(entityIDHashesOfReceivedEvents).not.toContain(ownIssAsOriginEvent.entityIDHash);
-  });
+  }, 30000);
 
   
 });
@@ -80,17 +82,20 @@ describe('DOME events publication', () => {
     const entityIdOne = randomBytes(20).toString('hex');
     const correctEventTypeOne = {
       origin: iss,
-      entityIDHash: createHash('sha256').update(entityIdOne).digest('hex'),
+      entityIDHash: "0x" + createHash('sha256').update(entityIdOne).digest('hex'),
       previousEntityHash: "0x743c956500000000001000000070000000600000000000300000000050000000",
       eventType: 'eventType1',
       dataLocation: 'dataLocation1',
       metadata: [],
     };
 
-    await publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.dataLocation, correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIDHash, correctEventTypeOne.previousEntityHash, rpcAddress);
     let entityIDHashesOfReceivedEvents = new Set<string>();
-    expect(() => subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, notificationEndpoint, (event: any) => {eventPublicationValidCaseDOMEEventsHandler(event, entityIDHashesOfReceivedEvents, correctEventTypeOne.entityIDHash)})).toThrow(NotificationEndpointError);
-  });
+    subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventPublicationValidCaseDOMEEventsHandler(event, entityIDHashesOfReceivedEvents)});
+    await publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.dataLocation, correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIDHash, correctEventTypeOne.previousEntityHash, rpcAddress);
+    await sleep(2000);
+
+    expect(entityIDHashesOfReceivedEvents).toContain(correctEventTypeOne.entityIDHash);
+  }, 30000);
 });
 
 
@@ -114,9 +119,7 @@ function eventSubscriptionValidCaseDOMEEventsHandler(event: any, eventTypesOfInt
  *
  * @param event the DOME event to be handled.
  * @param entityIDHashesOfReceivedEvents the entityIDHashes of the events already handled by this handler.
- * @param entityIDHashOfPublishedEvent the entityIDHash of the previously published event.
  */
-function eventPublicationValidCaseDOMEEventsHandler(event: any, entityIDHashesOfReceivedEvents: Set<string>, entityIDHashOfPublishedEvent: string){
+function eventPublicationValidCaseDOMEEventsHandler(event: any, entityIDHashesOfReceivedEvents: Set<string>){
   entityIDHashesOfReceivedEvents.add(event.entityIDHash);
-  expect(entityIDHashesOfReceivedEvents).toContain(entityIDHashOfPublishedEvent);
 }

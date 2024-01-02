@@ -1,26 +1,17 @@
 const supertest = require('supertest');
-const { app, server } = require('../src/server');
-import {describe, expect, it, beforeEach, afterEach} from '@jest/globals'
+const {app} = require('../src/server');
+import {describe, expect, it, beforeEach} from '@jest/globals'
 
 let api: any;
 
-// 
 beforeEach(() => { api = supertest(app); })
-
-// Close the server after all tests have completed
-afterEach((done) => {
-    server.close(() => {
-        done();
-    });
-});
-
 
 describe('Express Server Tests', () => {
     it('Should respond with a 404 for an unknown route', async () => {
         const response = await api.get('/nonexistent');
         expect(response.status).toBe(404);
         expect(response.message).toBe(undefined)
-        expect(response.body.message).toBe("not found")
+        expect(response.body.message).toBe("Not Found")
     });
     it("Return HTTP 200 OK", async () => {
         const healthCheckResponse = {
@@ -104,7 +95,6 @@ async function configureNode() {
             "rpcAddress": "https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6",
             "iss": "0x43b27fef24cfe8a0b797ed8a36de2884f9963c0c2a0da640e3ec7ad6cd0c493d"
         });
-    console.log(response.headers['set-cookie'])
 
     return response
 }
@@ -115,8 +105,7 @@ async function subscribeSingleEvent() {
         .set('Cookie', 'sessionCookieDOME=s%3A_GXSO6x4Px0VmIfuPyD-3NHv-QwSvu7-.1wzULfw%2BeUcZn%2FJhanyfW5R3%2BC4yQ9vO82vsqy6Abm0; Path=/; HttpOnly;')
         .withCredentials()
         .send({
-            "eventType": ["productAdded"],
-            "notificationEndpoint": "http://localhost:8080/api/v1/testSubscribedUser"
+            "eventTypes": ["productAdded"]
         });
 
     return response
@@ -128,8 +117,7 @@ async function subscribeMultipleEvents() {
         .set('Cookie', 'sessionCookieDOME=s%3A_GXSO6x4Px0VmIfuPyD-3NHv-QwSvu7-.1wzULfw%2BeUcZn%2FJhanyfW5R3%2BC4yQ9vO82vsqy6Abm0; Path=/; HttpOnly;')
         .withCredentials()
         .send({
-            "eventType": ["productAdded1", "productAdded2"],
-            "notificationEndpoint": "http://localhost:8080/api/v1/testSubscribedUser"
+            "eventTypes": ["productAdded1", "productAdded2"]
         });
 
     return response
