@@ -2,10 +2,6 @@ const { connectToNode, subscribeToDOMEEvents, publishDOMEEvent } = require('../s
 const ethers = require('ethers');
 import dotenv from "dotenv";
 dotenv.config();
-import {
-  domeEventsContractABI,
-  domeEventsContractAddress
-} from "../src/utils/const";
 import {describe, expect, it} from '@jest/globals'
 import { createHash } from "crypto";
 import { randomBytes } from "crypto";
@@ -92,7 +88,8 @@ describe('DOME events publication', () => {
     };
 
     await publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.dataLocation, correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIDHash, correctEventTypeOne.previousEntityHash, rpcAddress);
-    expect(() => subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, notificationEndpoint, (event: any) => {eventPublicationValidCaseDOMEEventsHandler(event, correctEventTypeOne.entityIDHash)})).toThrow(NotificationEndpointError);
+    let entityIDHashesOfReceivedEvents = new Set<string>();
+    expect(() => subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, notificationEndpoint, (event: any) => {eventPublicationValidCaseDOMEEventsHandler(event, entityIDHashesOfReceivedEvents, correctEventTypeOne.entityIDHash)})).toThrow(NotificationEndpointError);
   });
 });
 

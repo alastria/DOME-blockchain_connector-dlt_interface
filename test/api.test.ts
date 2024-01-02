@@ -1,5 +1,7 @@
 const supertest = require('supertest');
 const { app, server } = require('../src/server');
+import {describe, expect, it, beforeEach, afterEach} from '@jest/globals'
+
 let api: any;
 
 // 
