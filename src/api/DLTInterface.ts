@@ -19,8 +19,14 @@ const errorLog = debug("DLT Interface Service:error ");
  * @param req the HTTP request.
  */
 export async function connectToNode(rpcAddress: string, iss: string, req: any) {
+  if (rpcAddress === "") {
+    throw new IllegalArgumentError("The rpc address is blank.");
+  }
   if (rpcAddress === null || rpcAddress === undefined) {
     throw new IllegalArgumentError("The rpc address is null.");
+  }
+  if (iss === "") {
+    throw new IllegalArgumentError("The iss identifier is blank.");
   }
   if (iss === null || iss === undefined) {
     throw new IllegalArgumentError("The iss identifier is null.");
@@ -158,8 +164,17 @@ export function subscribeToDOMEEvents(
   if (eventTypes.length === 0) {
     throw new IllegalArgumentError("No eventTypes indicated for subscription.");
   }
+  if (eventTypes.includes("")) {
+    throw new IllegalArgumentError("Blank eventTypes indicated for subscription.");
+  }
   if (rpcAddress === null || rpcAddress === undefined) {
     throw new IllegalArgumentError("The rpc address is null.");
+  }
+  if (ownIss === "") {
+    throw new IllegalArgumentError("The ownIss is blank.");
+  }
+  if (ownIss === null || ownIss === undefined) {
+    throw new IllegalArgumentError("The ownIss is null.");
   }
 
   try {
