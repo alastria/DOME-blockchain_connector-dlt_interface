@@ -32,6 +32,7 @@ router.use((req: any, res: any, next: any) => {
     const origin = req.headers.origin;
     if (allowedOrigins.includes(origin)) {
         res.header('Access-Control-Allow-Origin', origin);
+        console.log("*****"+req.header);
     }
 
     // Set the allowed headers and methods
@@ -78,3 +79,6 @@ app.use((req: any, res: any, next: any) => {
 app.listen(port, () => {
     console.log(`DLT Interface API listening at http://localhost:${port}`)
 })
+
+module.exports = {app}
+

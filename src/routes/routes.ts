@@ -30,7 +30,7 @@ router.post("/api/v1/configureNode", (req: any, resp: any) => {
     debugLog("Entry call from origin: ", req.headers.origin);
     try {
       await connectToNode(req.body.rpcAddress, req.body.iss, req);
-      resp.status(200).send("OK");
+      resp.status(201).send("OK");
     } catch (error: any) {
       if (error == IllegalArgumentError) {
         errorLog("Error:\n ", error);
@@ -56,7 +56,7 @@ router.post("/api/v1/publishEvent", (req: any, resp: any) => {
         req.body.previousEntityHash,
         req.session.rpcAddress
       );
-      resp.status(200).send("OK");
+      resp.status(201).send("OK");
     } catch (error: any) {
       if (error == IllegalArgumentError) {
         errorLog("Error:\n ", error);
@@ -76,10 +76,10 @@ router.post("/api/v1/subscribe", (req: any, resp: any) => {
       subscribeToDOMEEvents(
         req.body.eventTypes,
         req.session.rpcAddress,
+        req.session.iss,
         req.body.notificationEndpoint,
-        req.session.iss
       );
-      resp.status(200).send("OK");
+      resp.status(201).send("OK");
     } catch (error: any) {
       if (error == NotificationEndpointError) {
         errorLog("Error:\n ", error);

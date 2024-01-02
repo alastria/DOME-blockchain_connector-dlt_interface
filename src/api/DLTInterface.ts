@@ -12,8 +12,6 @@ import { NotificationEndpointError } from "../exceptions/NotificationEndpointErr
 const debugLog = debug("DLT Interface Service: ");
 const errorLog = debug("DLT Interface Service:error ");
 
-//TODO: use a proper authenticated session.
-
 /**
  * Configures a blockchain node as the one to be used for the user's session. The session is managed at cookie level.
  * @param rpcAddress the address of the blockchain node.
@@ -96,7 +94,6 @@ export async function publishDOMEEvent(
 
   try {
     debugLog(">>> Publishing event to blockchain node...");
-    
 
     debugLog("  > Entry Data:", {
       iss,
@@ -117,6 +114,7 @@ export async function publishDOMEEvent(
       domeEventsContractABI,
       wallet
     );
+
     debugLog("  > Ethereum Contract: ", domeEventsContractWithSigner.address);
     debugLog("  > Ethereum Remittent: ", iss);
 
@@ -144,13 +142,15 @@ export async function publishDOMEEvent(
  * @param rpcAddress the blockchain node address to be used for event subscription.
  * @param notificationEndpoint the user's endpoint to be notified to of the events of interest.
  *                             The notification is sent as a POST.
- * @param iss the organization identifier hash
+ * @param handler an optional function to handle the events.
+ * @param ownIss the organization identifier hash
  */
 export function subscribeToDOMEEvents(
   eventTypes: string[],
   rpcAddress: string,
-  notificationEndpoint: string,
-  iss: string
+  ownIss: string,
+  notificationEndpoint?: string,
+  handler?: (event: object) => void
 ) {
   if (eventTypes === null || eventTypes === undefined) {
     throw new IllegalArgumentError("The eventType is null.");
@@ -160,9 +160,6 @@ export function subscribeToDOMEEvents(
   }
   if (rpcAddress === null || rpcAddress === undefined) {
     throw new IllegalArgumentError("The rpc address is null.");
-  }
-  if (notificationEndpoint === null || notificationEndpoint === undefined) {
-    throw new IllegalArgumentError("The notificationEndpoint is null.");
   }
 
   try {
@@ -193,69 +190,52 @@ export function subscribeToDOMEEvents(
         dataLocation,
         metadata
       ) => {
-        if (eventTypes.includes(eventType)) {
-          const eventContent = {
-            id: index,
-            publisherAddress: origin,
-            entityIDHash: entityIDHash,
-            previousEntityIDHash: entityIDHash,
-            eventType: eventType,
-            timestamp: timestamp,
-            dataLocation: dataLocation,
-            relevantMetadata: metadata,
-          };
+        if (!eventTypes.includes(eventType)) {
+          return;
+        }
+        const eventContent = {
+          id: index,
+          publisherAddress: origin,
+          entityIDHash: entityIDHash,
+          previousEntityIDHash: entityIDHash,
+          eventType: eventType,
+          timestamp: timestamp,
+          dataLocation: dataLocation,
+          relevantMetadata: metadata,
+        };
 
-          debugLog(" > Event Content:", {
-            index,
-            timestamp,
-            origin,
-            entityIDHash,
-            eventType,
-            dataLocation,
-            metadata,
-          });
+        debugLog(" > Event Content:", {
+          index,
+          timestamp,
+          origin,
+          entityIDHash,
+          eventType,
+          dataLocation,
+          metadata,
+        });
 
-          debugLog(
-            " > Event emitted: " +
-              eventType +
-              " with args: " +
-              JSON.stringify(eventContent)
-          );
-          debugLog(
-            " > Checking EventType " +
-              eventContent.eventType +
-              " with the interest for the user " +
-              eventType
-          );
+        debugLog(
+          " > Event emitted: " +
+            eventType +
+            " with args: " +
+            JSON.stringify(eventContent)
+        );
+        debugLog(
+          " > Checking EventType " +
+            eventContent.eventType +
+            " with the interest for the user " +
+            eventType
+        );
 
-          if (eventContent.publisherAddress != iss) {
-            const headers = {
-              "Content-Type": "application/json", // Set the Content-Type header to JSON
-            };
-            debugLog(
-              " > Sending notification to endpoint: " + notificationEndpoint
-            );
-            debugLog(
-              " > Notification Content: " + JSON.stringify(eventContent)
-            );
-            axios
-              .post(notificationEndpoint, JSON.stringify(eventContent), {
-                headers,
-              })
-              .then((response) => {
-                debugLog(
-                  " > Response from notification endpoint: " + response.status
-                );
-              })
-              .catch((error) => {
-                errorLog(" > !! Error from notification endpoint:\n" + error);
-                throw new NotificationEndpointError(
-                  "Can't connect to the notification endpoint."
-                );
-              });
-          } else {
-            debugLog(" > This event is not of interest for the user.");
-          }
+        if (eventContent.publisherAddress === ownIss) {
+          debugLog(" > This event is not of interest for the user.");
+          return;
+        }
+        if (notificationEndpoint != undefined) {
+          notifyEndpointDOMEEventsHandler(eventContent, notificationEndpoint);
+        }
+        if (handler != undefined) {
+          handler(eventContent);
         }
       }
     );
@@ -263,4 +243,33 @@ export function subscribeToDOMEEvents(
     errorLog(" > !! Error subscribing to DOME Events");
     throw error;
   }
+}
+
+/**
+ * Event handler for DOME events that notifies a specified endpoint.
+ * @param event the DOME event to be handled.
+ * @param notificationEndpoint the endpoint to be notified of the event.
+ */
+function notifyEndpointDOMEEventsHandler(
+  event: object,
+  notificationEndpoint: string
+) {
+  const headers = {
+    "Content-Type": "application/json", // Set the Content-Type header to JSON
+  };
+  debugLog(" > Sending notification to endpoint: " + notificationEndpoint);
+  debugLog(" > Notification Content: " + JSON.stringify(event));
+  axios
+    .post(notificationEndpoint, JSON.stringify(event), {
+      headers,
+    })
+    .then((response) => {
+      debugLog(" > Response from notification endpoint: " + response.status);
+    })
+    .catch((error) => {
+      errorLog(" > !! Error from notification endpoint:\n" + error);
+      throw new NotificationEndpointError(
+        "Can't connect to the notification endpoint."
+      );
+    });
 }
