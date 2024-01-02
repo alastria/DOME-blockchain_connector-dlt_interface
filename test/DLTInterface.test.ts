@@ -3,9 +3,14 @@ const ethers = require('ethers');
 import dotenv from "dotenv";
 dotenv.config();
 import {
-  domeEventsContractABI as domeEventsContractABI,
-  domeEventsContractAddress as domeEventsContractAddress,
+  domeEventsContractABI,
+  domeEventsContractAddress
 } from "../src/utils/const";
+import {describe, expect, it} from '@jest/globals'
+import { createHash } from "crypto";
+import { randomBytes } from "crypto";
+import { NotificationEndpointError } from "../src/exceptions/NotificationEndpointError";
+import { Set } from "typescript";
 
 describe('Configure blockchain node', () => {
 
@@ -20,44 +25,57 @@ describe('Configure blockchain node', () => {
   });
 });
 
-jest.mock('ethers');
-describe('subscribeToDOMEEvents', () => {
-  it('should subscribe to DOME events', () => {
-    const eventTypes = ['eventType1', 'eventType2'];
+describe('DOME events subscription', () => {
+
+  it('valid case: should subscribe to DOME events', async () => {
+    const eventTypesOfInterest = ['eventType1', 'eventType2'];
     const rpcAddress = 'https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6';
     const notificationEndpoint = 'http://marketplace-blockchain-connector-core-digitelts.com/notifications/blockchain-node';
+    const ownIss = "0x61b27fef24cfe8a0b797ed8a36de2884f9963c0c2a0da640e3ec7ad6cd0c351e"
+    const iss = "0x43b27fef24cfe8a0b797ed8a36de2884f9963c0c2a0da640e3ec7ad6cd0c493d";
+    const entityIdOne = randomBytes(20).toString('hex');
+    const entityIdTwo= randomBytes(20).toString('hex');
+    const entityIdThree = randomBytes(20).toString('hex');
 
-    const simulatedEvent = {
-      index: 1,
-      timestamp: 1234567890,
-      origin: 'originAddress',
+
+    const correctEventTypeOne = {
+      origin: iss,
+      entityIDHash: createHash('sha256').update(entityIdOne).digest('hex'),
+      previousEntityHash: "0x743c956500000000001000000070000000600000000000300000000050000000",
       eventType: 'eventType1',
       dataLocation: 'dataLocation1',
       metadata: [],
     };
+    
+    const correctEventTypeTwo = {
+      origin: iss,
+      entityIDHash: createHash('sha256').update(entityIdTwo).digest('hex'),
+      previousEntityHash: "0x843c956500000000001000000070000000600000000000300000000050000000",
+      eventType: 'eventType2',
+      dataLocation: correctEventTypeOne.dataLocation,
+      metadata: [],
+    };
 
-    const mockProvider = new ethers.providers.JsonRpcProvider(rpcAddress);
-    const DOMEEventsContract = new ethers.Contract('0x2BcAb3E30D0EcCd4728b48b80C92ff4E9430B3EE', [], mockProvider);
+    const ownIssAsOriginEvent = {
+      origin: ownIss,
+      entityIDHash: createHash('sha256').update(entityIdThree).digest('hex'),
+      previousEntityHash: "0x843c956500000000001000000070000000600000000000300000000050000000",
+      eventType: correctEventTypeTwo.eventType,
+      dataLocation: correctEventTypeOne.dataLocation,
+      metadata: [],
+    };
 
-    const onCallback = (index: any, timestamp: any, origin: any, eventType: any, dataLocation: any, metadata: any) => {
-      expect(eventTypes).toContain(eventType); // Verifica si el eventType está en la lista de interés
-      expect(origin).toBe('originAddress'); // Verifica el origen del evento
+    await publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.dataLocation, correctEventTypeOne.metadata, iss, rpcAddress);
+    await publishDOMEEvent(correctEventTypeTwo.eventType, correctEventTypeTwo.dataLocation, correctEventTypeTwo.metadata, iss, rpcAddress);
+    let entityIDHashesOfReceivedEvents = new Set<string>();
+    expect(() => subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, notificationEndpoint, (event: any) => {validCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrow(NotificationEndpointError);
 
-
-      const onSpy = jest.spyOn(DOMEEventsContract, 'EventDOMEv1');
-      onSpy.mockImplementation((eventName, callback) => {
-        if (eventName === 'EventDOMEv1') {
-          onCallback(simulatedEvent.index, simulatedEvent.timestamp, simulatedEvent.origin, simulatedEvent.eventType, simulatedEvent.dataLocation, simulatedEvent.metadata);
-        }
-      });
-      subscribeToDOMEEvents(eventTypes, rpcAddress, notificationEndpoint);
-
-      expect(onSpy).toHaveBeenCalledWith('EventDOMEv1');
-
-      onSpy.mockRestore();
-    }
+    expect(entityIDHashesOfReceivedEvents).toContain(correctEventTypeOne.entityIDHash);
+    expect(entityIDHashesOfReceivedEvents).toContain(correctEventTypeTwo.entityIDHash);
+    expect(entityIDHashesOfReceivedEvents).not.toContain(ownIssAsOriginEvent.entityIDHash);
   });
-  it('publishes a DOME event to the blockchain', async () => {
+
+  it('valid case: publishes a DOME event to the blockchain', async () => {
     const eventType = 'eventType1';
     const dataLocation = 'testDataLocation';
     const relevantMetadata = ['metadata1', 'metadata2'];
@@ -77,3 +95,18 @@ describe('subscribeToDOMEEvents', () => {
     expect(ethers.Contract).toHaveBeenCalledWith(domeEventsContractAddress, domeEventsContractABI, mockWallet);
   });
 });
+
+
+/**
+ * Event handler for DOME events that tests that the events received are to be received.
+ *
+ * @param event the DOME event to be handled.
+ * @param eventTypesOfInterest the DOME event types to be received.
+ * @param ownIss the identifier of the entity expected to be processing the events.
+ * @param entityIDHashesOfReceivedEvents the entityIDHashes of the events already handled by this handler.
+ */
+function validCaseDOMEEventsHandler(event: any, eventTypesOfInterest: string[], ownIss: string, entityIDHashesOfReceivedEvents: Set<string>){
+  entityIDHashesOfReceivedEvents.add(event.entityIDHash);
+  expect(event.iss).not.toBe(ownIss);
+  expect(eventTypesOfInterest).toContain(event.eventType);
+}

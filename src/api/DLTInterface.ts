@@ -145,13 +145,15 @@ export async function publishDOMEEvent(
  * @param rpcAddress the blockchain node address to be used for event subscription.
  * @param notificationEndpoint the user's endpoint to be notified to of the events of interest.
  *                             The notification is sent as a POST.
+ * @param handler an optional function to handle the events. 
  * @param iss the organization identifier hash
  */
 export function subscribeToDOMEEvents(
   eventTypes: string[],
   rpcAddress: string,
   notificationEndpoint: string,
-  iss: string
+  iss: string,
+  handler?: (event: object) => void 
 ) {
   if (eventTypes === null || eventTypes === undefined) {
     throw new IllegalArgumentError("The eventType is null.");
@@ -230,6 +232,28 @@ export function subscribeToDOMEEvents(
           );
 
           if (eventContent.publisherAddress != iss) {
+            notifyEndpointDOMEEventsHandler(eventContent, notificationEndpoint);
+            if(handler != undefined){
+                handler(eventContent);
+            }
+          } else {
+            debugLog(" > This event is not of interest for the user.");
+          }
+        }
+      }
+    );
+  } catch (error) {
+    errorLog(" > !! Error subscribing to DOME Events");
+    throw error;
+  }
+}
+
+/**
+ * Event handler for DOME events that notifies a specified endpoint.
+ * @param event the DOME event to be handled.
+ * @param notificationEndpoint the endpoint to be notified of the event. 
+ */
+function notifyEndpointDOMEEventsHandler(event: object, notificationEndpoint: string) {
             const headers = {
               "Content-Type": "application/json", // Set the Content-Type header to JSON
             };
@@ -237,10 +261,10 @@ export function subscribeToDOMEEvents(
               " > Sending notification to endpoint: " + notificationEndpoint
             );
             debugLog(
-              " > Notification Content: " + JSON.stringify(eventContent)
+              " > Notification Content: " + JSON.stringify(event)
             );
             axios
-              .post(notificationEndpoint, JSON.stringify(eventContent), {
+              .post(notificationEndpoint, JSON.stringify(event), {
                 headers,
               })
               .then((response) => {
@@ -254,14 +278,4 @@ export function subscribeToDOMEEvents(
                   "Can't connect to the notification endpoint."
                 );
               });
-          } else {
-            debugLog(" > This event is not of interest for the user.");
-          }
-        }
-      }
-    );
-  } catch (error) {
-    errorLog(" > !! Error subscribing to DOME Events");
-    throw error;
-  }
 }
