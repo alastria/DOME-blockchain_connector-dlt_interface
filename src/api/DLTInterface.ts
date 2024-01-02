@@ -12,8 +12,6 @@ import { NotificationEndpointError } from "../exceptions/NotificationEndpointErr
 const debugLog = debug("DLT Interface Service: ");
 const errorLog = debug("DLT Interface Service:error ");
 
-//TODO: use a proper authenticated session.
-
 /**
  * Configures a blockchain node as the one to be used for the user's session. The session is managed at cookie level.
  * @param rpcAddress the address of the blockchain node.
