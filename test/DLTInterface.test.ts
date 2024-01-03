@@ -6,6 +6,7 @@ import {describe, expect, it} from '@jest/globals'
 import { createHash, randomBytes } from "crypto";
 import { Set } from "typescript";
 import { sleep } from "../src/utils/funcs";
+import { IllegalArgumentError } from "../src/exceptions/IllegalArgumentError";
 
 const eventTypesOfInterest = ['eventType1', 'eventType2'];
 const rpcAddress = 'https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6';
@@ -21,7 +22,7 @@ describe('Configure blockchain node', () => {
     await connectToNode(rpcAddress, iss, req);
     expect(req.session.iss).toBe(iss);
     expect(req.session.rpcAddress).toBe(rpcAddress);
-  });
+  }, 10000);
 });
 
 describe('DOME events subscription', () => {
@@ -69,31 +70,79 @@ describe('DOME events subscription', () => {
     expect(entityIDHashesOfReceivedEvents).toContain(correctEventTypeOne.entityIDHash);
     expect(entityIDHashesOfReceivedEvents).toContain(correctEventTypeTwo.entityIDHash);
     expect(entityIDHashesOfReceivedEvents).not.toContain(ownIssAsOriginEvent.entityIDHash);
+  }, 60000);
+
+
+  it('invalid case: no event types selected', async () => {
+    let entityIDHashesOfReceivedEvents = new Set<string>();
+    expect(() => subscribeToDOMEEvents([], rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
   }, 30000);
 
-  
+  it('invalid case: blank event types selected', async () => {
+    let entityIDHashesOfReceivedEvents = new Set<string>();
+    expect(() => subscribeToDOMEEvents(["a", "", "u"], rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: undefined event types', async () => {
+    let entityIDHashesOfReceivedEvents = new Set<string>();
+    expect(() => subscribeToDOMEEvents(undefined, rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: null event types', async () => {
+    let entityIDHashesOfReceivedEvents = new Set<string>();
+    expect(() => subscribeToDOMEEvents(null, rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: undefined rpcAddress', async () => {
+    let entityIDHashesOfReceivedEvents = new Set<string>();
+    expect(() => subscribeToDOMEEvents(eventTypesOfInterest, undefined, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: null rpcAddress', async () => {
+    let entityIDHashesOfReceivedEvents = new Set<string>();
+    expect(() => subscribeToDOMEEvents(eventTypesOfInterest, null, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: blank ownIss', async () => {
+    let entityIDHashesOfReceivedEvents = new Set<string>();
+    expect(() => subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, "", notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: undefined ownIss', async () => {
+    let entityIDHashesOfReceivedEvents = new Set<string>();
+    expect(() => subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, undefined, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: null ownIss', async () => {
+    let entityIDHashesOfReceivedEvents = new Set<string>();
+    expect(() => subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, null, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
+  }, 30000);
+
 });
 
 describe('DOME events publication', () => {
 
-  it('valid case: publishes a DOME event to the blockchain', async () => {
-    const entityIdOne = randomBytes(20).toString('hex');
-    const correctEventTypeOne = {
+  const entityIdOne = randomBytes(20).toString('hex');
+  const correctEventTypeOne = {
       origin: iss,
       entityIDHash: "0x" + createHash('sha256').update(entityIdOne).digest('hex'),
       previousEntityHash: "0x743c956500000000001000000070000000600000000000300000000050000000",
       eventType: 'eventType1',
       dataLocation: 'dataLocation1',
       metadata: [],
-    };
+  };
 
+  it('valid case: publishes a DOME event to the blockchain', async () => {
+    const entityIdOne = randomBytes(20).toString('hex');
+    correctEventTypeOne.entityIDHash = "0x" + createHash('sha256').update(entityIdOne).digest('hex');
+    
     let entityIDHashesOfReceivedEvents = new Set<string>();
     subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventPublicationValidCaseDOMEEventsHandler(event, entityIDHashesOfReceivedEvents)});
     await publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.dataLocation, correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIDHash, correctEventTypeOne.previousEntityHash, rpcAddress);
     await sleep(4000);
 
     expect(entityIDHashesOfReceivedEvents).toContain(correctEventTypeOne.entityIDHash);
-  }, 30000);
+  }, 60000);
 });
 
 
