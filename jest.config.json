@@ -1,9 +1,0 @@
-{
-  "preset": "ts-jest",
-  "testEnvironment": "node",
-  "testPathIgnorePatterns" : [
-    "src/exceptions/",
-    "src/routes/",
-    "src/server.ts"
-  ]
-}

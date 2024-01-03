@@ -1,14 +1,3 @@
-[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=digitelts_dlt-adapter)](https://sonarcloud.io/summary/new_code?id=digitelts_dlt-adapter)
-
-[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=digitelts_dlt-adapter&metric=bugs)](https://sonarcloud.io/summary/new_code?id=digitelts_dlt-adapter)[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=digitelts_dlt-adapter&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=digitelts_dlt-adapter)
-
-[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=digitelts_dlt-adapter&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=digitelts_dlt-adapter)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=digitelts_dlt-adapter&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=digitelts_dlt-adapter)
-
-[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=digitelts_dlt-adapter&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=digitelts_dlt-adapter)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=digitelts_dlt-adapter&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=digitelts_dlt-adapter)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=digitelts_dlt-adapter&metric=coverage)](https://sonarcloud.io/summary/new_code?id=digitelts_dlt-adapter)
-
 # Introduction
 The DLT Adapter, also referred to as the DLT Interface is a component used by the Blockchain Connector to interact with the Blockchain technology in a transparent way. It is provided as a REST API.
 
@@ -36,7 +25,6 @@ You can see the OpenAPI specification at `/docs`
 ## Installing
 - Clone the DLT Adapter project `git clone git@github.com:alastria/DOME-blockchain_connector-dlt_interface.git`
 - Put the private key of the Ethereum account that is going to be publishing the events through the blockchain node in the `.env` file.
-- Put the secret to be used to generated the cookies in the `.env` file.
 - Create the Docker image of the component by using the Dockerfile at the root directory of the project.
 - Execute the image in a docker container.
 - The REST API will be available at http://localhost:8080/
