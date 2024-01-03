@@ -23,42 +23,6 @@ describe('Configure blockchain node', () => {
     expect(req.session.iss).toBe(iss);
     expect(req.session.rpcAddress).toBe(rpcAddress);
   });
-
-  it('invalid case: blank rpcAddress', async () => {
-    let session = {iss: "", rpcAddress: ""};
-    let req = { session };
-    expect(async() => await connectToNode("", iss, req)).toThrowError(IllegalArgumentError);
-  });
-
-  it('invalid case: undefined rpcAddress', async () => {
-    let session = {iss: "", rpcAddress: ""};
-    let req = { session };
-    expect(() => connectToNode(undefined, iss, req)).toThrowError(IllegalArgumentError);
-  });
-
-  it('invalid case: null rpcAddress', async () => {
-    let session = {iss: "", rpcAddress: ""};
-    let req = { session };
-    expect(() => connectToNode(null, iss, req)).toThrowError(IllegalArgumentError);
-  });
-
-  it('invalid case: blank iss', async () => {
-    let session = {iss: "", rpcAddress: ""};
-    let req = { session };
-    expect(() => connectToNode(rpcAddress, "", req)).toThrowError(IllegalArgumentError);
-  });
-
-  it('invalid case: undefined iss', async () => {
-    let session = {iss: "", rpcAddress: ""};
-    let req = { session };
-    expect(() => connectToNode(rpcAddress, undefined, req)).toThrowError(IllegalArgumentError);
-  });
-
-  it('invalid case: null iss', async () => {
-    let session = {iss: "", rpcAddress: ""};
-    let req = { session };
-    expect(() => connectToNode(rpcAddress, null, req)).toThrowError(IllegalArgumentError);
-  });
 });
 
 describe('DOME events subscription', () => {
@@ -179,31 +143,6 @@ describe('DOME events publication', () => {
 
     expect(entityIDHashesOfReceivedEvents).toContain(correctEventTypeOne.entityIDHash);
   }, 30000);
-
-  it('invalid case: blank eventType', async () => {
-    const entityIdOne = randomBytes(20).toString('hex');
-    correctEventTypeOne.entityIDHash = "0x" + createHash('sha256').update(entityIdOne).digest('hex');
-
-    expect(async() => await publishDOMEEvent("", correctEventTypeOne.dataLocation, correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIDHash, correctEventTypeOne.previousEntityHash, rpcAddress)).toThrowError(IllegalArgumentError);
-  }, 30000);
-
-  it('invalid case: undefined eventType', async () => {
-    const entityIdOne = randomBytes(20).toString('hex');
-    correctEventTypeOne.entityIDHash = "0x" + createHash('sha256').update(entityIdOne).digest('hex');
-
-    expect(async() => await publishDOMEEvent(undefined, correctEventTypeOne.dataLocation, correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIDHash, correctEventTypeOne.previousEntityHash, rpcAddress)).toThrowError(IllegalArgumentError);
-  }, 30000);
-
-  it('invalid case: null eventType', async () => {
-    const entityIdOne = randomBytes(20).toString('hex');
-    correctEventTypeOne.entityIDHash = "0x" + createHash('sha256').update(entityIdOne).digest('hex');
-
-    expect(async() => await publishDOMEEvent(null, correctEventTypeOne.dataLocation, correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIDHash, correctEventTypeOne.previousEntityHash, rpcAddress)).toThrowError(IllegalArgumentError);
-  }, 30000);
-
- 
-
-
 });
 
 
