@@ -79,6 +79,9 @@ export async function publishDOMEEvent(
   previousEntityHash: string,
   rpcAddress: string
 ) {
+  if (eventType === "") {
+    throw new IllegalArgumentError("The eventType is blank.");
+  }
   if (eventType === null || eventType === undefined) {
     throw new IllegalArgumentError("The eventType is null.");
   }
