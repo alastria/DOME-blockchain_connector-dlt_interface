@@ -22,7 +22,7 @@ describe('Configure blockchain node', () => {
     await connectToNode(rpcAddress, iss, req);
     expect(req.session.iss).toBe(iss);
     expect(req.session.rpcAddress).toBe(rpcAddress);
-  });
+  }, 10000);
 });
 
 describe('DOME events subscription', () => {
@@ -70,7 +70,7 @@ describe('DOME events subscription', () => {
     expect(entityIDHashesOfReceivedEvents).toContain(correctEventTypeOne.entityIDHash);
     expect(entityIDHashesOfReceivedEvents).toContain(correctEventTypeTwo.entityIDHash);
     expect(entityIDHashesOfReceivedEvents).not.toContain(ownIssAsOriginEvent.entityIDHash);
-  }, 30000);
+  }, 60000);
 
 
   it('invalid case: no event types selected', async () => {
@@ -142,7 +142,7 @@ describe('DOME events publication', () => {
     await sleep(4000);
 
     expect(entityIDHashesOfReceivedEvents).toContain(correctEventTypeOne.entityIDHash);
-  }, 30000);
+  }, 60000);
 });
 
 
