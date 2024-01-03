@@ -1,9 +1,8 @@
 import { debug } from "debug";
 import { BigNumber, ethers } from "ethers";
 import {
-  DOME_PRODUCTION_BLOCK_NUMBER,
-  DOME_EVENTS_CONTRACT_ABI as DOME_EVENTS_CONTRACT_ABI,
-  DOME_EVENTS_CONTRACT_ADDRESS as DOME_EVENTS_CONTRACT_ADDRESS,
+  domeEventsContractABI,
+  domeEventsContractAddress,
 } from "../utils/const";
 import axios from "axios";
 
@@ -12,11 +11,6 @@ import { NotificationEndpointError } from "../exceptions/NotificationEndpointErr
 
 const debugLog = debug("DLT Interface Service: ");
 const errorLog = debug("DLT Interface Service:error ");
-
-//TODO: Make it generic for any DLT technology.
-//TODO: use a proper authenticated session.
-//TODO: use persistence for the session.
-//TODO: protect methods from exceptions.
 
 /**
  * Configures a blockchain node as the one to be used for the user's session. The session is managed at cookie level.
@@ -112,15 +106,15 @@ export async function publishDOMEEvent(
 
     const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
 
-    //TODO: Secure PrivateKey
     const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
     debugLog("  > Ethereum Address of event publisher: ", wallet.address);
 
     const domeEventsContractWithSigner = new ethers.Contract(
-      DOME_EVENTS_CONTRACT_ADDRESS,
-      DOME_EVENTS_CONTRACT_ABI,
+      domeEventsContractAddress,
+      domeEventsContractABI,
       wallet
     );
+
     debugLog("  > Ethereum Contract: ", domeEventsContractWithSigner.address);
     debugLog("  > Ethereum Remittent: ", iss);
 
@@ -148,13 +142,15 @@ export async function publishDOMEEvent(
  * @param rpcAddress the blockchain node address to be used for event subscription.
  * @param notificationEndpoint the user's endpoint to be notified to of the events of interest.
  *                             The notification is sent as a POST.
- * @param iss the organization identifier hash
+ * @param handler an optional function to handle the events.
+ * @param ownIss the organization identifier hash
  */
 export function subscribeToDOMEEvents(
   eventTypes: string[],
   rpcAddress: string,
-  notificationEndpoint: string,
-  iss: string
+  ownIss: string,
+  notificationEndpoint?: string,
+  handler?: (event: object) => void
 ) {
   if (eventTypes === null || eventTypes === undefined) {
     throw new IllegalArgumentError("The eventType is null.");
@@ -165,21 +161,18 @@ export function subscribeToDOMEEvents(
   if (rpcAddress === null || rpcAddress === undefined) {
     throw new IllegalArgumentError("The rpc address is null.");
   }
-  if (notificationEndpoint === null || notificationEndpoint === undefined) {
-    throw new IllegalArgumentError("The notificationEndpoint is null.");
-  }
 
   try {
     debugLog(">>> Subscribing to DOME Events...");
 
     const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
     const DOMEEventsContract = new ethers.Contract(
-      DOME_EVENTS_CONTRACT_ADDRESS,
-      DOME_EVENTS_CONTRACT_ABI,
+      domeEventsContractAddress,
+      domeEventsContractABI,
       provider
     );
     debugLog(
-      " > Contract with address " + DOME_EVENTS_CONTRACT_ADDRESS + " loaded"
+      " > Contract with address " + domeEventsContractAddress + " loaded"
     );
     debugLog(
       " > User requests to subscribe to events..." + eventTypes.join(", ")
@@ -197,69 +190,52 @@ export function subscribeToDOMEEvents(
         dataLocation,
         metadata
       ) => {
-        if (eventTypes.includes(eventType)) {
-          const eventContent = {
-            id: index,
-            publisherAddress: origin,
-            entityIDHash: entityIDHash,
-            previousEntityIDHash: entityIDHash,
-            eventType: eventType,
-            timestamp: timestamp,
-            dataLocation: dataLocation,
-            relevantMetadata: metadata,
-          };
+        if (!eventTypes.includes(eventType)) {
+          return;
+        }
+        const eventContent = {
+          id: index,
+          publisherAddress: origin,
+          entityIDHash: entityIDHash,
+          previousEntityIDHash: entityIDHash,
+          eventType: eventType,
+          timestamp: timestamp,
+          dataLocation: dataLocation,
+          relevantMetadata: metadata,
+        };
 
-          debugLog(" > Event Content:", {
-            index,
-            timestamp,
-            origin,
-            entityIDHash,
-            eventType,
-            dataLocation,
-            metadata,
-          });
+        debugLog(" > Event Content:", {
+          index,
+          timestamp,
+          origin,
+          entityIDHash,
+          eventType,
+          dataLocation,
+          metadata,
+        });
 
-          debugLog(
-            " > Event emitted: " +
-              eventType +
-              " with args: " +
-              JSON.stringify(eventContent)
-          );
-          debugLog(
-            " > Checking EventType " +
-              eventContent.eventType +
-              " with the interest for the user " +
-              eventType
-          );
+        debugLog(
+          " > Event emitted: " +
+            eventType +
+            " with args: " +
+            JSON.stringify(eventContent)
+        );
+        debugLog(
+          " > Checking EventType " +
+            eventContent.eventType +
+            " with the interest for the user " +
+            eventType
+        );
 
-          if (eventContent.publisherAddress != iss) {
-            const headers = {
-              "Content-Type": "application/json", // Set the Content-Type header to JSON
-            };
-            debugLog(
-              " > Sending notification to endpoint: " + notificationEndpoint
-            );
-            debugLog(
-              " > Notification Content: " + JSON.stringify(eventContent)
-            );
-            axios
-              .post(notificationEndpoint, JSON.stringify(eventContent), {
-                headers,
-              })
-              .then((response) => {
-                debugLog(
-                  " > Response from notification endpoint: " + response.status
-                );
-              })
-              .catch((error) => {
-                errorLog(" > !! Error from notification endpoint:\n" + error);
-                throw new NotificationEndpointError(
-                  "Can't connect to the notification endpoint."
-                );
-              });
-          } else {
-            debugLog(" > This event is not of interest for the user.");
-          }
+        if (eventContent.publisherAddress === ownIss) {
+          debugLog(" > This event is not of interest for the user.");
+          return;
+        }
+        if (notificationEndpoint != undefined) {
+          notifyEndpointDOMEEventsHandler(eventContent, notificationEndpoint);
+        }
+        if (handler != undefined) {
+          handler(eventContent);
         }
       }
     );
@@ -269,110 +245,31 @@ export function subscribeToDOMEEvents(
   }
 }
 
-export async function getActiveDOMEEventsByDate(
-  startDateMs: number,
-  endDateMs: number,
-  rpcAddress: string
+/**
+ * Event handler for DOME events that notifies a specified endpoint.
+ * @param event the DOME event to be handled.
+ * @param notificationEndpoint the endpoint to be notified of the event.
+ */
+function notifyEndpointDOMEEventsHandler(
+  event: object,
+  notificationEndpoint: string
 ) {
-  let startDate = new Date(startDateMs);
-  let endDate = new Date(endDateMs);
-  debugLog(
-    ">>>> Getting active events between " + startDate + " and " + endDate
-  );
-
-  let allActiveEvents: ethers.Event[] = [];
-  let alreadyCheckedIDEntityHashes = new Map<string, boolean>();
-
-  const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
-  const DOMEEventsContract = new ethers.Contract(
-    DOME_EVENTS_CONTRACT_ADDRESS,
-    DOME_EVENTS_CONTRACT_ABI,
-    provider
-  );
-  debugLog(">>> Connecting to blockchain node...");
-  // Entry parameters in method.
-  debugLog("  >> rpcAddress: " + rpcAddress);
-
-  let blockNum = await provider.getBlockNumber();
-  debugLog("  >> Blockchain block number is " + blockNum);
-  let allDOMEEvents = await DOMEEventsContract.queryFilter(
-    "*",
-    DOME_PRODUCTION_BLOCK_NUMBER,
-    blockNum
-  );
-  let filterEventsByEntityIDHash;
-  let eventDateHexBigNumber;
-  let eventDateMilisecondsFromEpoch;
-  for (let i = 0; i < allDOMEEvents.length; i++) {
-    debugLog("  >>> Checking onchain active events...");
-
-    let entityIDHashToFilterWith = allDOMEEvents[i].args![3];
-    debugLog("  >> EntityIDHash of event is " + entityIDHashToFilterWith);
-    if (!alreadyCheckedIDEntityHashes.has(entityIDHashToFilterWith)) {
-      eventDateHexBigNumber = allDOMEEvents[i].args![1]._hex;
-      eventDateMilisecondsFromEpoch =
-        BigNumber.from(eventDateHexBigNumber).toNumber() * 1000;
-      debugLog(
-        "  >> Date of event being checked is " +
-          new Date(eventDateMilisecondsFromEpoch)
+  const headers = {
+    "Content-Type": "application/json", // Set the Content-Type header to JSON
+  };
+  debugLog(" > Sending notification to endpoint: " + notificationEndpoint);
+  debugLog(" > Notification Content: " + JSON.stringify(event));
+  axios
+    .post(notificationEndpoint, JSON.stringify(event), {
+      headers,
+    })
+    .then((response) => {
+      debugLog(" > Response from notification endpoint: " + response.status);
+    })
+    .catch((error) => {
+      errorLog(" > !! Error from notification endpoint:\n" + error);
+      throw new NotificationEndpointError(
+        "Can't connect to the notification endpoint."
       );
-      debugLog(
-        "  >> Filtering events with same EntityIDHash to obtain the active one..."
-      );
-      filterEventsByEntityIDHash = DOMEEventsContract.filters.EventDOMEv1(
-        null,
-        null,
-        null,
-        entityIDHashToFilterWith,
-        null,
-        null,
-        null,
-        null
-      );
-      let eventsWithSameEntityIDHash = await DOMEEventsContract.queryFilter(
-        filterEventsByEntityIDHash,
-        DOME_PRODUCTION_BLOCK_NUMBER,
-        blockNum
-      );
-      debugLog(
-        "  > The dates of the events with the same EntityIDHash are the following:\n"
-      );
-      eventsWithSameEntityIDHash.forEach((eventWithSameID) => {
-        let eventWithSameIDDateHexBigNumber = eventWithSameID.args![1]._hex;
-        let eventWithSameIDDateMilisecondsFromEpoch =
-          BigNumber.from(eventWithSameIDDateHexBigNumber).toNumber() * 1000;
-        debugLog(new Date(eventWithSameIDDateMilisecondsFromEpoch));
-      });
-
-      let activeEvent =
-        eventsWithSameEntityIDHash[eventsWithSameEntityIDHash.length - 1];
-      debugLog(
-        "  > The active event is the event number " +
-          eventsWithSameEntityIDHash.length +
-          " from the list of event dates showed just before."
-      );
-    alreadyCheckedIDEntityHashes.set(entityIDHashToFilterWith, true);
-
-
-      
-        allActiveEvents.push(activeEvent);
-        debugLog("  > Updated the list of active events:\n" + allActiveEvents);
-    }
-  }
-
-  let allActiveDOMEEvents: object[] = [];
-  allActiveEvents.forEach((event) => {
-    let eventJson = JSON.parse(JSON.stringify(event));
-    console.log(JSON.stringify(event));
-    let eventIndexHex = event.args![0]._hex;
-    let eventTimestampHex = event.args![1]._hex;
-    eventJson.args![0] = BigNumber.from(eventIndexHex).toNumber();
-    eventJson.args![1] = BigNumber.from(eventTimestampHex).toNumber() * 1000;
-    delete eventJson.args[7];
-    allActiveDOMEEvents.push(eventJson.args);
-  });
-
-  debugLog("The active DOME Events to be returned are the following:\n");
-  debugLog(await allActiveEvents);
-  return allActiveDOMEEvents;
+    });
 }
