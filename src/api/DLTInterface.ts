@@ -1,8 +1,8 @@
 import { debug } from "debug";
 import { ethers } from "ethers";
 import {
-    domeEventsContractABI as domeEventsContractABI,
-    domeEventsContractAddress as domeEventsContractAddress,
+    domeEventsContractABI, 
+    domeEventsContractAddress,
 } from "../utils/const";
 import axios from "axios";
 
