@@ -6,6 +6,7 @@ import {
   DOME_PRODUCTION_BLOCK_NUMBER
 } from "../utils/const";
 import axios from "axios";
+import { saveSession } from '../db/sessions';
 
 import { IllegalArgumentError } from "../exceptions/IllegalArgumentError";
 import { NotificationEndpointError } from "../exceptions/NotificationEndpointError";
