@@ -92,21 +92,4 @@ router.post("/api/v1/subscribe", (req: any, resp: any) => {
 });
 
 
-router.get('/getSessionByISS', async (req, resp) => {
-
-  try {
-    const userAddress = req.body.userEthereumAddress;
-    const session = await getSessionByISS(userAddress, req);
-    if (session == 0) {
-      return resp.status(404).send("Session not found");
-    }else{
-      return resp.status(200).send("OK");
-    }
-  } catch (error) {
-    debugLog("Error: ", error);
-    resp.status(400);
-  }
-})
-
-
 export = router;
