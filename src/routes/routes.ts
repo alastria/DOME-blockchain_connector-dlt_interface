@@ -1,4 +1,4 @@
-import { connectToNode, subscribeToDOMEEvents, publishDOMEEvent } from "../api/DLTInterface";
+import { connectToNode, subscribeToDOMEEvents, publishDOMEEvent, getActiveDOMEEventsByDate } from "../api/DLTInterface";
 import express from "express";
 import debug from "debug";
 import { getSessionByISS } from '../db/sessions';
@@ -90,6 +90,5 @@ router.post("/api/v1/subscribe", (req: any, resp: any) => {
     }
   })();
 });
-
 
 export = router;
