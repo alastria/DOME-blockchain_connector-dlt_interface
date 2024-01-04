@@ -6,8 +6,8 @@
 # Node artifact files
 node_modules/
 dist/
+jest.config.js
 coverage/
-
 
 # Compiled Java class files
 *.class
@@ -52,3 +52,6 @@ Thumbs.db
 
 package-lock.json
 privatekey
+coverage
+.scannerwork
+.vscode

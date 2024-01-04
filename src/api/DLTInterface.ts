@@ -13,11 +13,6 @@ import { NotificationEndpointError } from "../exceptions/NotificationEndpointErr
 const debugLog = debug("DLT Interface Service: ");
 const errorLog = debug("DLT Interface Service:error ");
 
-//TODO: Make it generic for any DLT technology.
-//TODO: use a proper authenticated session.
-//TODO: use persistence for the session.
-//TODO: protect methods from exceptions.
-
 /**
  * Configures a blockchain node as the one to be used for the user's session. The session is managed at cookie level.
  * @param rpcAddress the address of the blockchain node.
@@ -153,7 +148,8 @@ export async function publishDOMEEvent(
  * @param rpcAddress the blockchain node address to be used for event subscription.
  * @param notificationEndpoint the user's endpoint to be notified to of the events of interest.
  *                             The notification is sent as a POST.
- * @param iss the organization identifier hash
+ * @param handler an optional function to handle the events.
+ * @param ownIss the organization identifier hash
  */
 export function subscribeToDOMEEvents(
     eventTypes: string[],
