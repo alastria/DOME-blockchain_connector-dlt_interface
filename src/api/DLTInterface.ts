@@ -1,8 +1,9 @@
 import { debug } from "debug";
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import {
-  domeEventsContractABI,
-  domeEventsContractAddress,
+  DOME_EVENTS_CONTRACT_ABI,
+  DOME_EVENTS_CONTRACT_ADDRESS,
+  DOME_PRODUCTION_BLOCK_NUMBER
 } from "../utils/const";
 import axios from "axios";
 
@@ -119,8 +120,8 @@ export async function publishDOMEEvent(
     debugLog("  > Ethereum Address of event publisher: ", wallet.address);
 
     const domeEventsContractWithSigner = new ethers.Contract(
-      domeEventsContractAddress,
-      domeEventsContractABI,
+      DOME_EVENTS_CONTRACT_ADDRESS,
+      DOME_EVENTS_CONTRACT_ABI,
       wallet
     );
 
@@ -187,12 +188,12 @@ export function subscribeToDOMEEvents(
 
     const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
     const DOMEEventsContract = new ethers.Contract(
-      domeEventsContractAddress,
-      domeEventsContractABI,
+      DOME_EVENTS_CONTRACT_ADDRESS,
+      DOME_EVENTS_CONTRACT_ABI,
       provider
     );
     debugLog(
-      " > Contract with address " + domeEventsContractAddress + " loaded"
+      " > Contract with address " + DOME_EVENTS_CONTRACT_ADDRESS + " loaded"
     );
     debugLog(
       " > User requests to subscribe to events..." + eventTypes.join(", ")
@@ -296,4 +297,110 @@ function notifyEndpointDOMEEventsHandler(
         "Can't connect to the notification endpoint."
       );
     });
+}
+
+export async function getActiveDOMEEventsByDate(
+  startDateMs: number,
+  endDateMs: number,
+  rpcAddress: string
+) {
+  let startDate = new Date(startDateMs);
+  let endDate = new Date(endDateMs);
+  debugLog(
+    ">>>> Getting active events between " + startDate + " and " + endDate
+  );
+
+  let allActiveEvents: ethers.Event[] = [];
+  let alreadyCheckedIDEntityHashes = new Map<string, boolean>();
+
+  const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
+  const DOMEEventsContract = new ethers.Contract(
+    DOME_EVENTS_CONTRACT_ADDRESS,
+    DOME_EVENTS_CONTRACT_ABI,
+    provider
+  );
+  debugLog(">>> Connecting to blockchain node...");
+  // Entry parameters in method.
+  debugLog("  >> rpcAddress: " + rpcAddress);
+
+  let blockNum = await provider.getBlockNumber();
+  debugLog("  >> Blockchain block number is " + blockNum);
+  let allDOMEEvents = await DOMEEventsContract.queryFilter(
+    "*",
+    DOME_PRODUCTION_BLOCK_NUMBER,
+    blockNum
+  );
+  let filterEventsByEntityIDHash;
+  let eventDateHexBigNumber;
+  let eventDateMilisecondsFromEpoch;
+  for (let i = 0; i < allDOMEEvents.length; i++) {
+    debugLog("  >>> Checking onchain active events...");
+
+    let entityIDHashToFilterWith = allDOMEEvents[i].args![3];
+    debugLog("  >> EntityIDHash of event is " + entityIDHashToFilterWith);
+    if (!alreadyCheckedIDEntityHashes.has(entityIDHashToFilterWith)) {
+      eventDateHexBigNumber = allDOMEEvents[i].args![1]._hex;
+      eventDateMilisecondsFromEpoch =
+        BigNumber.from(eventDateHexBigNumber).toNumber() * 1000;
+      debugLog(
+        "  >> Date of event being checked is " +
+          new Date(eventDateMilisecondsFromEpoch)
+      );
+      debugLog(
+        "  >> Filtering events with same EntityIDHash to obtain the active one..."
+      );
+      filterEventsByEntityIDHash = DOMEEventsContract.filters.EventDOMEv1(
+        null,
+        null,
+        null,
+        entityIDHashToFilterWith,
+        null,
+        null,
+        null,
+        null
+      );
+      let eventsWithSameEntityIDHash = await DOMEEventsContract.queryFilter(
+        filterEventsByEntityIDHash,
+        DOME_PRODUCTION_BLOCK_NUMBER,
+        blockNum
+      );
+      debugLog(
+        "  > The dates of the events with the same EntityIDHash are the following:\n"
+      );
+      eventsWithSameEntityIDHash.forEach((eventWithSameID) => {
+        let eventWithSameIDDateHexBigNumber = eventWithSameID.args![1]._hex;
+        let eventWithSameIDDateMilisecondsFromEpoch =
+          BigNumber.from(eventWithSameIDDateHexBigNumber).toNumber() * 1000;
+        debugLog(new Date(eventWithSameIDDateMilisecondsFromEpoch));
+      });
+
+      let activeEvent =
+        eventsWithSameEntityIDHash[eventsWithSameEntityIDHash.length - 1];
+      debugLog(
+        "  > The active event is the event number " +
+          eventsWithSameEntityIDHash.length +
+          " from the list of event dates showed just before."
+      );
+
+      alreadyCheckedIDEntityHashes.set(entityIDHashToFilterWith, true);
+      allActiveEvents.push(activeEvent);
+      debugLog("  > Updated the list of active events:\n" + allActiveEvents);
+    }
+  }
+
+  let allActiveDOMEEvents: object[] = [];
+  allActiveEvents.forEach((event) => {
+    let eventJson = JSON.parse(JSON.stringify(event));
+    console.log(JSON.stringify(event));
+    let eventIndexHex = event.args![0]._hex;
+    let eventTimestampHex = event.args![1]._hex;
+    eventJson.args![0] = BigNumber.from(eventIndexHex).toNumber();
+    eventJson.args![1] = BigNumber.from(eventTimestampHex).toNumber() * 1000;
+    delete eventJson.args[7];
+    allActiveDOMEEvents.push(eventJson.args);
+  });
+
+  //debugLog("The active DOME Events to be returned are the following:\n");
+  //debugLog(await allActiveEvents);
+  return allActiveDOMEEvents;
 }

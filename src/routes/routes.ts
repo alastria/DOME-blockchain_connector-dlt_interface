@@ -1,4 +1,4 @@
-import { connectToNode, subscribeToDOMEEvents, publishDOMEEvent } from "../api/DLTInterface";
+import { connectToNode, subscribeToDOMEEvents, publishDOMEEvent, getActiveDOMEEventsByDate } from "../api/DLTInterface";
 import express from "express";
 import debug from "debug";
 import { IllegalArgumentError } from "../exceptions/IllegalArgumentError";
@@ -88,4 +88,14 @@ router.post("/api/v1/subscribe", (req: any, resp: any) => {
   })();
 });
 
+router.get('/api/v1/events', async (req: any, resp: any) => {
+  debugLog("Entry call from origin: ", req.headers.origin);
+  try {
+   var activeEvents = await getActiveDOMEEventsByDate(req.query.startDate, req.query.endDate, req.session.rpcAddress);
+    resp.status(200).json(activeEvents);
+  } catch (error: any) {
+    debugLog("Error:\n ", error);
+    resp.status(400).send("Error");
+  }
+})
 export = router;
