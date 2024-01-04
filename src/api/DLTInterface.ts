@@ -18,14 +18,16 @@ const errorLog = debug("DLT Interface Service:error ");
  * @param iss the organization identifier hash
  * @param req the HTTP request.
  */
-export async function connectToNode(
-    rpcAddress: string,
-    iss: string,
-    req: any
-) {
+export async function connectToNode(rpcAddress: string, iss: string, req: any) {
+  if (rpcAddress === "") {
+    throw new IllegalArgumentError("The rpc address is blank.");
+  }
     if (rpcAddress === null || rpcAddress === undefined) {
         throw new IllegalArgumentError("The rpc address is null.");
     }
+  if (iss === "") {
+    throw new IllegalArgumentError("The iss identifier is blank.");
+  }
     if (iss === null || iss === undefined) {
         throw new IllegalArgumentError("The iss identifier is null.");
     }
@@ -77,7 +79,9 @@ export async function publishDOMEEvent(
     previousEntityHash: string,
     rpcAddress: string
 ) {
-
+  if (eventType === "") {
+    throw new IllegalArgumentError("The eventType is blank.");
+  }
     if (eventType === null || eventType === undefined) {
         throw new IllegalArgumentError("The eventType is null.");
     }
@@ -111,7 +115,6 @@ export async function publishDOMEEvent(
 
         const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
 
-        //TODO: Secure PrivateKey
         const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
         debugLog("  > Ethereum Address of event publisher: ", wallet.address);
 
@@ -120,6 +123,7 @@ export async function publishDOMEEvent(
             domeEventsContractABI,
             wallet
         );
+
         debugLog("  > Ethereum Contract: ", domeEventsContractWithSigner.address);
         debugLog("  > Ethereum Remittent: ", iss);
 
@@ -153,8 +157,9 @@ export async function publishDOMEEvent(
 export function subscribeToDOMEEvents(
     eventTypes: string[],
     rpcAddress: string,
-    notificationEndpoint: string,
-    iss: string
+    ownIss: string,
+    notificationEndpoint?: string,
+    handler?: (event: object) => void
 ) {
     if (eventTypes === null || eventTypes === undefined) {
         throw new IllegalArgumentError("The eventType is null.");
@@ -162,11 +167,17 @@ export function subscribeToDOMEEvents(
     if (eventTypes.length === 0) {
         throw new IllegalArgumentError("No eventTypes indicated for subscription.");
     }
+    if (eventTypes.includes("")) {
+        throw new IllegalArgumentError("Blank eventTypes indicated for subscription.");
+    }
     if (rpcAddress === null || rpcAddress === undefined) {
         throw new IllegalArgumentError("The rpc address is null.");
     }
-    if (notificationEndpoint === null || notificationEndpoint === undefined) {
-        throw new IllegalArgumentError("The notificationEndpoint is null.");
+    if (ownIss === "") {
+        throw new IllegalArgumentError("The ownIss is blank.");
+    }
+    if (ownIss === null || ownIss === undefined) {
+        throw new IllegalArgumentError("The ownIss is null.");
     }
 
     try {
@@ -188,8 +199,18 @@ export function subscribeToDOMEEvents(
 
         DOMEEventsContract.on(
             "EventDOMEv1",
-            (index, timestamp, origin, entityIDHash, eventType, dataLocation, metadata) => {
-                if (eventTypes.includes(eventType)) {
+      (
+        index,
+        timestamp,
+        origin,
+        entityIDHash,
+        eventType,
+        dataLocation,
+        metadata
+      ) => {
+        if (!eventTypes.includes(eventType)) {
+          return;
+        }
                     const eventContent = {
                         id: index,
                         publisherAddress: origin,
@@ -224,24 +245,44 @@ export function subscribeToDOMEEvents(
                         eventType
                     );
 
-                    if (eventContent.publisherAddress != iss) {
+        if (eventContent.publisherAddress === ownIss) {
+          debugLog(" > This event is not of interest for the user.");
+          return;
+        }
+        if (notificationEndpoint != undefined) {
+          notifyEndpointDOMEEventsHandler(eventContent, notificationEndpoint);
+        }
+        if (handler != undefined) {
+          handler(eventContent);
+        }
+      }
+    );
+  } catch (error) {
+    errorLog(" > !! Error subscribing to DOME Events");
+    throw error;
+  }
+}
+
+/**
+ * Event handler for DOME events that notifies a specified endpoint.
+ * @param event the DOME event to be handled.
+ * @param notificationEndpoint the endpoint to be notified of the event.
+ */
+function notifyEndpointDOMEEventsHandler(
+  event: object,
+  notificationEndpoint: string
+) {
                         const headers = {
                             "Content-Type": "application/json", // Set the Content-Type header to JSON
                         };
-                        debugLog(
-                            " > Sending notification to endpoint: " + notificationEndpoint
-                        );
-                        debugLog(
-                            " > Notification Content: " + JSON.stringify(eventContent)
-                        );
+  debugLog(" > Sending notification to endpoint: " + notificationEndpoint);
+  debugLog(" > Notification Content: " + JSON.stringify(event));
                         axios
-                            .post(notificationEndpoint, JSON.stringify(eventContent), {
+    .post(notificationEndpoint, JSON.stringify(event), {
                                 headers,
                             })
                             .then((response) => {
-                                debugLog(
-                                    " > Response from notification endpoint: " + response.status
-                                );
+      debugLog(" > Response from notification endpoint: " + response.status);
                             })
                             .catch((error) => {
                                 errorLog(" > !! Error from notification endpoint:\n" + error);
@@ -249,14 +290,4 @@ export function subscribeToDOMEEvents(
                                     "Can't connect to the notification endpoint."
                                 );
                             });
-                    } else {
-                        debugLog(" > This event is not of interest for the user.");
-                    }
-                }
-            }
-        );
-    } catch (error) {
-        errorLog(" > !! Error subscribing to DOME Events");
-        throw error;
-    }
 }
