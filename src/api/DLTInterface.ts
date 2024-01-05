@@ -422,7 +422,7 @@ export async function getActiveDOMEEventsByDate(
   });
 
   let finTime = new Date();
-  debugLog("Number of active events is " + allActiveDOMEEvents.length + "\n");
+  debugLog("Number of active events is " + allActiveDOMEEvents.length);
   debugLog("***************************************STATS***************************************\n");
   debugLog("Blockchain events processed is " + allDOMEEvents.length);
   debugLog("Processing time was " + (finTime.getTime() - initTime.getTime()) / 1000 / 60);
