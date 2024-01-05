@@ -306,6 +306,7 @@ export async function getActiveDOMEEventsByDate(
 ) {
   let startDate = new Date(startDateMs);
   let endDate = new Date(endDateMs);
+  let initTime = new Date();
   debugLog(
     ">>>> Getting active events between " + startDate + " and " + endDate
   );
@@ -390,24 +391,42 @@ export async function getActiveDOMEEventsByDate(
 
   debugLog("The active DOME Events to be returned are the following:\n");
   let allActiveDOMEEvents: object[] = [];
+  type eventJsonType = {
+    id: number;
+    timestamp: number;
+    eventType: string;
+    dataLocation: string;
+    relevantMetadata: string[];
+    entityId: string;
+    previousEntityHash: string;
+  }
   allActiveEvents.forEach((event) => {
-    let eventJson = JSON.parse(JSON.stringify(event));
-    let eventIndexHex = event.args![0]._hex;
-    let eventTimestampHex = event.args![1]._hex;
-    eventJson.args![0] = BigNumber.from(eventIndexHex).toNumber();
-    eventJson.args![1] = BigNumber.from(eventTimestampHex).toNumber() * 1000;
-    debugLog(eventJson.args);
-    // delete active field
-    delete eventJson.args[7];
-    // delete index field
-    delete eventJson.args[0];
-    eventJson.args.forEach((arg: any) => {
+    let eventJson: eventJsonType = {id: 0, timestamp: 0, eventType: "", dataLocation: "", relevantMetadata: [""], entityId: "", previousEntityHash: ""}; 
+    for (let i = 0; i < event.args!.length; i++) {
+        eventJson.id = event.args![0];
+        eventJson.timestamp = event.args![1];
+        eventJson.eventType = event.args![4];
+        eventJson.dataLocation = event.args![5];
+        eventJson.relevantMetadata = event.args![6];
+        eventJson.entityId = event.args![3];
+        eventJson.previousEntityHash = eventJson.entityId;
+    }
 
-        
-    });
+    let eventIDHash = event.args![0]._hex;
+    let eventTimestampHash = event.args![1]._hex;
+    eventJson.id = BigNumber.from(eventIDHash).toNumber();
+    eventJson.timestamp = BigNumber.from(eventTimestampHash).toNumber() * 1000;
+    debugLog(eventJson);
 
-    allActiveDOMEEvents.push(eventJson.args);
+    allActiveDOMEEvents.push(eventJson);
   });
+
+  let finTime = new Date();
+  debugLog("Number of active events is " + allActiveDOMEEvents.length + "\n");
+  debugLog("***************************************STATS***************************************\n");
+  debugLog("Blockchain events processed is " + allDOMEEvents.length);
+  debugLog("Processing time was " + (finTime.getTime() - initTime.getTime()) / 1000 / 60);
+  debugLog("***********************************************************************************\n");
 
   return allActiveDOMEEvents;
 }
