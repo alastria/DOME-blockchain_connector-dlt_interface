@@ -311,8 +311,6 @@ export async function getActiveDOMEEventsByDate(
     ">>>> Getting active events between " + startDate + " and " + endDate
   );
 
-  let allActiveEvents: ethers.Event[] = [];
-  let alreadyCheckedIDEntityHashes = new Map<string, boolean>();
 
   const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
   const DOMEEventsContract = new ethers.Contract(
@@ -331,63 +329,8 @@ export async function getActiveDOMEEventsByDate(
     DOME_PRODUCTION_BLOCK_NUMBER,
     blockNum
   );
-  let filterEventsByEntityIDHash;
-  let eventDateHexBigNumber;
-  let eventDateMilisecondsFromEpoch;
-  for (let i = 0; i < allDOMEEvents.length; i++) {
-    debugLog("  >>> Checking onchain active events...");
 
-    let entityIDHashToFilterWith = allDOMEEvents[i].args![3];
-    debugLog("  >> EntityIDHash of event is " + entityIDHashToFilterWith);
-    if (!alreadyCheckedIDEntityHashes.has(entityIDHashToFilterWith)) {
-      eventDateHexBigNumber = allDOMEEvents[i].args![1]._hex;
-      eventDateMilisecondsFromEpoch =
-        BigNumber.from(eventDateHexBigNumber).toNumber() * 1000;
-      debugLog(
-        "  >> Date of event being checked is " +
-          new Date(eventDateMilisecondsFromEpoch)
-      );
-      debugLog(
-        "  >> Filtering events with same EntityIDHash to obtain the active one..."
-      );
-      filterEventsByEntityIDHash = DOMEEventsContract.filters.EventDOMEv1(
-        null,
-        null,
-        null,
-        entityIDHashToFilterWith,
-        null,
-        null,
-        null,
-        null
-      );
-      let eventsWithSameEntityIDHash = await DOMEEventsContract.queryFilter(
-        filterEventsByEntityIDHash,
-        DOME_PRODUCTION_BLOCK_NUMBER,
-        blockNum
-      );
-      debugLog(
-        "  > The dates of the events with the same EntityIDHash are the following:\n"
-      );
-      eventsWithSameEntityIDHash.forEach((eventWithSameID) => {
-        let eventWithSameIDDateHexBigNumber = eventWithSameID.args![1]._hex;
-        let eventWithSameIDDateMilisecondsFromEpoch =
-          BigNumber.from(eventWithSameIDDateHexBigNumber).toNumber() * 1000;
-        debugLog(new Date(eventWithSameIDDateMilisecondsFromEpoch));
-      });
-
-      let activeEvent =
-        eventsWithSameEntityIDHash[eventsWithSameEntityIDHash.length - 1];
-      debugLog(
-        "  > The active event is the event number " +
-          eventsWithSameEntityIDHash.length +
-          " from the list of event dates showed just before."
-      );
-
-      alreadyCheckedIDEntityHashes.set(entityIDHashToFilterWith, true);
-      allActiveEvents.push(activeEvent);
-      debugLog("  > Updated the list of active events:\n" + allActiveEvents);
-    }
-  }
+  let allActiveEvents: ethers.Event[] = await getAllActiveEvents(allDOMEEvents, DOMEEventsContract, blockNum);
 
   debugLog("The active DOME Events to be returned are the following:\n");
   let allActiveDOMEEvents: object[] = [];
@@ -429,4 +372,69 @@ export async function getActiveDOMEEventsByDate(
   debugLog("***********************************************************************************\n");
 
   return allActiveDOMEEvents;
+}
+
+
+async function getAllActiveEvents(allDOMEEvents: ethers.Event[], DOMEEventsContract: ethers.Contract, actualBlockNumber: number){
+  let allActiveEvents: ethers.Event[] = [];
+  let alreadyCheckedIDEntityHashes = new Map<string, boolean>();
+  let filterEventsByEntityIDHash;
+  let eventDateHexBigNumber;
+  let eventDateMilisecondsFromEpoch;
+  for (let i = 0; i < allDOMEEvents.length; i++) {
+    debugLog("  >>> Checking onchain active events...");
+
+    let entityIDHashToFilterWith = allDOMEEvents[i].args![3];
+    debugLog("  >> EntityIDHash of event is " + entityIDHashToFilterWith);
+    if (!alreadyCheckedIDEntityHashes.has(entityIDHashToFilterWith)) {
+      eventDateHexBigNumber = allDOMEEvents[i].args![1]._hex;
+      eventDateMilisecondsFromEpoch =
+        BigNumber.from(eventDateHexBigNumber).toNumber() * 1000;
+      debugLog(
+        "  >> Date of event being checked is " +
+          new Date(eventDateMilisecondsFromEpoch)
+      );
+      debugLog(
+        "  >> Filtering events with same EntityIDHash to obtain the active one..."
+      );
+      filterEventsByEntityIDHash = DOMEEventsContract.filters.EventDOMEv1(
+        null,
+        null,
+        null,
+        entityIDHashToFilterWith,
+        null,
+        null,
+        null,
+        null
+      );
+      let eventsWithSameEntityIDHash = await DOMEEventsContract.queryFilter(
+        filterEventsByEntityIDHash,
+        DOME_PRODUCTION_BLOCK_NUMBER,
+        actualBlockNumber 
+      );
+      debugLog(
+        "  > The dates of the events with the same EntityIDHash are the following:\n"
+      );
+      eventsWithSameEntityIDHash.forEach((eventWithSameID) => {
+        let eventWithSameIDDateHexBigNumber = eventWithSameID.args![1]._hex;
+        let eventWithSameIDDateMilisecondsFromEpoch =
+          BigNumber.from(eventWithSameIDDateHexBigNumber).toNumber() * 1000;
+        debugLog(new Date(eventWithSameIDDateMilisecondsFromEpoch));
+      });
+
+      let activeEvent =
+        eventsWithSameEntityIDHash[eventsWithSameEntityIDHash.length - 1];
+      debugLog(
+        "  > The active event is the event number " +
+          eventsWithSameEntityIDHash.length +
+          " from the list of event dates showed just before."
+      );
+
+      alreadyCheckedIDEntityHashes.set(entityIDHashToFilterWith, true);
+      allActiveEvents.push(activeEvent);
+      debugLog("  > Updated the list of active events:\n" + allActiveEvents);
+    }
+  }
+
+  return allActiveEvents;
 }
