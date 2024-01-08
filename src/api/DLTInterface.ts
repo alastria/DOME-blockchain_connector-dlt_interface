@@ -1,3 +1,4 @@
+var binarySearch = require("binary-search");
 import { debug } from "debug";
 import { BigNumber, ethers } from "ethers";
 import {
@@ -9,6 +10,7 @@ import axios from "axios";
 
 import { IllegalArgumentError } from "../exceptions/IllegalArgumentError";
 import { NotificationEndpointError } from "../exceptions/NotificationEndpointError";
+import { getIndexOfFirstAppearanceOfElement } from "../utils/funcs";
 
 const debugLog = debug("DLT Interface Service: ");
 const errorLog = debug("DLT Interface Service:error ");
@@ -298,19 +300,38 @@ function notifyEndpointDOMEEventsHandler(
       );
     });
 }
-
+/**
+ * Returns all the DOME active events from the blockchain between given dates  
+ * @param startDateMs the given start date in miliseconds
+ * @param endDateMs the given end date in miliseconds
+ * @param endDateMs 
+ * @param rpcAddress 
+ * @returns a JSON with all the DOME active events from the blockchain between the given dates
+ */
 export async function getActiveDOMEEventsByDate(
   startDateMs: number,
   endDateMs: number,
   rpcAddress: string
 ) {
+  if(startDateMs === null || startDateMs === undefined){
+    throw new IllegalArgumentError("The start date is null.");
+  }
+  if(endDateMs === null || endDateMs === undefined){
+    throw new IllegalArgumentError("The end date is null.");
+  }
+  if(rpcAddress === null || rpcAddress === undefined){
+    throw new IllegalArgumentError("The rpc address is null.");
+  }
+  if(startDateMs > endDateMs){
+    throw new IllegalArgumentError("The end date can't be lower than the start date.");
+  }
+
   let startDate = new Date(startDateMs);
   let endDate = new Date(endDateMs);
   let initTime = new Date();
   debugLog(
     ">>>> Getting active events between " + startDate + " and " + endDate
   );
-
 
   const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
   const DOMEEventsContract = new ethers.Contract(
@@ -330,7 +351,22 @@ export async function getActiveDOMEEventsByDate(
     blockNum
   );
 
-  let allActiveEvents: ethers.Event[] = await getAllActiveEvents(allDOMEEvents, DOMEEventsContract, blockNum);
+  let indexOfFirstEventToCheck: number = -1;
+  let indexOfLastEventToCheck: number = -1;
+  for (let i = 0; i <= (endDateMs - startDateMs) && (indexOfFirstEventToCheck < 0 || indexOfLastEventToCheck < 0); i++) {
+    if(indexOfFirstEventToCheck < 0) {
+      indexOfFirstEventToCheck = binarySearch(allDOMEEvents, startDateMs + i, function(element: any, needle: any) { return element - needle; }); 
+    }
+    if(indexOfLastEventToCheck < 0) {
+      indexOfLastEventToCheck = binarySearch(allDOMEEvents, endDateMs - i, function(element: any, needle: any) { return element - needle; }); 
+    }
+  }
+
+  indexOfFirstEventToCheck = getIndexOfFirstAppearanceOfElement(allDOMEEvents, indexOfFirstEventToCheck);
+  indexOfLastEventToCheck = getIndexOfFirstAppearanceOfElement(allDOMEEvents, indexOfLastEventToCheck);
+  let allDOMEEventsBetweenDates = allDOMEEvents.slice(indexOfFirstEventToCheck, indexOfLastEventToCheck + 1);
+
+  let allActiveEvents: ethers.Event[] = await getAllActiveDOMEBlockchainEventsBetweenDates(allDOMEEventsBetweenDates, DOMEEventsContract, blockNum, startDateMs, endDateMs);
 
   debugLog("The active DOME Events to be returned are the following:\n");
   let allActiveDOMEEvents: object[] = [];
@@ -375,19 +411,28 @@ export async function getActiveDOMEEventsByDate(
 }
 
 
-async function getAllActiveEvents(allDOMEEvents: ethers.Event[], DOMEEventsContract: ethers.Contract, actualBlockNumber: number){
-  let allActiveEvents: ethers.Event[] = [];
+/**
+ * Returns all the DOME active blockchain events from the blockchain between given dates  
+ * @param DOMEEvents all the DOME blockchain events
+ * @param DOMEEventsContract the DOME Event's contract. 
+ * @param actualBlockNumber the actual block number of the blockchain
+ * @param startDateMs the given start date in miliseconds
+ * @param endDateMs the given end date in miliseconds
+ * @returns an Array with all the DOME active blockchain events from the blockchain between the given dates
+ */
+async function getAllActiveDOMEBlockchainEventsBetweenDates(DOMEEvents: ethers.Event[], DOMEEventsContract: ethers.Contract, actualBlockNumber: number, startDateMs: number, endDateMs: number){
+  let activeEvents: ethers.Event[] = [];
   let alreadyCheckedIDEntityHashes = new Map<string, boolean>();
   let filterEventsByEntityIDHash;
   let eventDateHexBigNumber;
   let eventDateMilisecondsFromEpoch;
-  for (let i = 0; i < allDOMEEvents.length; i++) {
+  for (let i = 0; i < DOMEEvents.length; i++) {
     debugLog("  >>> Checking onchain active events...");
 
-    let entityIDHashToFilterWith = allDOMEEvents[i].args![3];
+    let entityIDHashToFilterWith = DOMEEvents[i].args![3];
     debugLog("  >> EntityIDHash of event is " + entityIDHashToFilterWith);
     if (!alreadyCheckedIDEntityHashes.has(entityIDHashToFilterWith)) {
-      eventDateHexBigNumber = allDOMEEvents[i].args![1]._hex;
+      eventDateHexBigNumber = DOMEEvents[i].args![1]._hex;
       eventDateMilisecondsFromEpoch =
         BigNumber.from(eventDateHexBigNumber).toNumber() * 1000;
       debugLog(
@@ -431,10 +476,16 @@ async function getAllActiveEvents(allDOMEEvents: ethers.Event[], DOMEEventsContr
       );
 
       alreadyCheckedIDEntityHashes.set(entityIDHashToFilterWith, true);
-      allActiveEvents.push(activeEvent);
-      debugLog("  > Updated the list of active events:\n" + allActiveEvents);
+
+      let activeEventDateMilisecondsFromEpoch = BigNumber.from(activeEvent.args![1]._hex).toNumber() * 1000;
+      if(activeEventDateMilisecondsFromEpoch <= endDateMs && activeEventDateMilisecondsFromEpoch >= startDateMs){
+        activeEvents.push(activeEvent);
+        debugLog("  > Updated the list of active events:\n" + activeEvents);
+      } else{
+        debugLog("  > DIDN'T Updated the list of active events because event date is OUT OF THE SPECIFIED DATE RANGE.");
+      }
     }
   }
 
-  return allActiveEvents;
+  return activeEvents;
 }
