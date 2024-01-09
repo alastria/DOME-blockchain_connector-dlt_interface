@@ -10,7 +10,7 @@ import axios from "axios";
 
 import { IllegalArgumentError } from "../exceptions/IllegalArgumentError";
 import { NotificationEndpointError } from "../exceptions/NotificationEndpointError";
-import { getIndexOfFirstAppearanceOfElement } from "../utils/funcs";
+import { getIndexOfFirstAppearanceOfElement, getIndexOfLastAppearanceOfElement } from "../utils/funcs";
 
 const debugLog = debug("DLT Interface Service: ");
 const errorLog = debug("DLT Interface Service:error ");
@@ -350,20 +350,20 @@ export async function getActiveDOMEEventsByDate(
     DOME_PRODUCTION_BLOCK_NUMBER,
     blockNum
   );
+  let allDOMEEventsTimestamps: number[] = [];
+  allDOMEEvents.forEach((event) => {allDOMEEventsTimestamps.push(BigNumber.from(event.args![1]._hex).toNumber() * 1000)});
 
   let indexOfFirstEventToCheck: number = -1;
   let indexOfLastEventToCheck: number = -1;
-  for (let i = 0; i <= (endDateMs - startDateMs) && (indexOfFirstEventToCheck < 0 || indexOfLastEventToCheck < 0); i++) {
-    if(indexOfFirstEventToCheck < 0) {
-      indexOfFirstEventToCheck = binarySearch(allDOMEEvents, startDateMs + i, function(element: any, needle: any) { return element - needle; }); 
-    }
-    if(indexOfLastEventToCheck < 0) {
-      indexOfLastEventToCheck = binarySearch(allDOMEEvents, endDateMs - i, function(element: any, needle: any) { return element - needle; }); 
-    }
+  for (let i = 0; i <= (endDateMs - startDateMs) && (indexOfFirstEventToCheck < 0); i++) {
+    indexOfFirstEventToCheck = binarySearch(allDOMEEventsTimestamps, startDateMs + i, function(element: any, needle: any) { return element - needle; }); 
+  }
+  for (let i = 0; i <= (endDateMs - startDateMs) && (indexOfLastEventToCheck < 0); i++) {
+    indexOfLastEventToCheck = binarySearch(allDOMEEventsTimestamps, endDateMs - i, function(element: any, needle: any) { return element - needle; }); 
   }
 
-  indexOfFirstEventToCheck = getIndexOfFirstAppearanceOfElement(allDOMEEvents, indexOfFirstEventToCheck);
-  indexOfLastEventToCheck = getIndexOfFirstAppearanceOfElement(allDOMEEvents, indexOfLastEventToCheck);
+  indexOfFirstEventToCheck = getIndexOfFirstAppearanceOfElement(allDOMEEventsTimestamps, indexOfFirstEventToCheck);
+  indexOfLastEventToCheck = getIndexOfLastAppearanceOfElement(allDOMEEventsTimestamps, indexOfLastEventToCheck);
   let allDOMEEventsBetweenDates = allDOMEEvents.slice(indexOfFirstEventToCheck, indexOfLastEventToCheck + 1);
 
   let allActiveEvents: ethers.Event[] = await getAllActiveDOMEBlockchainEventsBetweenDates(allDOMEEventsBetweenDates, DOMEEventsContract, blockNum, startDateMs, endDateMs);
