@@ -326,8 +326,11 @@ export async function getActiveDOMEEventsByDate(
     throw new IllegalArgumentError("The end date can't be lower than the start date.");
   }
 
-  let startDate = new Date(startDateMs);
-  let endDate = new Date(endDateMs);
+  let startDateSeconds = Math.trunc(startDateMs / 1000);
+  let endDateSeconds = Math.trunc(endDateMs / 1000);
+
+  let startDate = new Date(parseInt(startDateMs.toString()));
+  let endDate = new Date(parseInt(endDateMs.toString()));
   let initTime = new Date();
   debugLog(
     ">>>> Getting active events between " + startDate + " and " + endDate
@@ -351,15 +354,15 @@ export async function getActiveDOMEEventsByDate(
     blockNum
   );
   let allDOMEEventsTimestamps: number[] = [];
-  allDOMEEvents.forEach((event) => {allDOMEEventsTimestamps.push(BigNumber.from(event.args![1]._hex).toNumber() * 1000)});
+  allDOMEEvents.forEach((event) => {allDOMEEventsTimestamps.push(BigNumber.from(event.args![1]._hex).toNumber())});
 
   let indexOfFirstEventToCheck: number = -1;
   let indexOfLastEventToCheck: number = -1;
-  for (let i = 0; i <= (endDateMs - startDateMs) && (indexOfFirstEventToCheck < 0); i++) {
-    indexOfFirstEventToCheck = binarySearch(allDOMEEventsTimestamps, startDateMs + i, function(element: any, needle: any) { return element - needle; }); 
+  for (let i = 0; i <= (endDateSeconds - startDateSeconds) && (indexOfFirstEventToCheck < 0); i++) {
+    indexOfFirstEventToCheck = binarySearch(allDOMEEventsTimestamps, startDateSeconds + i, function(element: any, needle: any) { return element - needle; }); 
   }
-  for (let i = 0; i <= (endDateMs - startDateMs) && (indexOfLastEventToCheck < 0); i++) {
-    indexOfLastEventToCheck = binarySearch(allDOMEEventsTimestamps, endDateMs - i, function(element: any, needle: any) { return element - needle; }); 
+  for (let i = 0; i <= (endDateSeconds - startDateSeconds) && (indexOfLastEventToCheck < 0); i++) {
+    indexOfLastEventToCheck = binarySearch(allDOMEEventsTimestamps, endDateSeconds - i, function(element: any, needle: any) { return element - needle; }); 
   }
 
   indexOfFirstEventToCheck = getIndexOfFirstAppearanceOfElement(allDOMEEventsTimestamps, indexOfFirstEventToCheck);
@@ -400,10 +403,12 @@ export async function getActiveDOMEEventsByDate(
     allActiveDOMEEvents.push(eventJson);
   });
 
+  debugLog("Number of active events is " + allActiveDOMEEvents.length + "\n");
   let finTime = new Date();
-  debugLog("Number of active events is " + allActiveDOMEEvents.length);
-  debugLog("***************************************STATS***************************************\n");
-  debugLog("Blockchain events processed is " + allDOMEEvents.length);
+
+  debugLog("***************************************STATS***************************************");
+  debugLog("Total blockchain events are " + allDOMEEvents.length);
+  debugLog("Processed blockchain events are " + allDOMEEventsBetweenDates.length);
   debugLog("Processing time was " + (finTime.getTime() - initTime.getTime()) / 1000 / 60);
   debugLog("***********************************************************************************\n");
 

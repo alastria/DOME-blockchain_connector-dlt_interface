@@ -26,7 +26,7 @@
   },
   "scripts": {
     "dev": "nodemon src/server.ts",
-    "build": "rm -rf build/ && prettier --write source/ && tsc",
+    "build": "rm -rf build/ && tsc",
     "test": "jest --coverage --forceExit"
   },
   "author": "",

@@ -94,8 +94,12 @@ router.get('/api/v1/events', async (req: any, resp: any) => {
    var activeEvents = await getActiveDOMEEventsByDate(req.query.startDate, req.query.endDate, req.session.rpcAddress);
     resp.status(200).json(activeEvents);
   } catch (error: any) {
+    if (error == IllegalArgumentError) {
+      errorLog("Error:\n ", error);
+      resp.status(400).send(error.message);
+    }
     debugLog("Error:\n ", error);
-    resp.status(400).send("Error");
+    resp.status(400).send("Error connecting to the blockchain.");
   }
 })
 export = router;
