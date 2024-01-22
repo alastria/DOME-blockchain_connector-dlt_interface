@@ -12,7 +12,7 @@
 # Introduction
 The DLT Adapter, also referred to as the DLT Interface is a component used by the Blockchain Connector to interact with the Blockchain technology in a transparent way. It is provided as a REST API.
 
-It is built using TypeScript 4.7.4 with express 4.17.3. **Keep in mind that this is a WIP and it is not production-ready yet**.
+It is built using TypeScript 4.7.4 with express 4.17.3. It interacts with the blockchain through the smart contracts provided in https://github.com/alastria/DOME-blockchain_smart_contracts/tree/main. **Keep in mind that this is a WIP and it is not production-ready yet**.
 
 ## Main features:
 - Blockchain node selection for all the Blockchain interaction.
@@ -40,6 +40,11 @@ You can see the OpenAPI specification at `/docs`
 - Create the Docker image of the component by using the Dockerfile at the root directory of the project.
 - Execute the image in a docker container.
 - The REST API will be available at http://localhost:8080/
+
+## Tweaking the component to connect to other blockchains
+If you are one of the DOME federated networks and want to configure the DLT Adapter to connect to your blockchain you need to:
+- Deploy the smart contract at https://github.com/alastria/DOME-blockchain_smart_contracts/tree/main in your blockchain network. 
+- Change the contract address and ABI in `const.ts` to fit the one deployed in your network.
 
 # License
 - [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
