@@ -27,7 +27,7 @@
   "scripts": {
     "dev": "nodemon src/server.ts",
     "build": "rm -rf build/ && tsc",
-    "test": "jest --coverage --forceExit"
+    "test": "jest --watch --coverage --forceExit"
   },
   "author": "",
   "license": "ISC"

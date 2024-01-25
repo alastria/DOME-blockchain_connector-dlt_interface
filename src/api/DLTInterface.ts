@@ -217,7 +217,7 @@ export function subscribeToDOMEEvents(
           id: index,
           publisherAddress: origin,
           entityIDHash: entityIDHash,
-          previousEntityIDHash: entityIDHash,
+          previousEntityHash: entityIDHash,
           eventType: eventType,
           timestamp: timestamp,
           dataLocation: dataLocation,
@@ -306,13 +306,13 @@ function notifyEndpointDOMEEventsHandler(
  * @param endDateMs the given end date in miliseconds
  * @param endDateMs 
  * @param rpcAddress 
- * @returns a JSON with all the DOME active events from the blockchain between the given dates
+ * @returns a JSON with all the DOME active events from the blockchain between the given dates with its timestamp truncated to seconds, not to miliseconds
  */
 export async function getActiveDOMEEventsByDate(
   startDateMs: number,
   endDateMs: number,
   rpcAddress: string
-) {
+): Promise<DOMEEvent[]> {
   if(startDateMs === null || startDateMs === undefined){
     throw new IllegalArgumentError("The start date is null.");
   }
@@ -372,18 +372,10 @@ export async function getActiveDOMEEventsByDate(
   let allActiveEvents: ethers.Event[] = await getAllActiveDOMEBlockchainEventsBetweenDates(allDOMEEventsBetweenDates, DOMEEventsContract, blockNum, startDateMs, endDateMs);
 
   debugLog("The active DOME Events to be returned are the following:\n");
-  let allActiveDOMEEvents: object[] = [];
-  type eventJsonType = {
-    id: number;
-    timestamp: number;
-    eventType: string;
-    dataLocation: string;
-    relevantMetadata: string[];
-    entityId: string;
-    previousEntityHash: string;
-  }
+  let allActiveDOMEEvents: DOMEEvent[] = [];
+  
   allActiveEvents.forEach((event) => {
-    let eventJson: eventJsonType = {id: 0, timestamp: 0, eventType: "", dataLocation: "", relevantMetadata: [""], entityId: "", previousEntityHash: ""}; 
+    let eventJson: DOMEEvent = {id: 0, timestamp: 0, eventType: "", dataLocation: "", relevantMetadata: [""], entityId: "", previousEntityHash: ""}; 
     for (let i = 0; i < event.args!.length; i++) {
         eventJson.id = event.args![0];
         eventJson.timestamp = event.args![1];
