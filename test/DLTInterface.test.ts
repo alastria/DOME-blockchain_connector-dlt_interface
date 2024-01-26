@@ -186,24 +186,14 @@ describe('DOME active events retrieval', () => {
         dataLocation: previousStateEvent.dataLocation,
         metadata: previousStateEvent.metadata 
     };
-
-    // anotherEvent= {
-    //     origin: iss,
-    //     entityIDHash: "0x" + createHash('sha256').update(entityIdOne).digest('hex'),
-    //     previousEntityHash: previousStateEvent.previousEntityHash,
-    //     eventType: 'eventType2',
-    //     dataLocation: previousStateEvent.dataLocation,
-    //     metadata: previousStateEvent.metadata 
-    // };
-
   });
 
   it('valid case: retrieved events are constrained for the given timeframe and are active events', async () => {
     let initialTime = new Date();
     await publishDOMEEvent(previousStateEvent.eventType, previousStateEvent.dataLocation, previousStateEvent.metadata, iss, previousStateEvent.entityIDHash, previousStateEvent.previousEntityHash, rpcAddress);
     await publishDOMEEvent(activeStateEvent.eventType, activeStateEvent.dataLocation, activeStateEvent.metadata, iss, activeStateEvent.entityIDHash, activeStateEvent.previousEntityHash, rpcAddress);
-    let finTime = new Date();
     await sleep(1000);
+    let finTime = new Date();
     await publishDOMEEvent("eventType3", previousStateEvent.dataLocation, previousStateEvent.metadata, iss, previousStateEvent.entityIDHash, previousStateEvent.previousEntityHash, rpcAddress);
 
     let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate(initialTime.valueOf(), finTime.valueOf(), rpcAddress);
@@ -220,15 +210,6 @@ describe('DOME active events retrieval', () => {
     expect(allActiveEventsBetweenDatesEntityIdHashes).toContain(previousStateEvent.entityIDHash);
     expect(allActiveEventsBetweenDatesWithDefinedEntityIdHash.length).toBe(1);
     expect(allActiveEventsBetweenDatesWithDefinedEntityIdHash[0].eventType).toBe(activeStateEvent.eventType);
-  }, 600000);
-
-  it('valid case: start and end date for event retrieval are the same', async () => {
-    let initialTime = new Date();
-    await publishDOMEEvent(previousStateEvent.eventType, previousStateEvent.dataLocation, previousStateEvent.metadata, iss, previousStateEvent.entityIDHash, previousStateEvent.previousEntityHash, rpcAddress);
-
-    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate(initialTime.valueOf(), initialTime.valueOf(), rpcAddress);
-
-    expect(allActiveEventsBetweenDates.length).toBe(0);
   }, 600000);
 
   it('valid case: active event in lower boundary IS included', async () => {

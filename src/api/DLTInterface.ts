@@ -300,6 +300,7 @@ function notifyEndpointDOMEEventsHandler(
       );
     });
 }
+
 /**
  * Returns all the DOME active events from the blockchain between given dates  
  * @param startDateMs the given start date in miliseconds
@@ -363,6 +364,10 @@ export async function getActiveDOMEEventsByDate(
   }
   for (let i = 0; i <= (endDateSeconds - startDateSeconds) && (indexOfLastEventToCheck < 0); i++) {
     indexOfLastEventToCheck = binarySearch(allDOMEEventsTimestamps, endDateSeconds - i, function(element: any, needle: any) { return element - needle; }); 
+  }
+
+  if(indexOfFirstEventToCheck < 0 || indexOfLastEventToCheck < 0){
+    return [];
   }
 
   indexOfFirstEventToCheck = getIndexOfFirstAppearanceOfElement(allDOMEEventsTimestamps, indexOfFirstEventToCheck);
