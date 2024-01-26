@@ -369,7 +369,7 @@ export async function getActiveDOMEEventsByDate(
   indexOfLastEventToCheck = getIndexOfLastAppearanceOfElement(allDOMEEventsTimestamps, indexOfLastEventToCheck);
   let allDOMEEventsBetweenDates = allDOMEEvents.slice(indexOfFirstEventToCheck, indexOfLastEventToCheck + 1);
 
-  let allActiveEvents: ethers.Event[] = await getAllActiveDOMEBlockchainEventsBetweenDates(allDOMEEventsBetweenDates, DOMEEventsContract, blockNum, startDateMs, endDateMs);
+  let allActiveEvents: ethers.Event[] = await getAllActiveDOMEBlockchainEventsBetweenDates(allDOMEEventsBetweenDates, DOMEEventsContract, blockNum, startDateSeconds, endDateSeconds);
 
   debugLog("The active DOME Events to be returned are the following:\n");
   let allActiveDOMEEvents: DOMEEvent[] = [];
@@ -410,14 +410,14 @@ export async function getActiveDOMEEventsByDate(
 
 /**
  * Returns all the DOME active blockchain events from the blockchain between given dates  
- * @param DOMEEvents all the DOME blockchain events
+ * @param DOMEEvents some DOME blockchain events
  * @param DOMEEventsContract the DOME Event's contract. 
  * @param actualBlockNumber the actual block number of the blockchain
- * @param startDateMs the given start date in miliseconds
- * @param endDateMs the given end date in miliseconds
+ * @param startDateSeconds the given start date in seconds
+ * @param endDateSeconds the given end date in seconds
  * @returns an Array with all the DOME active blockchain events from the blockchain between the given dates
  */
-async function getAllActiveDOMEBlockchainEventsBetweenDates(DOMEEvents: ethers.Event[], DOMEEventsContract: ethers.Contract, actualBlockNumber: number, startDateMs: number, endDateMs: number){
+async function getAllActiveDOMEBlockchainEventsBetweenDates(DOMEEvents: ethers.Event[], DOMEEventsContract: ethers.Contract, actualBlockNumber: number, startDateSeconds: number, endDateSeconds: number){
   let activeEvents: ethers.Event[] = [];
   let alreadyCheckedIDEntityHashes = new Map<string, boolean>();
   let filterEventsByEntityIDHash;
@@ -466,6 +466,13 @@ async function getAllActiveDOMEBlockchainEventsBetweenDates(DOMEEvents: ethers.E
 
       let activeEvent =
         eventsWithSameEntityIDHash[eventsWithSameEntityIDHash.length - 1];
+      for (let i= 0; i < eventsWithSameEntityIDHash.length; i++) {
+        let eventWithSameIDHashTimestampSeconds = BigNumber.from(eventsWithSameEntityIDHash[eventsWithSameEntityIDHash.length - 1 - i].args![1]._hex).toNumber()
+        if(eventWithSameIDHashTimestampSeconds >= startDateSeconds && eventWithSameIDHashTimestampSeconds <= endDateSeconds){
+          activeEvent = eventsWithSameEntityIDHash[eventsWithSameEntityIDHash.length - 1 - i];
+          break;
+        }
+      }
       debugLog(
         "  > The active event is the event number " +
           eventsWithSameEntityIDHash.length +
@@ -474,13 +481,8 @@ async function getAllActiveDOMEBlockchainEventsBetweenDates(DOMEEvents: ethers.E
 
       alreadyCheckedIDEntityHashes.set(entityIDHashToFilterWith, true);
 
-      let activeEventDateMilisecondsFromEpoch = BigNumber.from(activeEvent.args![1]._hex).toNumber() * 1000;
-      if(activeEventDateMilisecondsFromEpoch <= endDateMs && activeEventDateMilisecondsFromEpoch >= startDateMs){
-        activeEvents.push(activeEvent);
-        debugLog("  > Updated the list of active events:\n" + activeEvents);
-      } else{
-        debugLog("  > DIDN'T Updated the list of active events because event date is OUT OF THE SPECIFIED DATE RANGE.");
-      }
+      activeEvents.push(activeEvent);
+      debugLog("  > Updated the list of active events:\n" + activeEvents);
     }
   }
 
