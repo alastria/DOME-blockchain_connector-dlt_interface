@@ -222,6 +222,15 @@ describe('DOME active events retrieval', () => {
     expect(allActiveEventsBetweenDatesWithDefinedEntityIdHash[0].eventType).toBe(activeStateEvent.eventType);
   }, 600000);
 
+  it('valid case: start and end date for event retrieval are the same', async () => {
+    let initialTime = new Date();
+    await publishDOMEEvent(previousStateEvent.eventType, previousStateEvent.dataLocation, previousStateEvent.metadata, iss, previousStateEvent.entityIDHash, previousStateEvent.previousEntityHash, rpcAddress);
+
+    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate(initialTime.valueOf(), initialTime.valueOf(), rpcAddress);
+
+    expect(allActiveEventsBetweenDates.length).toBe(0);
+  }, 600000);
+
   it('valid case: active event in lower boundary IS included', async () => {
     let timestampOfPublishedEvent: number = -1; 
     subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
