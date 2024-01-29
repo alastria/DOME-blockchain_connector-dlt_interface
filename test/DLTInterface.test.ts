@@ -352,7 +352,7 @@ describe('DOME active events retrieval', () => {
       }
     });
     await publishDOMEEvent(previousStateEvent.eventType, previousStateEvent.dataLocation, previousStateEvent.metadata, iss, previousStateEvent.entityIDHash, previousStateEvent.previousEntityHash, rpcAddress);
-    await sleep(10000);
+    await sleep(20000);
 
     expect(timestampOfPublishedEvent).not.toBe(-1);
     let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate((timestampOfPublishedEvent - 1) * 1000, (timestampOfPublishedEvent - 1) * 1000, rpcAddress);
