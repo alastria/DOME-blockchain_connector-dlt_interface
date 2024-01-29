@@ -1,4 +1,4 @@
-export async function sleep (ms: number) {new Promise((r) => setTimeout(r, ms))};
+export async function sleep (ms: number) {return new Promise((r) => setTimeout(r, ms))};
 
 /**
  * Returns the index of the first appearance of the element at the given index in the given sorted array
