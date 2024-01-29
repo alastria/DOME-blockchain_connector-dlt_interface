@@ -8,6 +8,7 @@ import { Set } from "typescript";
 import { sleep } from "../src/utils/funcs";
 import { IllegalArgumentError } from "../src/exceptions/IllegalArgumentError";
 import { getActiveDOMEEventsByDate } from "../src/api/DLTInterface";
+import { DOMEEvent } from "../src/utils/types";
 
 const rpcAddress = 'https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6';
 const notificationEndpoint = undefined;
@@ -191,9 +192,8 @@ describe('DOME active events retrieval', () => {
   it('valid case: retrieved events are constrained for the given timeframe and are active events', async () => {
     let initialTime = new Date();
     await publishDOMEEvent(previousStateEvent.eventType, previousStateEvent.dataLocation, previousStateEvent.metadata, iss, previousStateEvent.entityIDHash, previousStateEvent.previousEntityHash, rpcAddress);
-    await publishDOMEEvent(activeStateEvent.eventType, activeStateEvent.dataLocation, activeStateEvent.metadata, iss, activeStateEvent.entityIDHash, activeStateEvent.previousEntityHash, rpcAddress);
-    await sleep(1000);
-    let finTime = new Date();
+    let eventPublicationTimestampSeconds = await publishDOMEEvent(activeStateEvent.eventType, activeStateEvent.dataLocation, activeStateEvent.metadata, iss, activeStateEvent.entityIDHash, activeStateEvent.previousEntityHash, rpcAddress);
+    let finTime = new Date(eventPublicationTimestampSeconds * 1000);
     await publishDOMEEvent("eventType3", previousStateEvent.dataLocation, previousStateEvent.metadata, iss, previousStateEvent.entityIDHash, previousStateEvent.previousEntityHash, rpcAddress);
 
     let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate(initialTime.valueOf(), finTime.valueOf(), rpcAddress);
@@ -223,7 +223,7 @@ describe('DOME active events retrieval', () => {
     await sleep(10000);
 
     expect(timestampOfPublishedEvent).not.toBe(-1);
-    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate(timestampOfPublishedEvent! * 1000, new Date().valueOf(), rpcAddress);
+    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate(timestampOfPublishedEvent! * 1000, timestampOfPublishedEvent! * 1000, rpcAddress);
     let allActiveEventsBetweenDatesEntityIdHashes: string[] = [];
     let allActiveEventsBetweenDatesWithDefinedEntityIdHash: DOMEEvent[] = [];
     allActiveEventsBetweenDates.forEach(event => {
@@ -248,7 +248,7 @@ describe('DOME active events retrieval', () => {
     await sleep(10000);
 
     expect(timestampOfPublishedEvent).not.toBe(-1);
-    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate(initialTime.valueOf(), timestampOfPublishedEvent * 1000, rpcAddress);
+    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate(timestampOfPublishedEvent * 1000, timestampOfPublishedEvent * 1000, rpcAddress);
     let allActiveEventsBetweenDatesEntityIdHashes: string[] = [];
     let allActiveEventsBetweenDatesWithDefinedEntityIdHash: DOMEEvent[] = [];
     allActiveEventsBetweenDates.forEach(event => {
@@ -272,7 +272,7 @@ describe('DOME active events retrieval', () => {
     await sleep(10000);
 
     expect(timestampOfPublishedEvent).not.toBe(-1);
-    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate((timestampOfPublishedEvent + 1) * 1000, new Date().valueOf(), rpcAddress);
+    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate((timestampOfPublishedEvent + 1) * 1000, (timestampOfPublishedEvent + 1) * 1000, rpcAddress);
     let allActiveEventsBetweenDatesEntityIdHashes: string[] = [];
     let allActiveEventsBetweenDatesWithDefinedEntityIdHash: DOMEEvent[] = [];
     allActiveEventsBetweenDates.forEach(event => {
@@ -297,7 +297,7 @@ describe('DOME active events retrieval', () => {
     await sleep(10000);
 
     expect(timestampOfPublishedEvent).not.toBe(-1);
-    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate(initialTime.valueOf(), (timestampOfPublishedEvent - 1) * 1000, rpcAddress);
+    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate((timestampOfPublishedEvent - 1) * 1000, (timestampOfPublishedEvent - 1) * 1000, rpcAddress);
     let allActiveEventsBetweenDatesEntityIdHashes: string[] = [];
     let allActiveEventsBetweenDatesWithDefinedEntityIdHash: DOMEEvent[] = [];
     allActiveEventsBetweenDates.forEach(event => {
@@ -315,7 +315,7 @@ describe('DOME active events retrieval', () => {
     let finTime = new Date();
     finTime.setFullYear(initialTime.getFullYear() + 1);
 
-    expect(await getActiveDOMEEventsByDate(finTime.valueOf(), initialTime.valueOf(), rpcAddress)).toThrowError(IllegalArgumentError);
+    expect(() => {getActiveDOMEEventsByDate(finTime.valueOf(), initialTime.valueOf(), rpcAddress)}).toThrowError(IllegalArgumentError);
   }, 60000);
 });
 
