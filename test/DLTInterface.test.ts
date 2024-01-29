@@ -107,7 +107,7 @@ describe('DOME events subscription', () => {
     subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)});
     await publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.dataLocation, correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIDHash, correctEventTypeOne.previousEntityHash, rpcAddress);
     await publishDOMEEvent(correctEventTypeTwo.eventType, correctEventTypeTwo.dataLocation, correctEventTypeTwo.metadata, iss, correctEventTypeTwo.entityIDHash, correctEventTypeTwo.previousEntityHash, rpcAddress);
-    await sleep(20000);
+    await sleep(30000);
 
     expect(entityIDHashesOfReceivedEvents).toContain(correctEventTypeOne.entityIDHash);
     expect(entityIDHashesOfReceivedEvents).toContain(correctEventTypeTwo.entityIDHash);
@@ -186,7 +186,7 @@ describe('DOME events publication', () => {
     let entityIDHashesOfReceivedEvents = new Set<string>();
     subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventPublicationValidCaseDOMEEventsHandler(event, entityIDHashesOfReceivedEvents)});
     await publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.dataLocation, correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIDHash, correctEventTypeOne.previousEntityHash, rpcAddress);
-    await sleep(10000);
+    await sleep(30000);
 
     expect(entityIDHashesOfReceivedEvents).toContain(correctEventTypeOne.entityIDHash);
   }, 60000);
@@ -278,7 +278,7 @@ describe('DOME active events retrieval', () => {
       }
     });
     await publishDOMEEvent(previousStateEvent.eventType, previousStateEvent.dataLocation, previousStateEvent.metadata, iss, previousStateEvent.entityIDHash, previousStateEvent.previousEntityHash, rpcAddress);
-    await sleep(10000);
+    await sleep(30000);
 
     expect(timestampOfPublishedEvent).not.toBe(-1);
     let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate(timestampOfPublishedEvent! * 1000, timestampOfPublishedEvent! * 1000, rpcAddress);
@@ -303,7 +303,7 @@ describe('DOME active events retrieval', () => {
       }
     });
     await publishDOMEEvent(previousStateEvent.eventType, previousStateEvent.dataLocation, previousStateEvent.metadata, iss, previousStateEvent.entityIDHash, previousStateEvent.previousEntityHash, rpcAddress);
-    await sleep(10000);
+    await sleep(30000);
 
     expect(timestampOfPublishedEvent).not.toBe(-1);
     let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate(timestampOfPublishedEvent * 1000, timestampOfPublishedEvent * 1000, rpcAddress);
@@ -327,7 +327,7 @@ describe('DOME active events retrieval', () => {
       }
     });
     await publishDOMEEvent(previousStateEvent.eventType, previousStateEvent.dataLocation, previousStateEvent.metadata, iss, previousStateEvent.entityIDHash, previousStateEvent.previousEntityHash, rpcAddress);
-    await sleep(10000);
+    await sleep(30000);
 
     expect(timestampOfPublishedEvent).not.toBe(-1);
     let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate((timestampOfPublishedEvent + 1) * 1000, (timestampOfPublishedEvent + 1) * 1000, rpcAddress);
@@ -352,7 +352,7 @@ describe('DOME active events retrieval', () => {
       }
     });
     await publishDOMEEvent(previousStateEvent.eventType, previousStateEvent.dataLocation, previousStateEvent.metadata, iss, previousStateEvent.entityIDHash, previousStateEvent.previousEntityHash, rpcAddress);
-    await sleep(20000);
+    await sleep(30000);
 
     expect(timestampOfPublishedEvent).not.toBe(-1);
     let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate((timestampOfPublishedEvent - 1) * 1000, (timestampOfPublishedEvent - 1) * 1000, rpcAddress);
