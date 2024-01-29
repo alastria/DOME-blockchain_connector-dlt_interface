@@ -315,7 +315,7 @@ describe('DOME active events retrieval', () => {
     let finTime = new Date();
     finTime.setFullYear(initialTime.getFullYear() + 1);
 
-    expect(() => {getActiveDOMEEventsByDate(finTime.valueOf(), initialTime.valueOf(), rpcAddress)}).toThrowError(IllegalArgumentError);
+    await expect(getActiveDOMEEventsByDate(finTime.valueOf(), initialTime.valueOf(), rpcAddress)).rejects.toThrow(IllegalArgumentError);
   }, 60000);
 });
 
