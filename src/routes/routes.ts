@@ -43,7 +43,7 @@ router.post("/api/v1/publishEvent", (req: any, resp: any) => {
   (async () => {
     debugLog("Entry call from origin: ", req.headers.origin);
     try {
-      await publishDOMEEvent(
+      let eventTimestamp = await publishDOMEEvent(
         req.body.eventType,
         req.body.dataLocation,
         req.body.relevantMetadata,
@@ -52,7 +52,7 @@ router.post("/api/v1/publishEvent", (req: any, resp: any) => {
         req.body.previousEntityHash,
         req.session.rpcAddress
       );
-      resp.status(201).send("OK");
+      resp.status(201).send(eventTimestamp);
     } catch (error: any) {
       if (error == IllegalArgumentError) {
         errorLog("Error:\n ", error);

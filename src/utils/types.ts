@@ -1,4 +1,4 @@
-type DOMEEvent = {
+export type DOMEEvent = {
     id: number;
     timestamp: number;
     eventType: string;
