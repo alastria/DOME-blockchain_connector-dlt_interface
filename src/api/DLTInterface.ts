@@ -11,6 +11,7 @@ import axios from "axios";
 import { IllegalArgumentError } from "../exceptions/IllegalArgumentError";
 import { NotificationEndpointError } from "../exceptions/NotificationEndpointError";
 import { getIndexOfFirstAppearanceOfElement, getIndexOfLastAppearanceOfElement } from "../utils/funcs";
+import { DOMEEvent } from "../utils/types";
 
 const debugLog = debug("DLT Interface Service: ");
 const errorLog = debug("DLT Interface Service:error ");
@@ -72,6 +73,7 @@ export async function connectToNode(rpcAddress: string, iss: string, req: any) {
  * @param iss the organization identifier hash
  * @param rpcAddress the address of the blockchain node
  * @param entityIDHash entity identifier hash
+ * @returns the timestamp of the block where the event was published to.
  */
 export async function publishDOMEEvent(
   eventType: string,
@@ -141,6 +143,7 @@ export async function publishDOMEEvent(
     debugLog("  > Transaction waiting to be mined...");
     await tx.wait();
     debugLog("  > Transaction executed:\n" + JSON.stringify(tx));
+    return (await provider.getBlock((await provider.getTransaction(tx.hash)).blockNumber!)).timestamp;
   } catch (error) {
     errorLog(" > !! Error in publishDOMEEvent");
     throw error;
