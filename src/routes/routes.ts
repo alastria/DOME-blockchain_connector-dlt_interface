@@ -52,7 +52,7 @@ router.post("/api/v1/publishEvent", (req: any, resp: any) => {
         req.body.previousEntityHash,
         req.session.rpcAddress
       );
-      resp.status(201).send(eventTimestamp);
+      resp.status(201).json(eventTimestamp);
     } catch (error: any) {
       if (error == IllegalArgumentError) {
         errorLog("Error:\n ", error);
