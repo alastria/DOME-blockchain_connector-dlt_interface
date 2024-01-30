@@ -1,5 +1,10 @@
 import { debug } from "debug";
 import { BigNumber, ethers } from "ethers";
+import {
+  DOME_EVENTS_CONTRACT_ABI,
+  DOME_EVENTS_CONTRACT_ADDRESS,
+  DOME_PRODUCTION_BLOCK_NUMBER
+} from "../utils/const";
 import axios from "axios";
 import { saveSession } from '../db/sessions';
 
@@ -116,8 +121,8 @@ export async function publishDOMEEvent(
     debugLog("  > Ethereum Address of event publisher: ", wallet.address);
 
     const domeEventsContractWithSigner = new ethers.Contract(
-      process.env.DOME_EVENTS_CONTRACT_ADDRESS!,
-      process.env.DOME_EVENTS_CONTRACT_ABI!,
+      DOME_EVENTS_CONTRACT_ADDRESS,
+      DOME_EVENTS_CONTRACT_ABI,
       wallet
     );
 
@@ -184,12 +189,12 @@ export function subscribeToDOMEEvents(
 
     const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
     const DOMEEventsContract = new ethers.Contract(
-      process.env.DOME_EVENTS_CONTRACT_ADDRESS!,
-      process.env.DOME_EVENTS_CONTRACT_ABI!,
+      DOME_EVENTS_CONTRACT_ADDRESS,
+      DOME_EVENTS_CONTRACT_ABI,
       provider
     );
     debugLog(
-      " > Contract with address " + process.env.DOME_EVENTS_CONTRACT_ADDRESS! + " loaded"
+      " > Contract with address " + DOME_EVENTS_CONTRACT_ADDRESS + " loaded"
     );
     debugLog(
       " > User requests to subscribe to events..." + eventTypes.join(", ")
@@ -311,8 +316,8 @@ export async function getActiveDOMEEventsByDate(
 
   const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
   const DOMEEventsContract = new ethers.Contract(
-    process.env.DOME_EVENTS_CONTRACT_ADDRESS!,
-    process.env.DOME_EVENTS_CONTRACT_ABI!,
+    DOME_EVENTS_CONTRACT_ADDRESS,
+    DOME_EVENTS_CONTRACT_ABI,
     provider
   );
   debugLog(">>> Connecting to blockchain node...");
@@ -323,7 +328,7 @@ export async function getActiveDOMEEventsByDate(
   debugLog("  >> Blockchain block number is " + blockNum);
   let allDOMEEvents = await DOMEEventsContract.queryFilter(
     "*",
-    process.env.DOME_PRODUCTION_BLOCK_NUMBER,
+    DOME_PRODUCTION_BLOCK_NUMBER,
     blockNum
   );
   let filterEventsByEntityIDHash;
