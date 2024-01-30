@@ -1,6 +1,9 @@
 import { connectToNode, subscribeToDOMEEvents, publishDOMEEvent, getActiveDOMEEventsByDate } from "../api/DLTInterface";
 import express from "express";
 import debug from "debug";
+import { getSessionByISS } from '../db/sessions';
+
+
 import { IllegalArgumentError } from "../exceptions/IllegalArgumentError";
 import { NotificationEndpointError } from "../exceptions/NotificationEndpointError";
 
