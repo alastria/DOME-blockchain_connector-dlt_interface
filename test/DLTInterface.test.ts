@@ -281,7 +281,7 @@ describe('DOME active events retrieval', () => {
     await sleep(20000);
 
     expect(timestampOfPublishedEvent).not.toBe(-1);
-    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate(timestampOfPublishedEvent! * 1000, timestampOfPublishedEvent! * 1000, rpcAddress);
+    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate(timestampOfPublishedEvent * 1000, timestampOfPublishedEvent * 1000, rpcAddress);
     let allActiveEventsBetweenDatesEntityIdHashes: string[] = [];
     let allActiveEventsBetweenDatesWithDefinedEntityIdHash: DOMEEvent[] = [];
     allActiveEventsBetweenDates.forEach(event => {
@@ -295,7 +295,6 @@ describe('DOME active events retrieval', () => {
   }, 60000);
 
   it('valid case: active event in upper boundary IS included', async () => {
-    let initialTime = new Date();
     let timestampOfPublishedEvent: number = -1; 
     subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
       if(event.entityIDHash === previousStateEvent.entityIDHash){
@@ -344,7 +343,6 @@ describe('DOME active events retrieval', () => {
   }, 60000);
 
   it('valid case: active event out of upper boundary IS NOT included', async () => {
-    let initialTime = new Date();
     let timestampOfPublishedEvent: number = -1; 
     subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
       if(event.entityIDHash === previousStateEvent.entityIDHash){
