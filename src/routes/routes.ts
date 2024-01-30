@@ -46,7 +46,7 @@ router.post("/api/v1/publishEvent", (req: any, resp: any) => {
   (async () => {
     debugLog("Entry call from origin: ", req.headers.origin);
     try {
-      await publishDOMEEvent(
+      let eventTimestamp = await publishDOMEEvent(
         req.body.eventType,
         req.body.dataLocation,
         req.body.relevantMetadata,
@@ -55,7 +55,7 @@ router.post("/api/v1/publishEvent", (req: any, resp: any) => {
         req.body.previousEntityHash,
         req.session.rpcAddress
       );
-      resp.status(201).send("OK");
+      resp.status(201).json(eventTimestamp);
     } catch (error: any) {
       if (error == IllegalArgumentError) {
         errorLog("Error:\n ", error);
@@ -91,4 +91,18 @@ router.post("/api/v1/subscribe", (req: any, resp: any) => {
   })();
 });
 
+router.get('/api/v1/events', async (req: any, resp: any) => {
+  debugLog("Entry call from origin: ", req.headers.origin);
+  try {
+    let activeEvents = await getActiveDOMEEventsByDate(req.query.startDate, req.query.endDate, req.session.rpcAddress);
+    resp.status(200).json(activeEvents);
+  } catch (error: any) {
+    if (error == IllegalArgumentError) {
+      errorLog("Error:\n ", error);
+      resp.status(400).send(error.message);
+    }
+    debugLog("Error:\n ", error);
+    resp.status(400).send("Error connecting to the blockchain.");
+  }
+})
 export = router;

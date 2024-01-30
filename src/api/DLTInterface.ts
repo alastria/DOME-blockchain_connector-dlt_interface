@@ -1,15 +1,13 @@
+let binarySearch = require("binary-search");
 import { debug } from "debug";
 import { BigNumber, ethers } from "ethers";
-import {
-  DOME_EVENTS_CONTRACT_ABI,
-  DOME_EVENTS_CONTRACT_ADDRESS,
-  DOME_PRODUCTION_BLOCK_NUMBER
-} from "../utils/const";
 import axios from "axios";
 import { saveSession } from '../db/sessions';
 
 import { IllegalArgumentError } from "../exceptions/IllegalArgumentError";
 import { NotificationEndpointError } from "../exceptions/NotificationEndpointError";
+import { getIndexOfFirstAppearanceOfElement, getIndexOfLastAppearanceOfElement } from "../utils/funcs";
+import { DOMEEvent } from "../utils/types";
 
 const debugLog = debug("DLT Interface Service: ");
 const errorLog = debug("DLT Interface Service:error ");
@@ -71,6 +69,7 @@ export async function connectToNode(rpcAddress: string, iss: string, req: any) {
  * @param iss the organization identifier hash
  * @param rpcAddress the address of the blockchain node
  * @param entityIDHash entity identifier hash
+ * @returns the timestamp of the block where the event was published to.
  */
 export async function publishDOMEEvent(
   eventType: string,
@@ -121,8 +120,8 @@ export async function publishDOMEEvent(
     debugLog("  > Ethereum Address of event publisher: ", wallet.address);
 
     const domeEventsContractWithSigner = new ethers.Contract(
-      DOME_EVENTS_CONTRACT_ADDRESS,
-      DOME_EVENTS_CONTRACT_ABI,
+      process.env.DOME_EVENTS_CONTRACT_ADDRESS!,
+      process.env.DOME_EVENTS_CONTRACT_ABI!,
       wallet
     );
 
@@ -140,6 +139,7 @@ export async function publishDOMEEvent(
     debugLog("  > Transaction waiting to be mined...");
     await tx.wait();
     debugLog("  > Transaction executed:\n" + JSON.stringify(tx));
+    return (await provider.getBlock((await provider.getTransaction(tx.hash)).blockNumber!)).timestamp;
   } catch (error) {
     errorLog(" > !! Error in publishDOMEEvent");
     throw error;
@@ -189,12 +189,12 @@ export function subscribeToDOMEEvents(
 
     const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
     const DOMEEventsContract = new ethers.Contract(
-      DOME_EVENTS_CONTRACT_ADDRESS,
-      DOME_EVENTS_CONTRACT_ABI,
+      process.env.DOME_EVENTS_CONTRACT_ADDRESS!,
+      process.env.DOME_EVENTS_CONTRACT_ABI!,
       provider
     );
     debugLog(
-      " > Contract with address " + DOME_EVENTS_CONTRACT_ADDRESS + " loaded"
+      " > Contract with address " + process.env.DOME_EVENTS_CONTRACT_ADDRESS! + " loaded"
     );
     debugLog(
       " > User requests to subscribe to events..." + eventTypes.join(", ")
@@ -216,7 +216,7 @@ export function subscribeToDOMEEvents(
           id: index,
           publisherAddress: origin,
           entityIDHash: entityIDHash,
-          previousEntityIDHash: entityIDHash,
+          previousEntityHash: entityIDHash,
           eventType: eventType,
           timestamp: timestamp,
           dataLocation: dataLocation,
@@ -300,24 +300,46 @@ function notifyEndpointDOMEEventsHandler(
     });
 }
 
+/**
+ * Returns all the DOME active events from the blockchain between given dates  
+ * @param startDateMs the given start date in miliseconds
+ * @param endDateMs the given end date in miliseconds
+ * @param endDateMs 
+ * @param rpcAddress 
+ * @returns a JSON with all the DOME active events from the blockchain between the given dates with its timestamp truncated to seconds, not to miliseconds
+ */
 export async function getActiveDOMEEventsByDate(
   startDateMs: number,
   endDateMs: number,
   rpcAddress: string
-) {
-  let startDate = new Date(startDateMs);
-  let endDate = new Date(endDateMs);
+): Promise<DOMEEvent[]> {
+  if(startDateMs === null || startDateMs === undefined){
+    throw new IllegalArgumentError("The start date is null.");
+  }
+  if(endDateMs === null || endDateMs === undefined){
+    throw new IllegalArgumentError("The end date is null.");
+  }
+  if(rpcAddress === null || rpcAddress === undefined){
+    throw new IllegalArgumentError("The rpc address is null.");
+  }
+  if(startDateMs > endDateMs){
+    throw new IllegalArgumentError("The end date can't be lower than the start date.");
+  }
+
+  let startDateSeconds = Math.trunc(startDateMs / 1000);
+  let endDateSeconds = Math.trunc(endDateMs / 1000);
+
+  let startDate = new Date(parseInt(startDateMs.toString()));
+  let endDate = new Date(parseInt(endDateMs.toString()));
+  let initTime = new Date();
   debugLog(
     ">>>> Getting active events between " + startDate + " and " + endDate
   );
 
-  let allActiveEvents: ethers.Event[] = [];
-  let alreadyCheckedIDEntityHashes = new Map<string, boolean>();
-
   const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
   const DOMEEventsContract = new ethers.Contract(
-    DOME_EVENTS_CONTRACT_ADDRESS,
-    DOME_EVENTS_CONTRACT_ABI,
+    process.env.DOME_EVENTS_CONTRACT_ADDRESS!,
+    process.env.DOME_EVENTS_CONTRACT_ABI!,
     provider
   );
   debugLog(">>> Connecting to blockchain node...");
@@ -328,19 +350,90 @@ export async function getActiveDOMEEventsByDate(
   debugLog("  >> Blockchain block number is " + blockNum);
   let allDOMEEvents = await DOMEEventsContract.queryFilter(
     "*",
-    DOME_PRODUCTION_BLOCK_NUMBER,
+    parseInt(process.env.DOME_PRODUCTION_BLOCK_NUMBER!),
     blockNum
   );
+  let allDOMEEventsTimestamps: number[] = [];
+  allDOMEEvents.forEach((event) => {allDOMEEventsTimestamps.push(BigNumber.from(event.args![1]._hex).toNumber())});
+
+  let indexOfFirstEventToCheck: number = -1;
+  let indexOfLastEventToCheck: number = -1;
+  for (let i = 0; i <= (endDateSeconds - startDateSeconds) && (indexOfFirstEventToCheck < 0); i++) {
+    indexOfFirstEventToCheck = binarySearch(allDOMEEventsTimestamps, startDateSeconds + i, function(element: any, needle: any) { return element - needle; }); 
+  }
+  for (let i = 0; i <= (endDateSeconds - startDateSeconds) && (indexOfLastEventToCheck < 0); i++) {
+    indexOfLastEventToCheck = binarySearch(allDOMEEventsTimestamps, endDateSeconds - i, function(element: any, needle: any) { return element - needle; }); 
+  }
+
+  if(indexOfFirstEventToCheck < 0 || indexOfLastEventToCheck < 0){
+    return [];
+  }
+
+  indexOfFirstEventToCheck = getIndexOfFirstAppearanceOfElement(allDOMEEventsTimestamps, indexOfFirstEventToCheck);
+  indexOfLastEventToCheck = getIndexOfLastAppearanceOfElement(allDOMEEventsTimestamps, indexOfLastEventToCheck);
+  let allDOMEEventsBetweenDates = allDOMEEvents.slice(indexOfFirstEventToCheck, indexOfLastEventToCheck + 1);
+
+  let allActiveEvents: ethers.Event[] = await getAllActiveDOMEBlockchainEventsBetweenDates(allDOMEEventsBetweenDates, DOMEEventsContract, blockNum, startDateSeconds, endDateSeconds);
+
+  debugLog("The active DOME Events to be returned are the following:\n");
+  let allActiveDOMEEvents: DOMEEvent[] = [];
+  
+  allActiveEvents.forEach((event) => {
+    let eventJson: DOMEEvent = {id: 0, timestamp: 0, eventType: "", dataLocation: "", relevantMetadata: [""], entityId: "", previousEntityHash: ""}; 
+    for (let i = 0; i < event.args!.length; i++) {
+        eventJson.id = event.args![0];
+        eventJson.timestamp = event.args![1];
+        eventJson.eventType = event.args![4];
+        eventJson.dataLocation = event.args![5];
+        eventJson.relevantMetadata = event.args![6];
+        eventJson.entityId = event.args![3];
+        eventJson.previousEntityHash = eventJson.entityId;
+    }
+
+    let eventIDHash = event.args![0]._hex;
+    let eventTimestampHash = event.args![1]._hex;
+    eventJson.id = BigNumber.from(eventIDHash).toNumber();
+    eventJson.timestamp = BigNumber.from(eventTimestampHash).toNumber() * 1000;
+    debugLog(eventJson);
+
+    allActiveDOMEEvents.push(eventJson);
+  });
+
+  debugLog("Number of active events is " + allActiveDOMEEvents.length + "\n");
+  let finTime = new Date();
+
+  debugLog("***************************************STATS***************************************");
+  debugLog("Total blockchain events are " + allDOMEEvents.length);
+  debugLog("Processed blockchain events are " + allDOMEEventsBetweenDates.length);
+  debugLog("Processing time was " + (finTime.getTime() - initTime.getTime()) / 1000 / 60);
+  debugLog("***********************************************************************************\n");
+
+  return allActiveDOMEEvents;
+}
+
+
+/**
+ * Returns all the DOME active blockchain events from the blockchain between given dates  
+ * @param DOMEEvents some DOME blockchain events
+ * @param DOMEEventsContract the DOME Event's contract. 
+ * @param actualBlockNumber the actual block number of the blockchain
+ * @param startDateSeconds the given start date in seconds
+ * @param endDateSeconds the given end date in seconds
+ * @returns an Array with all the DOME active blockchain events from the blockchain between the given dates
+ */
+async function getAllActiveDOMEBlockchainEventsBetweenDates(DOMEEvents: ethers.Event[], DOMEEventsContract: ethers.Contract, actualBlockNumber: number, startDateSeconds: number, endDateSeconds: number){
+  let activeEvents: ethers.Event[] = [];
+  let alreadyCheckedIDEntityHashes = new Map<string, boolean>();
   let filterEventsByEntityIDHash;
   let eventDateHexBigNumber;
   let eventDateMilisecondsFromEpoch;
-  for (let i = 0; i < allDOMEEvents.length; i++) {
+  for (let i = 0; i < DOMEEvents.length; i++) {
     debugLog("  >>> Checking onchain active events...");
 
-    let entityIDHashToFilterWith = allDOMEEvents[i].args![3];
+    let entityIDHashToFilterWith = DOMEEvents[i].args![3];
     debugLog("  >> EntityIDHash of event is " + entityIDHashToFilterWith);
     if (!alreadyCheckedIDEntityHashes.has(entityIDHashToFilterWith)) {
-      eventDateHexBigNumber = allDOMEEvents[i].args![1]._hex;
+      eventDateHexBigNumber = DOMEEvents[i].args![1]._hex;
       eventDateMilisecondsFromEpoch =
         BigNumber.from(eventDateHexBigNumber).toNumber() * 1000;
       debugLog(
@@ -362,8 +455,8 @@ export async function getActiveDOMEEventsByDate(
       );
       let eventsWithSameEntityIDHash = await DOMEEventsContract.queryFilter(
         filterEventsByEntityIDHash,
-        DOME_PRODUCTION_BLOCK_NUMBER,
-        blockNum
+        parseInt(process.env.DOME_PRODUCTION_BLOCK_NUMBER!),
+        actualBlockNumber 
       );
       debugLog(
         "  > The dates of the events with the same EntityIDHash are the following:\n"
@@ -377,6 +470,13 @@ export async function getActiveDOMEEventsByDate(
 
       let activeEvent =
         eventsWithSameEntityIDHash[eventsWithSameEntityIDHash.length - 1];
+      for (let i= 0; i < eventsWithSameEntityIDHash.length; i++) {
+        let eventWithSameIDHashTimestampSeconds = BigNumber.from(eventsWithSameEntityIDHash[eventsWithSameEntityIDHash.length - 1 - i].args![1]._hex).toNumber()
+        if(eventWithSameIDHashTimestampSeconds >= startDateSeconds && eventWithSameIDHashTimestampSeconds <= endDateSeconds){
+          activeEvent = eventsWithSameEntityIDHash[eventsWithSameEntityIDHash.length - 1 - i];
+          break;
+        }
+      }
       debugLog(
         "  > The active event is the event number " +
           eventsWithSameEntityIDHash.length +
@@ -384,24 +484,11 @@ export async function getActiveDOMEEventsByDate(
       );
 
       alreadyCheckedIDEntityHashes.set(entityIDHashToFilterWith, true);
-      allActiveEvents.push(activeEvent);
-      debugLog("  > Updated the list of active events:\n" + allActiveEvents);
+
+      activeEvents.push(activeEvent);
+      debugLog("  > Updated the list of active events:\n" + activeEvents);
     }
   }
 
-  let allActiveDOMEEvents: object[] = [];
-  allActiveEvents.forEach((event) => {
-    let eventJson = JSON.parse(JSON.stringify(event));
-    console.log(JSON.stringify(event));
-    let eventIndexHex = event.args![0]._hex;
-    let eventTimestampHex = event.args![1]._hex;
-    eventJson.args![0] = BigNumber.from(eventIndexHex).toNumber();
-    eventJson.args![1] = BigNumber.from(eventTimestampHex).toNumber() * 1000;
-    delete eventJson.args[7];
-    allActiveDOMEEvents.push(eventJson.args);
-  });
-
-  //debugLog("The active DOME Events to be returned are the following:\n");
-  //debugLog(await allActiveEvents);
-  return allActiveDOMEEvents;
+  return activeEvents;
 }
