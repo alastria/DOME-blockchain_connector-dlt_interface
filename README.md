@@ -37,7 +37,7 @@ You can see the OpenAPI specification at `/docs`
 
 ## Tweaking the component to connect to an EVM blockchain
 To configure the component to connect to a certain EVM blockchain you need to:
-- Deploy the smart contract at https://github.com/alastria/DOME-blockchain_smart_contracts/tree/main in your blockchain network. 
+- Deploy the smart contract at `https://github.com/alastria/DOME-blockchain_smart_contracts/tree/main` in your blockchain network. 
 - Change the contract address and ABI env variables as defined in `.env` file to fit the one deployed in your network. 
 - Change the block number from which all events will be considered legit events i.e. not test events although written by trusted entities of DOME, not events written in earyly development phases.
 
@@ -50,12 +50,18 @@ To configure the component to connect to a certain EVM blockchain you need to:
 - Put the secret to be used to generate the cookies in the `.env` file.
 - Create the Docker image of the component by using the Dockerfile at the root directory of the project.
 - Execute the image in a docker container.
-- The REST API will be available at http://localhost:8080/
+- The REST API will be available at `http://localhost:8080/`
 
 ## Installation using the Docker image
-- Get the docker image from https://quay.io/repository/digitelts/dlt-adapter
-- Run the docker image in a container after setting all the env variables in the `.env` file as commented before.
-- The REST API will be available at http://localhost:8080/
+- Get the docker image from `https://quay.io/repository/digitelts/dlt-adapter`
+- Run the docker image in a container indicating the `.env` file after setting all the env variables in the `.env` file as commented before.
+- The REST API will be available at `http://localhost:8080/`
+
+## Installation using the Helm Chart
+- Set all the env variables in the `.env` file as commented before.
+- Create a configmap with the `.env` file using kubectl: `kubectl create configmap dlt-adapter-env-config --from-env-file=../.env`
+- Install the Helm Chart with `helm install dlt-adapter dlt-adapter --values dlt-adapter/values.yml`
+- The REST API will be available at `http://localhost:8080/`
 
 # License
 - [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
