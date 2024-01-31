@@ -8,11 +8,11 @@ services:
     volumes:
       - mongodb-data:/data/db
 
-  nodejs:
+  dlt-adapter:
     build:
       context: . 
       dockerfile: Dockerfile
-    container_name: nodejs
+    container_name: dlt-adapter 
     ports:
       - "8080:8080"
     depends_on:
