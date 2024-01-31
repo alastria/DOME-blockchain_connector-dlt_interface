@@ -2,7 +2,6 @@ let binarySearch = require("binary-search");
 import { debug } from "debug";
 import { BigNumber, ethers } from "ethers";
 import axios from "axios";
-import { saveSession } from '../db/sessions';
 
 import { IllegalArgumentError } from "../exceptions/IllegalArgumentError";
 import { NotificationEndpointError } from "../exceptions/NotificationEndpointError";
