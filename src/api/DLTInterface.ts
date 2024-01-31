@@ -12,54 +12,6 @@ const debugLog = debug("DLT Interface Service: ");
 const errorLog = debug("DLT Interface Service:error ");
 
 /**
- * Configures a blockchain node as the one to be used for the user's session. The session is managed at cookie level.
- * @param rpcAddress the address of the blockchain node.
- * @param iss the organization identifier hash
- * @param req the HTTP request.
- */
-export async function connectToNode(rpcAddress: string, iss: string, req: any) {
-  if (rpcAddress === "") {
-    throw new IllegalArgumentError("The rpc address is blank.");
-  }
-  if (rpcAddress === null || rpcAddress === undefined) {
-    throw new IllegalArgumentError("The rpc address is null.");
-  }
-  if (iss === "") {
-    throw new IllegalArgumentError("The iss identifier is blank.");
-  }
-  if (iss === null || iss === undefined) {
-    throw new IllegalArgumentError("The iss identifier is null.");
-  }
-
-  debugLog(">>> Connecting to blockchain node...");
-  // Entry parameters in method.
-  debugLog("  > rpcAddress: " + rpcAddress);
-  debugLog("  > iss: " + iss);
-
-  let provider;
-  try {
-    provider = new ethers.providers.JsonRpcProvider(rpcAddress);
-  } catch (error) {
-    errorLog(" > !! Error connecting to the blockchain");
-    throw error;
-  }
-
-  debugLog("  > Provider: " + JSON.stringify(provider));
-  debugLog(
-    "  > Provider Network: " + JSON.stringify(await provider.getNetwork())
-  );
-  // Registry req parameters in session.
-  debugLog("  > req.session: " + JSON.stringify(req.session));
-  debugLog("  > req.headers: " + JSON.stringify(req.headers));
-  req.session.provider = provider;
-  req.session.iss = iss;
-  req.session.rpcAddress = rpcAddress;
-  debugLog(
-    "  > Stored blockchain node configuration for this user's session (provider and public key)."
-  );
-}
-
-/**
  * Publish DOME event as a blockchain event.
  *
  * @param eventType the name of the dome event

@@ -30,37 +30,6 @@ paths:
       - url: http://localhost:8080
     servers:
     - url: http://localhost:8080
-  /api/v1/configureNode:
-    post:
-      description: Auto generated using Swagger Inspector
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/v1_configureNode_body'
-            examples:
-              "0":
-                value: "{\r\n    \"rpcAddress\": \"https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6\",\r\n    \"iss\": \"0xb794f5ea0ba39494ce839613fffba742795792680x626c756500000000000000000000000000000000000000000000000000000000\"\r\n}"
-      responses:
-        "200":
-          description: Auto generated using Swagger Inspector
-          content:
-            text/html; charset=utf-8:
-              schema:
-                type: string
-              example: OK
-        "400":
-          description: Error 
-          content:
-            text/html; charset=utf-8:
-              schema:
-                type: string
-              example: Error connecting to the blockchain node.
-      servers:
-      - url: http://localhost:8080
-    servers:
-    - url: http://localhost:8080
-
 
   /api/v1/subscribe:
     post:
@@ -96,7 +65,7 @@ paths:
 
   /api/v1/publishEvent:
     post:
-      description: Auto generated using Swagger Inspector
+      description: Publishes a DOME Event to the blockchain network set by environment variables through the node RPC Address and with the iss identifier provided. It is not mandatory to provide those two if planning to use the ones declared in the respective environment variables.
       requestBody:
         content:
           application/json:

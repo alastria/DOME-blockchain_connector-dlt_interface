@@ -15,53 +15,6 @@ const notificationEndpoint = undefined;
 const ownIss = "0x61b27fef24cfe8a0b797ed8a36de2884f9963c0c2a0da640e3ec7ad6cd0c351e"
 const iss = "0x43b27fef24cfe8a0b797ed8a36de2884f9963c0c2a0da640e3ec7ad6cd0c493d";
 
-describe('Configure blockchain node', () => {
-
-  it('valid case: should configure the session with the provided blockchain node', async () => {
-    let session = {iss: "", rpcAddress: ""};
-    let req = { session };
-    await connectToNode(rpcAddress, iss, req);
-    expect(req.session.iss).toBe(iss);
-    expect(req.session.rpcAddress).toBe(rpcAddress);
-  }, 10000);
-
-  it('invalid case: blank rpcAddress', async () => {
-    let session = {iss: "", rpcAddress: ""};
-    let req = { session };
-    await expect(connectToNode("", iss, req)).rejects.toThrow(IllegalArgumentError);
-  });
-
-  it('invalid case: undefined rpcAddress', async () => {
-    let session = {iss: "", rpcAddress: ""};
-    let req = { session };
-    await expect(connectToNode(undefined, iss, req)).rejects.toThrow(IllegalArgumentError);
-  });
-
-  it('invalid case: null rpcAddress', async () => {
-    let session = {iss: "", rpcAddress: ""};
-    let req = { session };
-    await expect(connectToNode(null, iss, req)).rejects.toThrow(IllegalArgumentError);
-  });
-
-  it('invalid case: blank iss', async () => {
-    let session = {iss: "", rpcAddress: ""};
-    let req = { session };
-    await expect(connectToNode(rpcAddress, "", req)).rejects.toThrow(IllegalArgumentError);
-  });
-
-  it('invalid case: undefined iss', async () => {
-    let session = {iss: "", rpcAddress: ""};
-    let req = { session };
-    await expect(connectToNode(rpcAddress, undefined, req)).rejects.toThrow(IllegalArgumentError);
-  });
-
-  it('invalid case: null iss', async () => {
-    let session = {iss: "", rpcAddress: ""};
-    let req = { session };
-    await expect(connectToNode(rpcAddress, null, req)).rejects.toThrow(IllegalArgumentError);
-  });
-});
-
 describe('DOME events subscription', () => {
   let eventTypesOfInterest: string[];
 
