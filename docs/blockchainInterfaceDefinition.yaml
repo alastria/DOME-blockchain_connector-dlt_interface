@@ -1,56 +1,53 @@
----
 openapi: 3.0.1
 info:
-  title: Blockchain Interface DOME 
-  description: The component to be used when interacting with the blockchain layer in DOME. 
-  version: "0.1"
+  title: Blockchain Interface DOME
+  description: The component to be used when interacting with the blockchain layer in DOME.
+  version: '0.1'
 servers:
-- url: http://localhost:8080
+  - url: http://localhost:8080
+
 paths:
+
   /health:
     get:
-      description: Auto generated using Swagger Inspector
+      description: Healthcheck endpoint
       responses:
-        "200":
+        '200':
           description: Auto generated using Swagger Inspector
           content:
             text/html; charset=utf-8:
               schema:
                 type: string
-              example: {
-                        status: "UP",
-                        checks: [
-                                  {
-                                    name: "Blockchain connector health check",
-                                    status: "UP"
-                                  }
-                                ]
-                      }
+              example:
+                status: UP
+                checks:
+                  - name: DLT Adapter health check
+                    status: UP
       servers:
-      - url: http://localhost:8080
+        - url: http://localhost:8080
     servers:
-    - url: http://localhost:8080
+      - url: http://localhost:8080
 
   /api/v1/subscribe:
     post:
-      description: Auto generated using Swagger Inspector
+      description: Subscribes to the DOME Events of the specified type and notifies the corresponding DOME Events to the specified endpoint.
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/v1_subscribe_body'
             examples:
-              "0":
+              '0':
                 value: "{\r\n   \"eventTypes\": [\"ProductAdded1\", \"ProductAdded2\"],\r\n    \"notificationEndpoint\": \"http://localhost:8080/api/v1/testSubscribedUser\"\r\n}"
       responses:
-        "200":
+        '200':
           description: Auto generated using Swagger Inspector
           content:
             text/html; charset=utf-8:
               schema:
                 type: string
               example: OK.
-        "400":
+        '400':
           description: Auto generated using Swagger Inspector
           content:
             text/html; charset=utf-8:
@@ -58,10 +55,9 @@ paths:
                 type: string
               example: Error connecting to the blockchain node.
       servers:
-      - url: http://localhost:8080
+        - url: http://localhost:8080
     servers:
-    - url: http://localhost:8080
-
+      - url: http://localhost:8080
 
   /api/v1/publishEvent:
     post:
@@ -72,17 +68,17 @@ paths:
             schema:
               $ref: '#/components/schemas/v1_publishEvent_body'
             examples:
-              "0":
+              '0':
                 value: "{\r\n    \"eventType\": \"ProductAdded\",\r\n    \"eventDataLocation\": \"x\",\r\n    \"relevantMetadata\": [\"veryRelevant1\", \"veryRelevant2\"],\r\n \"entityId\": \"0x626c756500000000000000000000000000000000000000000000000000000000\",\r\n \"previousEntityHash\": \"0x626c756500000000000000000000000000000000000000000000000000000000\"}"
       responses:
-        "200":
-          description: Auto generated using Swagger Inspector
+        '201':
+          description: Returns the blockchain UNIX timestamp of publication of the event 
           content:
             text/html; charset=utf-8:
               schema:
                 type: string
-              example: "OK"
-        "400":
+              example: 1706616455
+        '400':
           description: Auto generated using Swagger Inspector
           content:
             text/html; charset=utf-8:
@@ -90,22 +86,77 @@ paths:
                 type: string
               example: Error connecting to the blockchain node.
       servers:
-      - url: http://localhost:8080
+        - url: http://localhost:8080
     servers:
-    - url: http://localhost:8080
+      - url: http://localhost:8080
+
+  /api/v1/events:
+    get:
+      parameters:
+        - in: query
+          name: startDate
+          schema:
+            type: string 
+        - in: query
+          name: endDate 
+          schema:
+            type: string 
+
+      responses:
+        '200':
+          description: Returns the DOME Events that are still active between the given dates
+          content:
+            application/json:
+              examples:
+                '0':
+                  value:  [
+                            {
+                                "id": 702,
+                                "timestamp": 1705401561000,
+                                "eventType": "ProductOffering",
+                                "dataLocation": "http://scorpio:9090/ngsi-ld/v1/entities/urn:ngsi-ld:product-offering:443734333?hl=0xb1331924fa7a2dc86ebedfbef5b159449cf91112b5ec4336ca8342cc71ac060e",
+                                "relevantMetadata": [],
+                                "entityId": "0x82ca976389b8c45f0a5923c21f8d0185d0d632061a683830e687c29e8bdc91b6",
+                                "previousEntityHash": "0x82ca976389b8c45f0a5923c21f8d0185d0d632061a683830e687c29e8bdc91b6"
+                            },
+                            {
+                                "id": 689,
+                                "timestamp": 1705047233000,
+                                "eventType": "ProductOffering",
+                                "dataLocation": "http://scorpio:9090/ngsi-ld/v1/entities/urn:ngsi-ld:product-offering:443734334?hl=0xe9501808af2401bc84d387383e37bf52362017f4c8e51a702f0f0480dced8a82",
+                                "relevantMetadata": [],
+                                "entityId": "0x65c4b136290052a864ec06978838bfcad47fc5234c467d34e372a37bc1aa91e4",
+                                "previousEntityHash": "0x65c4b136290052a864ec06978838bfcad47fc5234c467d34e372a37bc1aa91e4"
+                            } 
+                          ]
+        '400':
+          description: Auto generated using Swagger Inspector
+          content:
+            text/html; charset=utf-8:
+              schema:
+                type: string
+              example: Error connecting to the blockchain node.
+      servers:
+        - url: http://localhost:8080
+    servers:
+      - url: http://localhost:8080
 
 components:
   schemas:
     v1_publishEvent_body:
       type: object
       properties:
-        eventRelevantMetadata:
-          type: array
-          items:
-            type: string
         eventType:
           type: string
         dataLocation:
+          type: string
+        relevantMetadata:
+          type: array
+          items:
+            type: string
+        entityId:
+          type: string
+        previousEntityHash:
           type: string
     v1_subscribe_body:
       type: object
@@ -116,10 +167,3 @@ components:
           type: array
           items:
             type: string
-    v1_configureNode_body:
-      type: object
-      properties:
-        iss:
-          type: string
-        rpcAddress:
-          type: string

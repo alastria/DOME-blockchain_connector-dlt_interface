@@ -13,7 +13,7 @@ router.get("/health", (req: any, resp: any) => {
     status: "UP",
     checks: [
       {
-        name: "Blockchain connector health check",
+        name: "DLT Adapter health check",
         status: "UP",
       },
     ],
