@@ -164,20 +164,26 @@ describe('DOME events subscription', () => {
 
 describe('DOME events publication', () => {
   let eventTypesOfInterest: string[];
+  let entityIdOne;
+  let correctEventTypeOne: any;
 
   beforeAll(() => {
     eventTypesOfInterest = ['eventType1', 'eventType2'];
   })
 
-  const entityIdOne = randomBytes(20).toString('hex');
-  const correctEventTypeOne = {
+  beforeEach(() => {
+    entityIdOne = randomBytes(20).toString('hex');
+    correctEventTypeOne = {
       origin: iss,
       entityIDHash: "0x" + createHash('sha256').update(entityIdOne).digest('hex'),
       previousEntityHash: "0x743c956500000000001000000070000000600000000000300000000050000000",
       eventType: 'eventType1',
       dataLocation: 'dataLocation1',
       metadata: [],
-  };
+    };
+  });
+
+  
 
   it('valid case: publishes a DOME event to the blockchain', async () => {
     const entityIdOne = randomBytes(20).toString('hex');

@@ -1,4 +1,4 @@
-FROM node:14.20.0
+FROM node:lts-iron
 ENV NODE_ENV=production
 WORKDIR /usr/src/app
 COPY . .
