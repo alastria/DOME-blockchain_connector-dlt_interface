@@ -49,7 +49,6 @@ To configure the component to connect to a certain EVM blockchain you need to:
 - Put the DOME Events contract address of your EVM compatible blockchain in the `.env` file.
 - Put the DOME Events contract ABI of the contract deployed in your EVM compatible blockchain in the `.env` file.
 - Put the DOME Production block number of the EVM network from which events will be considered as legit in the `.env` file.
-- Put the secret to be used to generate the cookies in the `.env` file.
 - Create the Docker image of the component by using the Dockerfile at the root directory of the project.
 - Execute the image in a docker container.
 - The REST API will be available at `http://localhost:8080/`
