@@ -331,15 +331,13 @@ export async function getActiveDOMEEventsByDate(
   
   allActiveEvents.forEach((event) => {
     let eventJson: DOMEEvent = {id: 0, timestamp: 0, eventType: "", dataLocation: "", relevantMetadata: [""], entityId: "", previousEntityHash: ""}; 
-    for (let i = 0; i < event.args!.length; i++) {
-        eventJson.id = event.args![0];
-        eventJson.timestamp = event.args![1];
-        eventJson.eventType = event.args![4];
-        eventJson.dataLocation = event.args![5];
-        eventJson.relevantMetadata = event.args![6];
-        eventJson.entityId = event.args![3];
-        eventJson.previousEntityHash = eventJson.entityId;
-    }
+    eventJson.id = event.args![0];
+    eventJson.timestamp = event.args![1];
+    eventJson.eventType = event.args![4];
+    eventJson.dataLocation = event.args![5];
+    eventJson.relevantMetadata = event.args![6];
+    eventJson.entityId = event.args![3];
+    eventJson.previousEntityHash = eventJson.entityId;
 
     let eventIDHash = event.args![0]._hex;
     let eventTimestampHash = event.args![1]._hex;
@@ -378,13 +376,13 @@ async function getAllActiveDOMEBlockchainEventsBetweenDates(DOMEEvents: ethers.E
   let filterEventsByEntityIDHash;
   let eventDateHexBigNumber;
   let eventDateMilisecondsFromEpoch;
-  for (let i = 0; i < DOMEEvents.length; i++) {
+  for (let domeEvent of DOMEEvents) {
     debugLog("  >>> Checking onchain active events...");
 
-    let entityIDHashToFilterWith = DOMEEvents[i].args![3];
+    let entityIDHashToFilterWith = domeEvent.args![3];
     debugLog("  >> EntityIDHash of event is " + entityIDHashToFilterWith);
     if (!alreadyCheckedIDEntityHashes.has(entityIDHashToFilterWith)) {
-      eventDateHexBigNumber = DOMEEvents[i].args![1]._hex;
+      eventDateHexBigNumber = domeEvent.args![1]._hex;
       eventDateMilisecondsFromEpoch =
         BigNumber.from(eventDateHexBigNumber).toNumber() * 1000;
       debugLog(

@@ -71,17 +71,20 @@ router.post("/api/v1/subscribe", (req: any, resp: any) => {
 });
 
 router.get('/api/v1/events', async (req: any, resp: any) => {
-  debugLog("Entry call from origin: ", req.headers.origin);
-  try {
-    let activeEvents = await getActiveDOMEEventsByDate(req.query.startDate, req.query.endDate, process.env.RPC_ADDRESS!);
-    resp.status(200).json(activeEvents);
-  } catch (error: any) {
-    if (error == IllegalArgumentError) {
-      errorLog("Error:\n ", error);
-      resp.status(400).send(error.message);
+  (async() => {
+
+    debugLog("Entry call from origin: ", req.headers.origin);
+    try {
+      let activeEvents = await getActiveDOMEEventsByDate(req.query.startDate, req.query.endDate, process.env.RPC_ADDRESS!);
+      resp.status(200).json(activeEvents);
+    } catch (error: any) {
+      if (error == IllegalArgumentError) {
+        errorLog("Error:\n ", error);
+        resp.status(400).send(error.message);
+      }
+      debugLog("Error:\n ", error);
+      resp.status(400).send("Error connecting to the blockchain.");
     }
-    debugLog("Error:\n ", error);
-    resp.status(400).send("Error connecting to the blockchain.");
-  }
+  })();
 })
 export = router;
