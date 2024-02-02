@@ -43,6 +43,8 @@ To configure the component to connect to a certain EVM blockchain you need to:
 
 ## "Bare metal" installation
 - Clone the DLT Adapter project `git clone git@github.com:alastria/DOME-blockchain_connector-dlt_interface.git`
+- Put the rpc address of the evm blokchain node to be used by default in the `.env` file.
+- Put the iss identifier of the legal entity in which name events are going to be published (it can and will be your legal entity in most cases) in the `.env` file. This is the hash of your Organization Identifier as established by eIDAS regulation.
 - Put the private key of the Ethereum account that is going to be publishing the events through the blockchain node in the `.env` file.
 - Put the DOME Events contract address of your EVM compatible blockchain in the `.env` file.
 - Put the DOME Events contract ABI of the contract deployed in your EVM compatible blockchain in the `.env` file.

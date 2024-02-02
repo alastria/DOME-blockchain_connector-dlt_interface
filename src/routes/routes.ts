@@ -1,9 +1,6 @@
-import { connectToNode, subscribeToDOMEEvents, publishDOMEEvent, getActiveDOMEEventsByDate } from "../api/DLTInterface";
+import { subscribeToDOMEEvents, publishDOMEEvent, getActiveDOMEEventsByDate } from "../api/DLTInterface";
 import express from "express";
 import debug from "debug";
-import { getSessionByISS } from '../db/sessions';
-
-
 import { IllegalArgumentError } from "../exceptions/IllegalArgumentError";
 import { NotificationEndpointError } from "../exceptions/NotificationEndpointError";
 
@@ -16,30 +13,12 @@ router.get("/health", (req: any, resp: any) => {
     status: "UP",
     checks: [
       {
-        name: "Blockchain connector health check",
+        name: "DLT Adapter health check",
         status: "UP",
       },
     ],
   };
   resp.status(200).json(healthCheckResponse);
-});
-
-router.post("/api/v1/configureNode", (req: any, resp: any) => {
-  (async () => {
-    debugLog("Entry call from origin: ", req.headers.origin);
-    try {
-      await connectToNode(req.body.rpcAddress, req.body.iss, req);
-      resp.status(201).send("OK");
-    } catch (error: any) {
-      if (error == IllegalArgumentError) {
-        errorLog("Error:\n ", error);
-        resp.status(400).send(error.message);
-      }
-
-      errorLog("Error:\n ", error);
-      resp.status(400).send("Error connecting to the blockchain node.");
-    }
-  })();
 });
 
 router.post("/api/v1/publishEvent", (req: any, resp: any) => {
@@ -50,10 +29,10 @@ router.post("/api/v1/publishEvent", (req: any, resp: any) => {
         req.body.eventType,
         req.body.dataLocation,
         req.body.relevantMetadata,
-        req.session.iss,
+        req.body.iss ?? process.env.ISS,
         req.body.entityId,
         req.body.previousEntityHash,
-        req.session.rpcAddress
+        req.body.rpcAddress ?? process.env.RPC_ADDRESS 
       );
       resp.status(201).json(eventTimestamp);
     } catch (error: any) {
@@ -74,8 +53,8 @@ router.post("/api/v1/subscribe", (req: any, resp: any) => {
     try {
       subscribeToDOMEEvents(
         req.body.eventTypes,
-        req.session.rpcAddress,
-        req.session.iss,
+        process.env.RPC_ADDRESS!,
+        process.env.ISS!,
         req.body.notificationEndpoint,
       );
       resp.status(201).send("OK");
@@ -94,7 +73,7 @@ router.post("/api/v1/subscribe", (req: any, resp: any) => {
 router.get('/api/v1/events', async (req: any, resp: any) => {
   debugLog("Entry call from origin: ", req.headers.origin);
   try {
-    let activeEvents = await getActiveDOMEEventsByDate(req.query.startDate, req.query.endDate, req.session.rpcAddress);
+    let activeEvents = await getActiveDOMEEventsByDate(req.query.startDate, req.query.endDate, process.env.RPC_ADDRESS!);
     resp.status(200).json(activeEvents);
   } catch (error: any) {
     if (error == IllegalArgumentError) {

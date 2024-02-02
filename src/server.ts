@@ -3,7 +3,6 @@ dotenv.config();
 
 const express = require("express")
 const morgan = require("morgan")
-import { connectToDatabase } from './db/db.config';
 
 
 import router from "./routes/routes"
@@ -79,7 +78,7 @@ app.use((req: any, res: any, next: any) => {
 
 app.listen(port, () => {
     console.log(`DLT Interface API listening at http://localhost:${port}`)
-    connectToDatabase().then(() => {
-        console.log('Connected to MongoDB');
-    })
 })
+
+module.exports = {app}
+
