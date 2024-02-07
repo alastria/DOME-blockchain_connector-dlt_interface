@@ -11,10 +11,8 @@ image:
 port: 8080
 
 service:
-  type: NodePort 
-  ports:
-    - port: 80
-      nodePort: 31500
+  type: ClusterIP
+  port: 80
 
 livenessProbe:
   initialDelaySeconds: 30
