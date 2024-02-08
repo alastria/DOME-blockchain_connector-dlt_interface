@@ -83,6 +83,7 @@ export async function publishDOMEEvent(
     const tx = await domeEventsContractWithSigner.emitNewEvent(
       iss,
       entityIDHash,
+      previousEntityHash,
       eventType,
       dataLocation,
       relevantMetadata
@@ -159,6 +160,7 @@ export function subscribeToDOMEEvents(
         timestamp,
         origin,
         entityIDHash,
+        previousEntityHash,
         eventType,
         dataLocation,
         metadata
@@ -167,7 +169,7 @@ export function subscribeToDOMEEvents(
           id: index,
           publisherAddress: origin,
           entityIDHash: entityIDHash,
-          previousEntityHash: entityIDHash,
+          previousEntityHash: previousEntityHash,
           eventType: eventType,
           timestamp: timestamp,
           dataLocation: dataLocation,
@@ -305,7 +307,9 @@ export async function getActiveDOMEEventsByDate(
     blockNum
   );
   let allDOMEEventsTimestamps: number[] = [];
-  allDOMEEvents.forEach((event) => {allDOMEEventsTimestamps.push(BigNumber.from(event.args![1]._hex).toNumber())});
+  allDOMEEvents = allDOMEEvents.slice(1);
+  allDOMEEvents.forEach((event) => {
+    allDOMEEventsTimestamps.push(BigNumber.from(event.args![1]._hex).toNumber())});
 
   let indexOfFirstEventToCheck: number = -1;
   let indexOfLastEventToCheck: number = -1;
@@ -333,11 +337,11 @@ export async function getActiveDOMEEventsByDate(
     let eventJson: DOMEEvent = {id: 0, timestamp: 0, eventType: "", dataLocation: "", relevantMetadata: [""], entityId: "", previousEntityHash: ""}; 
     eventJson.id = event.args![0];
     eventJson.timestamp = event.args![1];
-    eventJson.eventType = event.args![4];
-    eventJson.dataLocation = event.args![5];
-    eventJson.relevantMetadata = event.args![6];
+    eventJson.eventType = event.args![5];
+    eventJson.dataLocation = event.args![6];
+    eventJson.relevantMetadata = event.args![7];
     eventJson.entityId = event.args![3];
-    eventJson.previousEntityHash = eventJson.entityId;
+    eventJson.previousEntityHash = event.args![4];
 
     let eventIDHash = event.args![0]._hex;
     let eventTimestampHash = event.args![1]._hex;
