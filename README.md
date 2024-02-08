@@ -10,7 +10,7 @@
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=digitelts_dlt-adapter&metric=coverage)](https://sonarcloud.io/summary/new_code?id=digitelts_dlt-adapter)
 
 # Introduction
-The DLT Adapter, also referred to as the DLT Interface is a component used by the Blockchain Connector to interact with the Blockchain technology in a transparent way. It is provided as a REST API.
+The DLT Adapter, also referred to as the DLT Interface is a component used by the Blockchain Connector to interact with the Blockchain technology in a transparent way. It is provided as a REST API. **Keep in mind that this is a WIP and it is not production-ready yet**. 
 
 It is built using TypeScript 4.7.4 with express 4.17.3. It interacts with the blockchain through the smart contracts provided in https://github.com/alastria/DOME-blockchain_smart_contracts/tree/main.
 
