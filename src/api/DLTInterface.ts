@@ -165,13 +165,15 @@ export function subscribeToDOMEEvents(
         dataLocation,
         metadata
       ) => {
+        let parsedId = BigNumber.from(index._hex).toNumber();
+        let parsedTimestamp = BigNumber.from(timestamp._hex).toNumber();
         const eventContent = {
-          id: index,
+          id: parsedId,
           publisherAddress: origin,
           entityIDHash: entityIDHash,
           previousEntityHash: previousEntityHash,
           eventType: eventType,
-          timestamp: timestamp,
+          timestamp: parsedTimestamp,
           dataLocation: dataLocation,
           relevantMetadata: metadata,
         };
