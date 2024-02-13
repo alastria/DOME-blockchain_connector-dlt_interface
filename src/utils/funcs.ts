@@ -13,7 +13,7 @@ export function getIndexOfFirstAppearanceOfElement(sortedArray: any[], knownInde
     }
   }
 
-  return 0;
+  return knownIndexOfElement;
 }
 
 /**
@@ -29,5 +29,5 @@ export function getIndexOfLastAppearanceOfElement(sortedArray: any[], knownIndex
     }
   }
 
-  return 0;
+  return knownIndexOfElement;
 }

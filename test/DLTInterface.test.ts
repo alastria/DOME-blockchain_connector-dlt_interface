@@ -17,19 +17,24 @@ const iss = "0x43b27fef24cfe8a0b797ed8a36de2884f9963c0c2a0da640e3ec7ad6cd0c493d"
 
 describe('DOME events subscription', () => {
   let eventTypesOfInterest: string[];
+  let entityIdOne: string;
+  let entityIdTwo: string;
+  let entityIdThree: string; 
+
+  let correctEventTypeOne: any;
+  let correctEventTypeTwo: any;
+  let ownIssAsOriginEvent: any;
 
   beforeAll(() => {
     eventTypesOfInterest = ['eventType1', 'eventType2'];
   });
 
-  it('valid case: should subscribe to DOME events', async () => {
+  beforeEach(() => {
+    entityIdOne = randomBytes(20).toString('hex');
+    entityIdTwo= randomBytes(20).toString('hex');
+    entityIdThree = randomBytes(20).toString('hex');
 
-    const entityIdOne = randomBytes(20).toString('hex');
-    const entityIdTwo= randomBytes(20).toString('hex');
-    const entityIdThree = randomBytes(20).toString('hex');
-
-
-    const correctEventTypeOne = {
+    correctEventTypeOne = {
       origin: iss,
       entityIDHash: "0x" + createHash('sha256').update(entityIdOne).digest('hex'),
       previousEntityHash: "0x743c956500000000001000000070000000600000000000300000000050000000",
@@ -37,8 +42,8 @@ describe('DOME events subscription', () => {
       dataLocation: 'dataLocation1',
       metadata: [],
     };
-    
-    const correctEventTypeTwo = {
+
+    correctEventTypeTwo = {
       origin: iss,
       entityIDHash: "0x" + createHash('sha256').update(entityIdTwo).digest('hex'),
       previousEntityHash: "0x843c956500000000001000000070000000600000000000300000000050000000",
@@ -47,26 +52,29 @@ describe('DOME events subscription', () => {
       metadata: [],
     };
 
-    const ownIssAsOriginEvent = {
+    ownIssAsOriginEvent = {
       origin: ownIss,
       entityIDHash: "0x" + createHash('sha256').update(entityIdThree).digest('hex'),
-      previousEntityHash: "0x843c956500000000001000000070000000600000000000300000000050000000",
+      previousEntityHash: correctEventTypeTwo.previousEntityHash,
       eventType: correctEventTypeTwo.eventType,
       dataLocation: correctEventTypeOne.dataLocation,
       metadata: [],
     };
+  });
+
+  it('valid case: should subscribe to DOME events', async () => {
 
     let entityIDHashesOfReceivedEvents = new Set<string>();
     subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)});
     await publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.dataLocation, correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIDHash, correctEventTypeOne.previousEntityHash, rpcAddress);
     await publishDOMEEvent(correctEventTypeTwo.eventType, correctEventTypeTwo.dataLocation, correctEventTypeTwo.metadata, iss, correctEventTypeTwo.entityIDHash, correctEventTypeTwo.previousEntityHash, rpcAddress);
-    await sleep(20000);
+    await publishDOMEEvent(correctEventTypeTwo.eventType, correctEventTypeTwo.dataLocation, correctEventTypeTwo.metadata, ownIssAsOriginEvent.origin, ownIssAsOriginEvent.entityIDHash, correctEventTypeTwo.previousEntityHash, rpcAddress);
+    await sleep(10000);
 
     expect(entityIDHashesOfReceivedEvents).toContain(correctEventTypeOne.entityIDHash);
     expect(entityIDHashesOfReceivedEvents).toContain(correctEventTypeTwo.entityIDHash);
     expect(entityIDHashesOfReceivedEvents).not.toContain(ownIssAsOriginEvent.entityIDHash);
-  }, 60000);
-
+  }, 80000);
 
   it('invalid case: no event types selected', async () => {
     let entityIDHashesOfReceivedEvents = new Set<string>();
@@ -136,8 +144,6 @@ describe('DOME events publication', () => {
     };
   });
 
-  
-
   it('valid case: publishes a DOME event to the blockchain', async () => {
     const entityIdOne = randomBytes(20).toString('hex');
     correctEventTypeOne.entityIDHash = "0x" + createHash('sha256').update(entityIdOne).digest('hex');
@@ -150,7 +156,6 @@ describe('DOME events publication', () => {
     expect(entityIDHashesOfReceivedEvents).toContain(correctEventTypeOne.entityIDHash);
   }, 60000);
 
-  
   it('invalid case: blank eventType', async () => {
     const entityIdOne = randomBytes(20).toString('hex');
     correctEventTypeOne.entityIDHash = "0x" + createHash('sha256').update(entityIdOne).digest('hex');
@@ -171,6 +176,108 @@ describe('DOME events publication', () => {
 
     await expect(publishDOMEEvent(null, correctEventTypeOne.dataLocation, correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIDHash, correctEventTypeOne.previousEntityHash, rpcAddress)).rejects.toThrow(IllegalArgumentError);
   }, 30000);
+
+  it('invalid case: blank datalocation', async () => {
+    const entityIdOne = randomBytes(20).toString('hex');
+    correctEventTypeOne.entityIDHash = "0x" + createHash('sha256').update(entityIdOne).digest('hex');
+
+    await expect(publishDOMEEvent(correctEventTypeOne.eventType, "", correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIDHash, correctEventTypeOne.previousEntityHash, rpcAddress)).rejects.toThrow(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: undefined datalocation', async () => {
+    const entityIdOne = randomBytes(20).toString('hex');
+    correctEventTypeOne.entityIDHash = "0x" + createHash('sha256').update(entityIdOne).digest('hex');
+
+    await expect(publishDOMEEvent(correctEventTypeOne.eventType, undefined, correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIDHash, correctEventTypeOne.previousEntityHash, rpcAddress)).rejects.toThrow(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: null datalocation', async () => {
+    const entityIdOne = randomBytes(20).toString('hex');
+    correctEventTypeOne.entityIDHash = "0x" + createHash('sha256').update(entityIdOne).digest('hex');
+
+    await expect(publishDOMEEvent(correctEventTypeOne.eventType, null, correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIDHash, correctEventTypeOne.previousEntityHash, rpcAddress)).rejects.toThrow(IllegalArgumentError);
+  }, 30000);
+
+
+  it('invalid case: blank iss', async () => {
+    const entityIdOne = randomBytes(20).toString('hex');
+    correctEventTypeOne.entityIDHash = "0x" + createHash('sha256').update(entityIdOne).digest('hex');
+
+    await expect(publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.iss, correctEventTypeOne.metadata, "", correctEventTypeOne.entityIDHash, correctEventTypeOne.previousEntityHash, rpcAddress)).rejects.toThrow(IllegalArgumentError);
+  }, 30000);
+
+  
+  it('invalid case: undefined iss', async () => {
+    const entityIdOne = randomBytes(20).toString('hex');
+    correctEventTypeOne.entityIDHash = "0x" + createHash('sha256').update(entityIdOne).digest('hex');
+
+    await expect(publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.iss, correctEventTypeOne.metadata, undefined, correctEventTypeOne.entityIDHash, correctEventTypeOne.previousEntityHash, rpcAddress)).rejects.toThrow(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: null iss', async () => {
+    const entityIdOne = randomBytes(20).toString('hex');
+    correctEventTypeOne.entityIDHash = "0x" + createHash('sha256').update(entityIdOne).digest('hex');
+
+    await expect(publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.iss, correctEventTypeOne.metadata, null, correctEventTypeOne.entityIDHash, correctEventTypeOne.previousEntityHash, rpcAddress)).rejects.toThrow(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: blank entityIdHash', async () => {
+    const entityIdOne = randomBytes(20).toString('hex');
+    correctEventTypeOne.entityIDHash = "0x" + createHash('sha256').update(entityIdOne).digest('hex');
+
+    await expect(publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.iss, correctEventTypeOne.metadata, iss, "", correctEventTypeOne.previousEntityHash, rpcAddress)).rejects.toThrow(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: undefined entityIdHash', async () => {
+    const entityIdOne = randomBytes(20).toString('hex');
+    correctEventTypeOne.entityIDHash = "0x" + createHash('sha256').update(entityIdOne).digest('hex');
+
+    await expect(publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.iss, correctEventTypeOne.metadata, iss, undefined, correctEventTypeOne.previousEntityHash, rpcAddress)).rejects.toThrow(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: null entityIdHash', async () => {
+    const entityIdOne = randomBytes(20).toString('hex');
+    correctEventTypeOne.entityIDHash = "0x" + createHash('sha256').update(entityIdOne).digest('hex');
+
+    await expect(publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.iss, correctEventTypeOne.metadata, iss, null, correctEventTypeOne.previousEntityHash, rpcAddress)).rejects.toThrow(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: undefined previousEntityHash', async () => {
+    const entityIdOne = randomBytes(20).toString('hex');
+    correctEventTypeOne.entityIDHash = "0x" + createHash('sha256').update(entityIdOne).digest('hex');
+
+    await expect(publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.iss, correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIdHash, undefined, rpcAddress)).rejects.toThrow(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: null previousEntityHash', async () => {
+    const entityIdOne = randomBytes(20).toString('hex');
+    correctEventTypeOne.entityIDHash = "0x" + createHash('sha256').update(entityIdOne).digest('hex');
+
+    await expect(publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.iss, correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIdHash, null, rpcAddress)).rejects.toThrow(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: blank rpcAddress', async () => {
+    const entityIdOne = randomBytes(20).toString('hex');
+    correctEventTypeOne.entityIDHash = "0x" + createHash('sha256').update(entityIdOne).digest('hex');
+
+    await expect(publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.iss, correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIdHash, "", "")).rejects.toThrow(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: undefined rpcAddress', async () => {
+    const entityIdOne = randomBytes(20).toString('hex');
+    correctEventTypeOne.entityIDHash = "0x" + createHash('sha256').update(entityIdOne).digest('hex');
+
+    await expect(publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.iss, correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIdHash, "", undefined)).rejects.toThrow(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: null rpcAddress', async () => {
+    const entityIdOne = randomBytes(20).toString('hex');
+    correctEventTypeOne.entityIDHash = "0x" + createHash('sha256').update(entityIdOne).digest('hex');
+
+    await expect(publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.iss, correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIdHash, "", null)).rejects.toThrow(IllegalArgumentError);
+  }, 30000);
+
+
 });
 
 describe('DOME active events retrieval', () => {
@@ -332,6 +439,15 @@ describe('DOME active events retrieval', () => {
 
     await expect(getActiveDOMEEventsByDate(finTime.valueOf(), initialTime.valueOf(), rpcAddress)).rejects.toThrow(IllegalArgumentError);
   }, 60000);
+
+  it('invalid case: rpcAddress is blank', async () => {
+    let initialTime = new Date();
+    let finTime = new Date();
+    finTime.setFullYear(initialTime.getFullYear() + 1);
+
+    await expect(getActiveDOMEEventsByDate(initialTime.valueOf(), finTime.valueOf(), "")).rejects.toThrow(IllegalArgumentError);
+  }, 60000);
+
 });
 
 

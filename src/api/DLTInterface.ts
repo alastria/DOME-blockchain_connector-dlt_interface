@@ -37,17 +37,29 @@ export async function publishDOMEEvent(
   if (eventType === null || eventType === undefined) {
     throw new IllegalArgumentError("The eventType is null.");
   }
+  if (dataLocation === "") {
+    throw new IllegalArgumentError("The dataLocation is blank.");
+  }
   if (dataLocation === null || dataLocation === undefined) {
     throw new IllegalArgumentError("The dataLocation is null.");
   }
+  if (iss === "") {
+    throw new IllegalArgumentError("The iss identifier is blank.");
+  }
   if (iss === null || iss === undefined) {
     throw new IllegalArgumentError("The iss identifier is null.");
+  }
+  if (entityIDHash === "") {
+    throw new IllegalArgumentError("The entity identifier hash is blank.");
   }
   if (entityIDHash === null || entityIDHash === undefined) {
     throw new IllegalArgumentError("The entity identifier hash is null.");
   }
   if (previousEntityHash === null || previousEntityHash === undefined) {
     throw new IllegalArgumentError("The previousEntityHash is null.");
+  }
+  if (rpcAddress === "") {
+    throw new IllegalArgumentError("The rpc address is null.");
   }
   if (rpcAddress === null || rpcAddress === undefined) {
     throw new IllegalArgumentError("The rpc address is null.");
@@ -83,6 +95,7 @@ export async function publishDOMEEvent(
     const tx = await domeEventsContractWithSigner.emitNewEvent(
       iss,
       entityIDHash,
+      previousEntityHash,
       eventType,
       dataLocation,
       relevantMetadata
@@ -159,17 +172,20 @@ export function subscribeToDOMEEvents(
         timestamp,
         origin,
         entityIDHash,
+        previousEntityHash,
         eventType,
         dataLocation,
         metadata
       ) => {
+        let parsedId = BigNumber.from(index._hex).toNumber();
+        let parsedTimestamp = BigNumber.from(timestamp._hex).toNumber();
         const eventContent = {
-          id: index,
+          id: parsedId,
           publisherAddress: origin,
           entityIDHash: entityIDHash,
-          previousEntityHash: entityIDHash,
+          previousEntityHash: previousEntityHash,
           eventType: eventType,
-          timestamp: timestamp,
+          timestamp: parsedTimestamp,
           dataLocation: dataLocation,
           relevantMetadata: metadata,
         };
@@ -264,14 +280,8 @@ export async function getActiveDOMEEventsByDate(
   endDateMs: number,
   rpcAddress: string
 ): Promise<DOMEEvent[]> {
-  if(startDateMs === null || startDateMs === undefined){
-    throw new IllegalArgumentError("The start date is null.");
-  }
-  if(endDateMs === null || endDateMs === undefined){
-    throw new IllegalArgumentError("The end date is null.");
-  }
-  if(rpcAddress === null || rpcAddress === undefined){
-    throw new IllegalArgumentError("The rpc address is null.");
+  if(rpcAddress === ""){
+    throw new IllegalArgumentError("The rpc address is blank.");
   }
   if(startDateMs > endDateMs){
     throw new IllegalArgumentError("The end date can't be lower than the start date.");
@@ -305,7 +315,9 @@ export async function getActiveDOMEEventsByDate(
     blockNum
   );
   let allDOMEEventsTimestamps: number[] = [];
-  allDOMEEvents.forEach((event) => {allDOMEEventsTimestamps.push(BigNumber.from(event.args![1]._hex).toNumber())});
+  allDOMEEvents = allDOMEEvents.slice(1);
+  allDOMEEvents.forEach((event) => {
+    allDOMEEventsTimestamps.push(BigNumber.from(event.args![1]._hex).toNumber())});
 
   let indexOfFirstEventToCheck: number = -1;
   let indexOfLastEventToCheck: number = -1;
@@ -333,11 +345,11 @@ export async function getActiveDOMEEventsByDate(
     let eventJson: DOMEEvent = {id: 0, timestamp: 0, eventType: "", dataLocation: "", relevantMetadata: [""], entityId: "", previousEntityHash: ""}; 
     eventJson.id = event.args![0];
     eventJson.timestamp = event.args![1];
-    eventJson.eventType = event.args![4];
-    eventJson.dataLocation = event.args![5];
-    eventJson.relevantMetadata = event.args![6];
+    eventJson.eventType = event.args![5];
+    eventJson.dataLocation = event.args![6];
+    eventJson.relevantMetadata = event.args![7];
     eventJson.entityId = event.args![3];
-    eventJson.previousEntityHash = eventJson.entityId;
+    eventJson.previousEntityHash = event.args![4];
 
     let eventIDHash = event.args![0]._hex;
     let eventTimestampHash = event.args![1]._hex;
