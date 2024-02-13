@@ -6,7 +6,6 @@ const morgan = require("morgan")
 
 
 import router from "./routes/routes"
-import session from "express-session";
 
 const app = express()
 const port = 8080
@@ -50,19 +49,6 @@ router.use((req: any, res: any, next: any) => {
     // Continue with the request
     next();
 });
-
-
-/** ExpressJS session */
-app.use(session({
-    secret: process.env.COOKIE_SECRET!,
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-        secure: false,            //setting this false for http connections
-    },
-    name: "sessionCookieDOME"
-}))
-
 
 /** Routes */
 app.use("/", router)
