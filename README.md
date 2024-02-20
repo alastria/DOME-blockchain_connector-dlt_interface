@@ -60,8 +60,7 @@ To configure the component to connect to a certain EVM blockchain you need to:
 
 ## Installation using the Helm Chart
 - Add Alastria Helm Chart repository at `https://github.com/alastria/helm-charts` as a Helm repository
-- Set all the env variables in the `.env` file as commented before.
-- Create a configmap with the `.env` file using kubectl: `kubectl create configmap dlt-adapter-env-config --from-env-file=../.env`
+- Set all the env variables in the helm chart `values.yml` file.
 - Install the Helm Chart with `helm install dlt-adapter dlt-adapter --values dlt-adapter/values.yml`
 - The REST API will be available at `http://localhost:8080/`
 
