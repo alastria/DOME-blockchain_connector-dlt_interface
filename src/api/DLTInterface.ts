@@ -123,7 +123,7 @@ export async function publishDOMEEvent(
  */
 export function subscribeToDOMEEvents(
   eventTypes: string[],
-  metadata: string[],
+  metadataOfInterest: string[],
   rpcAddress: string,
   ownIss: string,
   notificationEndpoint?: string,
@@ -140,10 +140,10 @@ export function subscribeToDOMEEvents(
       "Blank eventTypes indicated for subscription."
     );
   }
-  if (metadata === null || metadata === undefined || metadata.length === 0) {
+  if (metadataOfInterest === null || metadataOfInterest === undefined || metadataOfInterest.length === 0) {
     throw new IllegalArgumentError("The metadata is not set. Set, atleast, the environment to work with.");
   }
-  if (metadata.includes("")) {
+  if (metadataOfInterest.includes("")) {
     throw new IllegalArgumentError("The metadata is blank.");
   }
   if (rpcAddress === null || rpcAddress === undefined) {
@@ -198,7 +198,7 @@ export function subscribeToDOMEEvents(
           relevantMetadata: metadata,
         };
 
-        abstractDOMEEventsHandler(eventContent, eventTypes, metadata, ownIss, notificationEndpoint, handler);
+        abstractDOMEEventsHandler(eventContent, eventTypes, metadataOfInterest, ownIss, notificationEndpoint, handler);
       }
     );
   } catch (error) {
@@ -227,32 +227,26 @@ function abstractDOMEEventsHandler(eventContent: any, eventTypes: string[], meta
   }
 
   debugLog(
-    " > Checking env metadata" +
+    " >  Checking env metadata " +
     eventContent.relevantMetadata +
     " with the interest for the user " +
     metadata
   );
-  if (eventContent.relevantMetadata.includes("sbx")) {
-    if (!metadata.includes("sbx")) {
+  if (metadata.includes("sbx") && !eventContent.relevantMetadata.includes("sbx")) {
       return;
-    }
   }
-  if (eventContent.relevantMetadata.includes("prd")) {
-    if (!metadata.includes("prd")) {
-      return;
-    }
+  if (metadata.includes("prd") && !eventContent.relevantMetadata.includes("prd")) {
+    return;
   }
-  if (eventContent.relevantMetadata.includes("dev")) {
-    if (!metadata.includes("dev")) {
-      return;
-    }
+  if (metadata.includes("dev") && !eventContent.relevantMetadata.includes("dev")) {
+    return;
   }
 
   debugLog(
     " > Event emitted with content: \n" +
     JSON.stringify(eventContent)
   );
-  
+
 
   if (eventContent.publisherAddress === ownIss) {
     debugLog(" > This event is not of interest for the user. It was published by the user itself.");
