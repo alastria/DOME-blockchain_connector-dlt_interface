@@ -78,7 +78,6 @@ export async function publishDOMEEvent(
     });
 
     const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
-    debugLog("  > Connecting to blockchain node with address: " + rpcAddress);
 
     const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
     debugLog("  > Ethereum Address of event publisher: ", wallet.address);
@@ -123,7 +122,6 @@ export async function publishDOMEEvent(
  */
 export function subscribeToDOMEEvents(
   eventTypes: string[],
-  metadata: string[],
   rpcAddress: string,
   ownIss: string,
   notificationEndpoint?: string,
@@ -139,12 +137,6 @@ export function subscribeToDOMEEvents(
     throw new IllegalArgumentError(
       "Blank eventTypes indicated for subscription."
     );
-  }
-  if (metadata === null || metadata === undefined || metadata.length === 0) {
-    throw new IllegalArgumentError("The metadata is not set. Set, atleast, the environment to work with.");
-  }
-  if (metadata.includes("")) {
-    throw new IllegalArgumentError("The metadata is blank.");
   }
   if (rpcAddress === null || rpcAddress === undefined) {
     throw new IllegalArgumentError("The rpc address is null.");
@@ -198,7 +190,7 @@ export function subscribeToDOMEEvents(
           relevantMetadata: metadata,
         };
 
-        abstractDOMEEventsHandler(eventContent, eventTypes, metadata, ownIss, notificationEndpoint, handler);
+        abstractDOMEEventsHandler(eventContent, eventTypes, ownIss, notificationEndpoint, handler);
       }
     );
   } catch (error) {
@@ -215,55 +207,35 @@ export function subscribeToDOMEEvents(
  * @param notificationEndpoint the endpoint to be notified of the event.
  * @param handler the specific handler for the event.
  */
-function abstractDOMEEventsHandler(eventContent: any, eventTypes: string[], metadata: string[], ownIss: string, notificationEndpoint?: string, handler?: (event: object) => void) {
-  debugLog(
-    " > Checking EventType " +
-    eventContent.eventType +
-    " with the interest for the user " +
-    eventTypes
-  );
-  if (!eventTypes.includes(eventContent.eventType)) {
-    return;
-  }
+function abstractDOMEEventsHandler(eventContent: any, eventTypes: string[], ownIss: string, notificationEndpoint?: string, handler?: (event: object) => void){
+        if (!eventTypes.includes(eventContent.eventType)) {
+          return;
+        }
 
-  debugLog(
-    " > Checking env metadata" +
-    eventContent.relevantMetadata +
-    " with the interest for the user " +
-    metadata
-  );
-  if (eventContent.relevantMetadata.includes("sbx")) {
-    if (!metadata.includes("sbx")) {
-      return;
-    }
-  }
-  if (eventContent.relevantMetadata.includes("prd")) {
-    if (!metadata.includes("prd")) {
-      return;
-    }
-  }
-  if (eventContent.relevantMetadata.includes("dev")) {
-    if (!metadata.includes("dev")) {
-      return;
-    }
-  }
+        debugLog(" > Event Content:", eventContent);
+        debugLog(
+          " > Event emitted: " +
+            eventContent.eventType +
+            " with args: " +
+            JSON.stringify(eventContent)
+        );
+        debugLog(
+          " > Checking EventType " +
+            eventContent.eventType +
+            " with the interest for the user " +
+            eventContent.eventType
+        );
 
-  debugLog(
-    " > Event emitted with content: \n" +
-    JSON.stringify(eventContent)
-  );
-  
-
-  if (eventContent.publisherAddress === ownIss) {
-    debugLog(" > This event is not of interest for the user. It was published by the user itself.");
-    return;
-  }
-  if (notificationEndpoint != undefined) {
-    notifyEndpointDOMEEventsHandler(eventContent, notificationEndpoint);
-  }
-  if (handler != undefined) {
-    handler(eventContent);
-  }
+        if (eventContent.publisherAddress === ownIss) {
+          debugLog(" > This event is not of interest for the user.");
+          return;
+        }
+        if (notificationEndpoint != undefined) {
+          notifyEndpointDOMEEventsHandler(eventContent, notificationEndpoint);
+        }
+        if (handler != undefined) {
+          handler(eventContent);
+        }
 }
 
 /**
@@ -308,10 +280,10 @@ export async function getActiveDOMEEventsByDate(
   endDateMs: number,
   rpcAddress: string
 ): Promise<DOMEEvent[]> {
-  if (rpcAddress === "") {
+  if(rpcAddress === ""){
     throw new IllegalArgumentError("The rpc address is blank.");
   }
-  if (startDateMs > endDateMs) {
+  if(startDateMs > endDateMs){
     throw new IllegalArgumentError("The end date can't be lower than the start date.");
   }
 
@@ -345,19 +317,18 @@ export async function getActiveDOMEEventsByDate(
   let allDOMEEventsTimestamps: number[] = [];
   allDOMEEvents = allDOMEEvents.slice(1);
   allDOMEEvents.forEach((event) => {
-    allDOMEEventsTimestamps.push(BigNumber.from(event.args![1]._hex).toNumber())
-  });
+    allDOMEEventsTimestamps.push(BigNumber.from(event.args![1]._hex).toNumber())});
 
   let indexOfFirstEventToCheck: number = -1;
   let indexOfLastEventToCheck: number = -1;
   for (let i = 0; i <= (endDateSeconds - startDateSeconds) && (indexOfFirstEventToCheck < 0); i++) {
-    indexOfFirstEventToCheck = binarySearch(allDOMEEventsTimestamps, startDateSeconds + i, function (element: any, needle: any) { return element - needle; });
+    indexOfFirstEventToCheck = binarySearch(allDOMEEventsTimestamps, startDateSeconds + i, function(element: any, needle: any) { return element - needle; }); 
   }
   for (let i = 0; i <= (endDateSeconds - startDateSeconds) && (indexOfLastEventToCheck < 0); i++) {
-    indexOfLastEventToCheck = binarySearch(allDOMEEventsTimestamps, endDateSeconds - i, function (element: any, needle: any) { return element - needle; });
+    indexOfLastEventToCheck = binarySearch(allDOMEEventsTimestamps, endDateSeconds - i, function(element: any, needle: any) { return element - needle; }); 
   }
 
-  if (indexOfFirstEventToCheck < 0 || indexOfLastEventToCheck < 0) {
+  if(indexOfFirstEventToCheck < 0 || indexOfLastEventToCheck < 0){
     return [];
   }
 
@@ -369,9 +340,9 @@ export async function getActiveDOMEEventsByDate(
 
   debugLog("The active DOME Events to be returned are the following:\n");
   let allActiveDOMEEvents: DOMEEvent[] = [];
-
+  
   allActiveEvents.forEach((event) => {
-    let eventJson: DOMEEvent = { id: 0, timestamp: 0, eventType: "", dataLocation: "", relevantMetadata: [""], entityId: "", previousEntityHash: "" };
+    let eventJson: DOMEEvent = {id: 0, timestamp: 0, eventType: "", dataLocation: "", relevantMetadata: [""], entityId: "", previousEntityHash: ""}; 
     eventJson.id = event.args![0];
     eventJson.timestamp = event.args![1];
     eventJson.eventType = event.args![5];
@@ -411,7 +382,7 @@ export async function getActiveDOMEEventsByDate(
  * @param endDateSeconds the given end date in seconds
  * @returns an Array with all the DOME active blockchain events from the blockchain between the given dates
  */
-async function getAllActiveDOMEBlockchainEventsBetweenDates(DOMEEvents: ethers.Event[], DOMEEventsContract: ethers.Contract, actualBlockNumber: number, startDateSeconds: number, endDateSeconds: number) {
+async function getAllActiveDOMEBlockchainEventsBetweenDates(DOMEEvents: ethers.Event[], DOMEEventsContract: ethers.Contract, actualBlockNumber: number, startDateSeconds: number, endDateSeconds: number){
   let activeEvents: ethers.Event[] = [];
   let alreadyCheckedIDEntityHashes = new Map<string, boolean>();
   let filterEventsByEntityIDHash;
@@ -428,7 +399,7 @@ async function getAllActiveDOMEBlockchainEventsBetweenDates(DOMEEvents: ethers.E
         BigNumber.from(eventDateHexBigNumber).toNumber() * 1000;
       debugLog(
         "  >> Date of event being checked is " +
-        new Date(eventDateMilisecondsFromEpoch)
+          new Date(eventDateMilisecondsFromEpoch)
       );
       debugLog(
         "  >> Filtering events with same EntityIDHash to obtain the active one..."
@@ -446,7 +417,7 @@ async function getAllActiveDOMEBlockchainEventsBetweenDates(DOMEEvents: ethers.E
       let eventsWithSameEntityIDHash = await DOMEEventsContract.queryFilter(
         filterEventsByEntityIDHash,
         parseInt(process.env.DOME_PRODUCTION_BLOCK_NUMBER!),
-        actualBlockNumber
+        actualBlockNumber 
       );
       debugLog(
         "  > The dates of the events with the same EntityIDHash are the following:\n"
@@ -460,17 +431,17 @@ async function getAllActiveDOMEBlockchainEventsBetweenDates(DOMEEvents: ethers.E
 
       let activeEvent =
         eventsWithSameEntityIDHash[eventsWithSameEntityIDHash.length - 1];
-      for (let i = 0; i < eventsWithSameEntityIDHash.length; i++) {
+      for (let i= 0; i < eventsWithSameEntityIDHash.length; i++) {
         let eventWithSameIDHashTimestampSeconds = BigNumber.from(eventsWithSameEntityIDHash[eventsWithSameEntityIDHash.length - 1 - i].args![1]._hex).toNumber()
-        if (eventWithSameIDHashTimestampSeconds >= startDateSeconds && eventWithSameIDHashTimestampSeconds <= endDateSeconds) {
+        if(eventWithSameIDHashTimestampSeconds >= startDateSeconds && eventWithSameIDHashTimestampSeconds <= endDateSeconds){
           activeEvent = eventsWithSameEntityIDHash[eventsWithSameEntityIDHash.length - 1 - i];
           break;
         }
       }
       debugLog(
         "  > The active event is the event number " +
-        eventsWithSameEntityIDHash.length +
-        " from the list of event dates showed just before."
+          eventsWithSameEntityIDHash.length +
+          " from the list of event dates showed just before."
       );
 
       alreadyCheckedIDEntityHashes.set(entityIDHashToFilterWith, true);
