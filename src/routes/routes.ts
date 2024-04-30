@@ -53,6 +53,7 @@ router.post("/api/v1/subscribe", (req: any, resp: any) => {
     try {
       subscribeToDOMEEvents(
         req.body.eventTypes,
+        req.body.metadata,
         process.env.RPC_ADDRESS!,
         process.env.ISS!,
         req.body.notificationEndpoint,
