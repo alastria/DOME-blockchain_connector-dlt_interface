@@ -230,18 +230,22 @@ function abstractDOMEEventsHandler(eventContent: any, eventTypes: string[], meta
   }
 
   debugLog(
-    " >  Checking env metadata " +
+    " > Checking env metadata " +
     eventContent.relevantMetadata +
     " with the interest for the user " +
     metadata
   );
   if (metadata.includes("sbx") && !eventContent.relevantMetadata.includes("sbx")) {
-      return;
-    }
+    debugLog(" > This event is not of interest for the user. It is related to an env different than the one's of interest");
+    return;
+  }
   if (metadata.includes("prd") && !eventContent.relevantMetadata.includes("prd")) {
+    debugLog(" > This event is not of interest for the user. It is related to an env different than the one's of interest");
       return;
     }
   if (metadata.includes("dev") && !eventContent.relevantMetadata.includes("dev")) {
+    debugLog(" > This event is not of interest for the user. It is related to an env different than the one's\
+  of interest");
       return;
   }
 
