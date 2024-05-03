@@ -222,9 +222,12 @@ function abstractDOMEEventsHandler(eventContent: any, eventTypes: string[], meta
     " with the interest for the user " +
     eventTypes
   );
-        if (!eventTypes.includes(eventContent.eventType)) {
-          return;
-        }
+
+  if (!eventTypes.includes(eventContent.eventType)) {
+    debugLog(" > This event is not of interest for the user. It is of a different type than the\
+    ones established.");
+    return;
+  }
 
   debugLog(
     " >  Checking env metadata " +
