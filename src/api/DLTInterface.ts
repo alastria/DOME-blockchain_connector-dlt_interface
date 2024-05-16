@@ -348,7 +348,7 @@ export async function getActiveDOMEEventsByDate(
   let allDOMEEventsTimestamps: number[] = [];
   allDOMEEvents = allDOMEEvents.slice(1);
   allDOMEEvents.forEach((event) => {
-    allDOMEEventsTimestamps.push(Math.trunc((BigNumber.from(event.args![1]._hex).toNumber()) / 1000))
+    allDOMEEventsTimestamps.push(BigNumber.from(event.args![1]._hex).toNumber())
   });
 
   let indexOfFirstEventToCheck: number = -1;

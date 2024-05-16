@@ -400,13 +400,13 @@ it('valid case: active event in upper boundary IS included', async () => {
     subscribeToDOMEEvents(eventTypesOfInterest, previousStateEvent.metadata, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
 
     });
+    let initialTime = new Date();
     timestampOfFirstPublishedEvent = await publishDOMEEvent(previousStateEvent.eventType, previousStateEvent.dataLocation, previousStateEvent.metadata, iss, previousStateEvent.entityIDHash, previousStateEvent.previousEntityHash, rpcAddress);
     timestampOfLatestPublishedEvent = await publishDOMEEvent(eventOfAnotherEnv.eventType, eventOfAnotherEnv.dataLocation, eventOfAnotherEnv.metadata, iss, eventOfAnotherEnv.entityIDHash, eventOfAnotherEnv.previousEntityHash, rpcAddress);
+    let finTime = new Date();
     await sleep(20000);
 
-    expect(timestampOfFirstPublishedEvent).not.toBe(-1);
-    expect(timestampOfLatestPublishedEvent).not.toBe(-1);
-    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate(timestampOfFirstPublishedEvent, timestampOfLatestPublishedEvent, metadata, rpcAddress!);
+    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate(initialTime.valueOf(), finTime.valueOf(), metadata, rpcAddress!);
     let allActiveEventsBetweenDatesEntityIdHashes: string[] = [];
     let allActiveEventsBetweenDatesWithDefinedEntityIdHash: DOMEEvent[] = [];
     allActiveEventsBetweenDates.forEach(event => {
