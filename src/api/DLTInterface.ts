@@ -114,8 +114,9 @@ export async function publishDOMEEvent(
 /**
  * Subscribe to DOME Events.
  *
- * @param eventType the event type of the events of interest for the user.
+ * @param eventTypes the event type/s of the events of interest for the user.
  * @param rpcAddress the blockchain node address to be used for event subscription.
+ * @param metadataOfInterest the environment of interest for the user.
  * @param notificationEndpoint the user's endpoint to be notified to of the events of interest.
  *                             The notification is sent as a POST.
  * @param handler an optional function to handle the events.
@@ -141,7 +142,7 @@ export function subscribeToDOMEEvents(
     );
   }
   if (metadataOfInterest === null || metadataOfInterest === undefined || metadataOfInterest.length === 0) {
-    throw new IllegalArgumentError("The metadata is not set. Set, atleast, the environment to work with.");
+    throw new IllegalArgumentError("The metadata is not set. Set the environment to work with.");
   }
   if (metadataOfInterest.includes("")) {
     throw new IllegalArgumentError("The metadata is blank.");
@@ -169,7 +170,7 @@ export function subscribeToDOMEEvents(
       " > Contract with address " + process.env.DOME_EVENTS_CONTRACT_ADDRESS! + " loaded"
     );
     debugLog(
-      " > User requests to subscribe to events..." + eventTypes.join(", ")
+      " > User requests to subscribe to events of type " + eventTypes.join(", ") + " and environment  " + metadataOfInterest.join(", ")
     );
     debugLog(" > Listening to events...");
 
@@ -307,6 +308,7 @@ function notifyEndpointDOMEEventsHandler(
 export async function getActiveDOMEEventsByDate(
   startDateMs: number,
   endDateMs: number,
+  metadataOfInterest: string[],
   rpcAddress: string
 ): Promise<DOMEEvent[]> {
   if (rpcAddress === "") {
@@ -346,7 +348,7 @@ export async function getActiveDOMEEventsByDate(
   let allDOMEEventsTimestamps: number[] = [];
   allDOMEEvents = allDOMEEvents.slice(1);
   allDOMEEvents.forEach((event) => {
-    allDOMEEventsTimestamps.push(BigNumber.from(event.args![1]._hex).toNumber())
+    allDOMEEventsTimestamps.push(Math.trunc((BigNumber.from(event.args![1]._hex).toNumber()) / 1000))
   });
 
   let indexOfFirstEventToCheck: number = -1;
@@ -366,7 +368,7 @@ export async function getActiveDOMEEventsByDate(
   indexOfLastEventToCheck = getIndexOfLastAppearanceOfElement(allDOMEEventsTimestamps, indexOfLastEventToCheck);
   let allDOMEEventsBetweenDates = allDOMEEvents.slice(indexOfFirstEventToCheck, indexOfLastEventToCheck + 1);
 
-  let allActiveEvents: ethers.Event[] = await getAllActiveDOMEBlockchainEventsBetweenDates(allDOMEEventsBetweenDates, DOMEEventsContract, blockNum, startDateSeconds, endDateSeconds);
+  let allActiveEvents: ethers.Event[] = await getAllActiveDOMEBlockchainEventsBetweenDates(allDOMEEventsBetweenDates, DOMEEventsContract, blockNum, startDateSeconds, endDateSeconds, metadataOfInterest);
 
   debugLog("The active DOME Events to be returned are the following:\n");
   let allActiveDOMEEvents: DOMEEvent[] = [];
@@ -412,7 +414,7 @@ export async function getActiveDOMEEventsByDate(
  * @param endDateSeconds the given end date in seconds
  * @returns an Array with all the DOME active blockchain events from the blockchain between the given dates
  */
-async function getAllActiveDOMEBlockchainEventsBetweenDates(DOMEEvents: ethers.Event[], DOMEEventsContract: ethers.Contract, actualBlockNumber: number, startDateSeconds: number, endDateSeconds: number) {
+async function getAllActiveDOMEBlockchainEventsBetweenDates(DOMEEvents: ethers.Event[], DOMEEventsContract: ethers.Contract, actualBlockNumber: number, startDateSeconds: number, endDateSeconds: number, metadataOfInterest: string[]) {
   let activeEvents: ethers.Event[] = [];
   let alreadyCheckedIDEntityHashes = new Map<string, boolean>();
   let filterEventsByEntityIDHash;
@@ -476,10 +478,27 @@ async function getAllActiveDOMEBlockchainEventsBetweenDates(DOMEEvents: ethers.E
 
       alreadyCheckedIDEntityHashes.set(entityIDHashToFilterWith, true);
 
-      activeEvents.push(activeEvent);
-      debugLog("  > Updated the list of active events:\n" + activeEvents);
+      if (isAnEventOfInterest(activeEvent.args![7], metadataOfInterest)) {
+       activeEvents.push(activeEvent);
+       debugLog("  > Updated the list of active events:\n" + activeEvents);
+      }
     }
   }
 
   return activeEvents;
+}
+
+function isAnEventOfInterest(eventMetadata: string[], metadataOfInterest: string[]): boolean {
+  if (metadataOfInterest.includes("sbx") && eventMetadata.includes("sbx")) {
+    return true;
+  }
+  if (metadataOfInterest.includes("prd") && eventMetadata.includes("prd")) {
+    return true;
+  }
+  if (metadataOfInterest.includes("dev") && eventMetadata.includes("dev")) {
+    return true;
+  }
+
+  debugLog(" > This event is not of interest for the user. It is related to an env different than the one's of interest");
+  return false;
 }
