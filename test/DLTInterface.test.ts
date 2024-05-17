@@ -338,7 +338,7 @@ describe('DOME active events retrieval', () => {
 
   it('valid case: active event in lower boundary IS included', async () => {
     let timestampOfPublishedEvent: number = -1; 
-    subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
+    subscribeToDOMEEvents(eventTypesOfInterest, metadata, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
       if(event.entityIDHash === previousStateEvent.entityIDHash){
         timestampOfPublishedEvent = event.timestamp;
       }
@@ -362,7 +362,7 @@ describe('DOME active events retrieval', () => {
 
 it('valid case: active event in upper boundary IS included', async () => {
     let timestampOfPublishedEvent: number = -1; 
-    subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
+    subscribeToDOMEEvents(eventTypesOfInterest, metadata, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
       if(event.entityIDHash === previousStateEvent.entityIDHash){
         timestampOfPublishedEvent = event.timestamp;
       }
@@ -397,7 +397,7 @@ it('valid case: active event in upper boundary IS included', async () => {
 
     let timestampOfFirstPublishedEvent: number = -1; 
     let timestampOfLatestPublishedEvent: number = -1; 
-    subscribeToDOMEEvents(eventTypesOfInterest, previousStateEvent.metadata, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
+    subscribeToDOMEEvents(eventTypesOfInterest, metadata, previousStateEvent.metadata, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
 
     });
     let initialTime = new Date();
@@ -421,7 +421,7 @@ it('valid case: active event in upper boundary IS included', async () => {
 
   it('valid case: active event out of lower boundary IS NOT included', async () => {
     let timestampOfPublishedEvent: number = -1; 
-    subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
+    subscribeToDOMEEvents(eventTypesOfInterest, metadata, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
       if(event.entityIDHash === previousStateEvent.entityIDHash){
         timestampOfPublishedEvent = event.timestamp;
       }
@@ -445,7 +445,7 @@ it('valid case: active event in upper boundary IS included', async () => {
 
   it('valid case: active event out of upper boundary IS NOT included', async () => {
     let timestampOfPublishedEvent: number = -1; 
-    subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
+    subscribeToDOMEEvents(eventTypesOfInterest, metadata, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
       if(event.entityIDHash === previousStateEvent.entityIDHash){
         timestampOfPublishedEvent = event.timestamp;
       }
