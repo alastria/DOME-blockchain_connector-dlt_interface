@@ -76,7 +76,7 @@ router.get('/api/v1/events', async (req: any, resp: any) => {
 
     debugLog("Entry call from origin: ", req.headers.origin);
     try {
-      let activeEvents = await getActiveDOMEEventsByDate(req.query.startDate, req.query.endDate, req.query.envM, process.env.RPC_ADDRESS!);
+      let activeEvents = await getActiveDOMEEventsByDate(req.query.startDate, req.query.endDate, process.env.RPC_ADDRESS!);
       resp.status(200).json(activeEvents);
     } catch (error: any) {
       if (error == IllegalArgumentError) {

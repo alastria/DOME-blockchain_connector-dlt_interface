@@ -10,10 +10,10 @@ import { IllegalArgumentError } from "../src/exceptions/IllegalArgumentError";
 import { getActiveDOMEEventsByDate } from "../src/api/DLTInterface";
 import { DOMEEvent } from "../src/utils/types";
 
-const rpcAddress = process.env.RPC_ADDRESS;
+const rpcAddress = 'https://red-t.alastria.io/v0/9461d9f4292b41230527d57ee90652a6';
 const notificationEndpoint = undefined;
 const ownIss = "0x61b27fef24cfe8a0b797ed8a36de2884f9963c0c2a0da640e3ec7ad6cd0c351e"
-const iss = process.env.ISS;
+const iss = "0x43b27fef24cfe8a0b797ed8a36de2884f9963c0c2a0da640e3ec7ad6cd0c493d";
 
 describe('DOME events subscription', () => {
   let eventTypesOfInterest: string[];
@@ -25,11 +25,8 @@ describe('DOME events subscription', () => {
   let correctEventTypeTwo: any;
   let ownIssAsOriginEvent: any;
 
-  let metadata: string[];
-
   beforeAll(() => {
     eventTypesOfInterest = ['eventType1', 'eventType2'];
-    metadata = ['sbx'];
   });
 
   beforeEach(() => {
@@ -43,7 +40,7 @@ describe('DOME events subscription', () => {
       previousEntityHash: "0x743c956500000000001000000070000000600000000000300000000050000000",
       eventType: 'eventType1',
       dataLocation: 'dataLocation1',
-      metadata: metadata,
+      metadata: [],
     };
 
     correctEventTypeTwo = {
@@ -52,7 +49,7 @@ describe('DOME events subscription', () => {
       previousEntityHash: "0x843c956500000000001000000070000000600000000000300000000050000000",
       eventType: 'eventType2',
       dataLocation: correctEventTypeOne.dataLocation,
-      metadata: metadata,
+      metadata: [],
     };
 
     ownIssAsOriginEvent = {
@@ -61,14 +58,14 @@ describe('DOME events subscription', () => {
       previousEntityHash: correctEventTypeTwo.previousEntityHash,
       eventType: correctEventTypeTwo.eventType,
       dataLocation: correctEventTypeOne.dataLocation,
-      metadata: metadata,
+      metadata: [],
     };
   });
 
   it('valid case: should subscribe to DOME events', async () => {
 
     let entityIDHashesOfReceivedEvents = new Set<string>();
-    subscribeToDOMEEvents(eventTypesOfInterest, metadata, rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)});
+    subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)});
     await publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.dataLocation, correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIDHash, correctEventTypeOne.previousEntityHash, rpcAddress);
     await publishDOMEEvent(correctEventTypeTwo.eventType, correctEventTypeTwo.dataLocation, correctEventTypeTwo.metadata, iss, correctEventTypeTwo.entityIDHash, correctEventTypeTwo.previousEntityHash, rpcAddress);
     await publishDOMEEvent(correctEventTypeTwo.eventType, correctEventTypeTwo.dataLocation, correctEventTypeTwo.metadata, ownIssAsOriginEvent.origin, ownIssAsOriginEvent.entityIDHash, correctEventTypeTwo.previousEntityHash, rpcAddress);
@@ -81,47 +78,47 @@ describe('DOME events subscription', () => {
 
   it('invalid case: no event types selected', async () => {
     let entityIDHashesOfReceivedEvents = new Set<string>();
-    expect(() => subscribeToDOMEEvents([], metadata, rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
+    expect(() => subscribeToDOMEEvents([], rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
   }, 30000);
 
   it('invalid case: blank event types selected', async () => {
     let entityIDHashesOfReceivedEvents = new Set<string>();
-    expect(() => subscribeToDOMEEvents(["a", "", "u"], metadata, rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
+    expect(() => subscribeToDOMEEvents(["a", "", "u"], rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
   }, 30000);
 
   it('invalid case: undefined event types', async () => {
     let entityIDHashesOfReceivedEvents = new Set<string>();
-    expect(() => subscribeToDOMEEvents(undefined, metadata, rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
+    expect(() => subscribeToDOMEEvents(undefined, rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
   }, 30000);
 
   it('invalid case: null event types', async () => {
     let entityIDHashesOfReceivedEvents = new Set<string>();
-    expect(() => subscribeToDOMEEvents(null, metadata, rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
+    expect(() => subscribeToDOMEEvents(null, rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
   }, 30000);
 
   it('invalid case: undefined rpcAddress', async () => {
     let entityIDHashesOfReceivedEvents = new Set<string>();
-    expect(() => subscribeToDOMEEvents(eventTypesOfInterest, metadata, undefined, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
+    expect(() => subscribeToDOMEEvents(eventTypesOfInterest, undefined, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
   }, 30000);
 
   it('invalid case: null rpcAddress', async () => {
     let entityIDHashesOfReceivedEvents = new Set<string>();
-    expect(() => subscribeToDOMEEvents(eventTypesOfInterest, metadata, null, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
+    expect(() => subscribeToDOMEEvents(eventTypesOfInterest, null, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
   }, 30000);
 
   it('invalid case: blank ownIss', async () => {
     let entityIDHashesOfReceivedEvents = new Set<string>();
-    expect(() => subscribeToDOMEEvents(eventTypesOfInterest, metadata, rpcAddress, "", notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
+    expect(() => subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, "", notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
   }, 30000);
 
   it('invalid case: undefined ownIss', async () => {
     let entityIDHashesOfReceivedEvents = new Set<string>();
-    expect(() => subscribeToDOMEEvents(eventTypesOfInterest, metadata, rpcAddress, undefined, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
+    expect(() => subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, undefined, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
   }, 30000);
 
   it('invalid case: null ownIss', async () => {
     let entityIDHashesOfReceivedEvents = new Set<string>();
-    expect(() => subscribeToDOMEEvents(eventTypesOfInterest, metadata, rpcAddress, null, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
+    expect(() => subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, null, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
   }, 30000);
 
 });
@@ -131,11 +128,8 @@ describe('DOME events publication', () => {
   let entityIdOne;
   let correctEventTypeOne: any;
 
-  let metadata: string[];
-
   beforeAll(() => {
     eventTypesOfInterest = ['eventType1', 'eventType2'];
-    metadata = ['sbx'];
   })
 
   beforeEach(() => {
@@ -146,7 +140,7 @@ describe('DOME events publication', () => {
       previousEntityHash: "0x743c956500000000001000000070000000600000000000300000000050000000",
       eventType: 'eventType1',
       dataLocation: 'dataLocation1',
-      metadata: metadata,
+      metadata: [],
     };
   });
 
@@ -155,7 +149,7 @@ describe('DOME events publication', () => {
     correctEventTypeOne.entityIDHash = "0x" + createHash('sha256').update(entityIdOne).digest('hex');
     
     let entityIDHashesOfReceivedEvents = new Set<string>();
-    subscribeToDOMEEvents(eventTypesOfInterest, metadata, rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventPublicationValidCaseDOMEEventsHandler(event, entityIDHashesOfReceivedEvents)});
+    subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventPublicationValidCaseDOMEEventsHandler(event, entityIDHashesOfReceivedEvents)});
     await publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.dataLocation, correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIDHash, correctEventTypeOne.previousEntityHash, rpcAddress);
     await sleep(20000);
 
@@ -287,15 +281,15 @@ describe('DOME events publication', () => {
 });
 
 describe('DOME active events retrieval', () => {
-  let entityIdOne: any; 
+  let entityIdOne; 
+  let entityIdTwo;
   let previousStateEvent: any;
   let activeStateEvent: any;
-  let metadata: string[];
+  let anotherEvent: any;
 
   let eventTypesOfInterest: string[];
   beforeAll(() => {
     eventTypesOfInterest = ['eventType1', 'eventType2', 'eventType3'];
-    metadata = ['sbx'];
   })
 
   beforeEach(() => {
@@ -306,7 +300,7 @@ describe('DOME active events retrieval', () => {
         previousEntityHash: "0x743c956500000000001000000070000000600000000000300000000050000000",
         eventType: 'eventType1',
         dataLocation: 'dataLocation1',
-        metadata: metadata 
+        metadata: [],
     };
 
     activeStateEvent= {
@@ -326,7 +320,7 @@ describe('DOME active events retrieval', () => {
     let finTime = new Date(eventPublicationTimestampSeconds * 1000);
     await publishDOMEEvent("eventType3", previousStateEvent.dataLocation, previousStateEvent.metadata, iss, previousStateEvent.entityIDHash, previousStateEvent.previousEntityHash, rpcAddress);
 
-    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate(initialTime.valueOf(), finTime.valueOf(), metadata, rpcAddress!);
+    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate(initialTime.valueOf(), finTime.valueOf(), rpcAddress);
     let allActiveEventsBetweenDatesEntityIdHashes: string[] = [];
     let allActiveEventsBetweenDatesWithDefinedEntityIdHash: DOMEEvent[] = [];
     allActiveEventsBetweenDates.forEach(event => {
@@ -344,7 +338,7 @@ describe('DOME active events retrieval', () => {
 
   it('valid case: active event in lower boundary IS included', async () => {
     let timestampOfPublishedEvent: number = -1; 
-    subscribeToDOMEEvents(eventTypesOfInterest, metadata, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
+    subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
       if(event.entityIDHash === previousStateEvent.entityIDHash){
         timestampOfPublishedEvent = event.timestamp;
       }
@@ -353,7 +347,7 @@ describe('DOME active events retrieval', () => {
     await sleep(20000);
 
     expect(timestampOfPublishedEvent).not.toBe(-1);
-    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate(timestampOfPublishedEvent * 1000, timestampOfPublishedEvent * 1000, metadata, rpcAddress!);
+    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate(timestampOfPublishedEvent * 1000, timestampOfPublishedEvent * 1000, rpcAddress);
     let allActiveEventsBetweenDatesEntityIdHashes: string[] = [];
     let allActiveEventsBetweenDatesWithDefinedEntityIdHash: DOMEEvent[] = [];
     allActiveEventsBetweenDates.forEach(event => {
@@ -366,9 +360,9 @@ describe('DOME active events retrieval', () => {
     expect(allActiveEventsBetweenDatesWithDefinedEntityIdHash.length).toBe(1);
   }, 60000);
 
-it('valid case: active event in upper boundary IS included', async () => {
+  it('valid case: active event in upper boundary IS included', async () => {
     let timestampOfPublishedEvent: number = -1; 
-    subscribeToDOMEEvents(eventTypesOfInterest, metadata, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
+    subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
       if(event.entityIDHash === previousStateEvent.entityIDHash){
         timestampOfPublishedEvent = event.timestamp;
       }
@@ -377,48 +371,13 @@ it('valid case: active event in upper boundary IS included', async () => {
     await sleep(20000);
 
     expect(timestampOfPublishedEvent).not.toBe(-1);
-    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate(timestampOfPublishedEvent * 1000, timestampOfPublishedEvent * 1000, metadata, rpcAddress!);
+    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate(timestampOfPublishedEvent * 1000, timestampOfPublishedEvent * 1000, rpcAddress);
     let allActiveEventsBetweenDatesEntityIdHashes: string[] = [];
     let allActiveEventsBetweenDatesWithDefinedEntityIdHash: DOMEEvent[] = [];
     allActiveEventsBetweenDates.forEach(event => {
       allActiveEventsBetweenDatesEntityIdHashes.push(event.entityId);
 
       if(event.entityId === previousStateEvent.entityIDHash){
-        allActiveEventsBetweenDatesWithDefinedEntityIdHash.push(event);
-      }
-    });
-    expect(allActiveEventsBetweenDatesWithDefinedEntityIdHash.length).toBe(1);
-  }, 60000);
-
-  it('valid case: Event of other env than the one of interest is not notified', async () => {
-    let entityId = randomBytes(20).toString('hex');
-    let eventOfAnotherEnv = {
-      origin: iss,
-      entityIDHash: "0x" + createHash('sha256').update(entityId).digest('hex'),
-      previousEntityHash: "0x743c956500000000001000000070000000600000000000300000000050000000",
-      eventType: 'eventType1',
-      dataLocation: 'dataLocation1',
-      metadata: ["dev"],
-    };
-
-    let timestampOfFirstPublishedEvent: number = -1; 
-    let timestampOfLatestPublishedEvent: number = -1; 
-    subscribeToDOMEEvents(eventTypesOfInterest, metadata, previousStateEvent.metadata, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
-
-    });
-    let initialTime = new Date();
-    timestampOfFirstPublishedEvent = await publishDOMEEvent(previousStateEvent.eventType, previousStateEvent.dataLocation, previousStateEvent.metadata, iss, previousStateEvent.entityIDHash, previousStateEvent.previousEntityHash, rpcAddress);
-    timestampOfLatestPublishedEvent = await publishDOMEEvent(eventOfAnotherEnv.eventType, eventOfAnotherEnv.dataLocation, eventOfAnotherEnv.metadata, iss, eventOfAnotherEnv.entityIDHash, eventOfAnotherEnv.previousEntityHash, rpcAddress);
-    let finTime = new Date();
-    await sleep(20000);
-
-    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate(initialTime.valueOf(), finTime.valueOf(), metadata, rpcAddress!);
-    let allActiveEventsBetweenDatesEntityIdHashes: string[] = [];
-    let allActiveEventsBetweenDatesWithDefinedEntityIdHash: DOMEEvent[] = [];
-    allActiveEventsBetweenDates.forEach(event => {
-      allActiveEventsBetweenDatesEntityIdHashes.push(event.entityId);
-
-      if(event.entityId === previousStateEvent.entityIDHash || event.entityId === eventOfAnotherEnv.entityIDHash){
         allActiveEventsBetweenDatesWithDefinedEntityIdHash.push(event);
       }
     });
@@ -427,7 +386,7 @@ it('valid case: active event in upper boundary IS included', async () => {
 
   it('valid case: active event out of lower boundary IS NOT included', async () => {
     let timestampOfPublishedEvent: number = -1; 
-    subscribeToDOMEEvents(eventTypesOfInterest, metadata, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
+    subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
       if(event.entityIDHash === previousStateEvent.entityIDHash){
         timestampOfPublishedEvent = event.timestamp;
       }
@@ -436,7 +395,7 @@ it('valid case: active event in upper boundary IS included', async () => {
     await sleep(20000);
 
     expect(timestampOfPublishedEvent).not.toBe(-1);
-    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate((timestampOfPublishedEvent + 1) * 1000, (timestampOfPublishedEvent + 1) * 1000, metadata, rpcAddress!);
+    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate((timestampOfPublishedEvent + 1) * 1000, (timestampOfPublishedEvent + 1) * 1000, rpcAddress);
     let allActiveEventsBetweenDatesEntityIdHashes: string[] = [];
     let allActiveEventsBetweenDatesWithDefinedEntityIdHash: DOMEEvent[] = [];
     allActiveEventsBetweenDates.forEach(event => {
@@ -451,7 +410,7 @@ it('valid case: active event in upper boundary IS included', async () => {
 
   it('valid case: active event out of upper boundary IS NOT included', async () => {
     let timestampOfPublishedEvent: number = -1; 
-    subscribeToDOMEEvents(eventTypesOfInterest, metadata, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
+    subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, ownIss, notificationEndpoint, (event: any) => {
       if(event.entityIDHash === previousStateEvent.entityIDHash){
         timestampOfPublishedEvent = event.timestamp;
       }
@@ -460,7 +419,7 @@ it('valid case: active event in upper boundary IS included', async () => {
     await sleep(20000);
 
     expect(timestampOfPublishedEvent).not.toBe(-1);
-    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate((timestampOfPublishedEvent - 1) * 1000, (timestampOfPublishedEvent - 1) * 1000, metadata, rpcAddress!);
+    let allActiveEventsBetweenDates = await getActiveDOMEEventsByDate((timestampOfPublishedEvent - 1) * 1000, (timestampOfPublishedEvent - 1) * 1000, rpcAddress);
     let allActiveEventsBetweenDatesEntityIdHashes: string[] = [];
     let allActiveEventsBetweenDatesWithDefinedEntityIdHash: DOMEEvent[] = [];
     allActiveEventsBetweenDates.forEach(event => {
@@ -478,7 +437,7 @@ it('valid case: active event in upper boundary IS included', async () => {
     let finTime = new Date();
     finTime.setFullYear(initialTime.getFullYear() + 1);
 
-    await expect(getActiveDOMEEventsByDate(finTime.valueOf(), initialTime.valueOf(), metadata, rpcAddress!)).rejects.toThrow(IllegalArgumentError);
+    await expect(getActiveDOMEEventsByDate(finTime.valueOf(), initialTime.valueOf(), rpcAddress)).rejects.toThrow(IllegalArgumentError);
   }, 60000);
 
   it('invalid case: rpcAddress is blank', async () => {
@@ -486,7 +445,7 @@ it('valid case: active event in upper boundary IS included', async () => {
     let finTime = new Date();
     finTime.setFullYear(initialTime.getFullYear() + 1);
 
-    await expect(getActiveDOMEEventsByDate(initialTime.valueOf(), finTime.valueOf(), metadata, "")).rejects.toThrow(IllegalArgumentError);
+    await expect(getActiveDOMEEventsByDate(initialTime.valueOf(), finTime.valueOf(), "")).rejects.toThrow(IllegalArgumentError);
   }, 60000);
 
 });
