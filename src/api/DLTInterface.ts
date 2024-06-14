@@ -95,6 +95,7 @@ export async function publishDOMEEvent(
         debugLog("  > Publishing event to blockchain node...");
         const tx = await domeEventsContractWithSigner.emitNewEvent(
             iss,
+            wallet.address.toString(),
             entityIDHash,
             previousEntityHash,
             eventType,
@@ -179,7 +180,8 @@ export function subscribeToDOMEEvents(
             (
                 index,
                 timestamp,
-                origin,
+                publisherAddress,
+                authorAddress,
                 entityIDHash,
                 previousEntityHash,
                 eventType,
@@ -190,7 +192,8 @@ export function subscribeToDOMEEvents(
                 let parsedTimestamp = BigNumber.from(timestamp._hex).toNumber();
                 const eventContent = {
                     id: parsedId,
-                    publisherAddress: origin,
+                    ethereumAddress: authorAddress,
+                    publisherAddress: publisherAddress,
                     entityIDHash: entityIDHash,
                     previousEntityHash: previousEntityHash,
                     eventType: eventType,
@@ -384,6 +387,8 @@ export async function getActiveDOMEEventsByDate(
     allActiveEvents.forEach((event) => {
         let eventJson: DOMEEvent = {
             id: 0,
+            ethereumAddress: "",
+            publisherAddress: "",
             timestamp: 0,
             eventType: "",
             dataLocation: "",
@@ -392,12 +397,14 @@ export async function getActiveDOMEEventsByDate(
             previousEntityHash: ""
         };
         eventJson.id = event.args![0];
+        eventJson.ethereumAddress = event.args![3];
+        eventJson.publisherAddress = event.args![2];
         eventJson.timestamp = event.args![1];
-        eventJson.eventType = event.args![5];
-        eventJson.dataLocation = event.args![6];
-        eventJson.relevantMetadata = event.args![7];
-        eventJson.entityId = event.args![3];
-        eventJson.previousEntityHash = event.args![4];
+        eventJson.eventType = event.args![6];
+        eventJson.dataLocation = event.args![7];
+        eventJson.relevantMetadata = event.args![8];
+        eventJson.entityId = event.args![4];
+        eventJson.previousEntityHash = event.args![5];
 
         let eventIDHash = event.args![0]._hex;
         let eventTimestampHash = event.args![1]._hex;
@@ -440,7 +447,7 @@ async function getAllActiveDOMEBlockchainEventsBetweenDates(DOMEEvents: ethers.E
     for (let domeEvent of DOMEEvents) {
         debugLog("  >>> Checking onchain active events...");
 
-        let entityIDHashToFilterWith = domeEvent.args![3];
+        let entityIDHashToFilterWith = domeEvent.args![4];
         debugLog("  >> EntityIDHash of event is " + entityIDHashToFilterWith);
         if (!alreadyCheckedIDEntityHashes.has(entityIDHashToFilterWith)) {
             eventDateHexBigNumber = domeEvent.args![1]._hex;
@@ -454,6 +461,7 @@ async function getAllActiveDOMEBlockchainEventsBetweenDates(DOMEEvents: ethers.E
                 "  >> Filtering events with same EntityIDHash to obtain the active one..."
             );
             filterEventsByEntityIDHash = DOMEEventsContract.filters.EventDOMEv1(
+                null,
                 null,
                 null,
                 null,
@@ -496,7 +504,7 @@ async function getAllActiveDOMEBlockchainEventsBetweenDates(DOMEEvents: ethers.E
             alreadyCheckedIDEntityHashes.set(entityIDHashToFilterWith, true);
             // solving problems, from IN2 :* - java rules
             let envMetadata : string[] = Array.of(metadataOfInterest)
-            if (isAnEventOfInterest(activeEvent.args![7], envMetadata)) {
+            if (isAnEventOfInterest(activeEvent.args![8], envMetadata)) {
                 activeEvents.push(activeEvent);
                 debugLog("  > Updated the list of active events:\n" + activeEvents);
             }
