@@ -8,8 +8,8 @@ import {NotificationEndpointError} from "../exceptions/NotificationEndpointError
 import {getIndexOfFirstAppearanceOfElement, getIndexOfLastAppearanceOfElement} from "../utils/funcs";
 import {DOMEEvent} from "../utils/types";
 
-const debugLog = debug("DLT Interface Service: ");
-const errorLog = debug("DLT Interface Service:error ");
+const debugLog = debug("DLT_Interface_Service:");
+const errorLog = debug("DLT_Interface_Service:error");
 
 /**
  * Publish DOME event as a blockchain event.
@@ -81,6 +81,7 @@ export async function publishDOMEEvent(
         debugLog("  > Connecting to blockchain node with address: " + rpcAddress);
 
         const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
+        debugLog("  > Ethereum Public Key of event publisher: ", wallet.publicKey);
         debugLog("  > Ethereum Address of event publisher: ", wallet.address);
 
         const domeEventsContractWithSigner = new ethers.Contract(
