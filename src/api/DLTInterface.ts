@@ -293,12 +293,6 @@ function notifyEndpointDOMEEventsHandler(
         .then((response) => {
             debugLog(" > Response from notification endpoint: " + response.status);
         })
-        .catch((error) => {
-            errorLog(" > !! Error from notification endpoint:\n" + error);
-            throw new NotificationEndpointError(
-                "Can't connect to the notification endpoint."
-            );
-        });
 }
 
 /**
