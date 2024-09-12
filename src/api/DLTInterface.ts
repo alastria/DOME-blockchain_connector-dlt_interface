@@ -293,6 +293,10 @@ function notifyEndpointDOMEEventsHandler(
         .then((response) => {
             debugLog(" > Response from notification endpoint: " + response.status);
         })
+        .catch((error) => {
+            debugLog(" > Something other than a 200 status code happened. It's not the bussiness" +
+                " of the DLT Adapter to determine nothing more after successful notification. Possible error is: " + error);
+        });
 }
 
 /**
