@@ -179,7 +179,11 @@ export function subscribeToDOMEEvents(
         debugLog(" > Listening to events...");
 
         let previousActiveSubscriptions = activeSubscriptions.get(ownIss) || [];
-        activeSubscriptions.set(ownIss, [...previousActiveSubscriptions, {eventTypes: eventTypes, metadata: metadataOfInterest}]);
+        let newSubscription: Subscription = {eventTypes: eventTypes, metadata: metadataOfInterest};
+        if(notificationEndpoint != undefined) {
+            newSubscription.notificationEndpoint = notificationEndpoint;
+        }
+        activeSubscriptions.set(ownIss, [...previousActiveSubscriptions, newSubscription]);
 
         DOMEEventsContract.on(
             "EventDOMEv1",
