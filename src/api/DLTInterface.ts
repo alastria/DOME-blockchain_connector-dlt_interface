@@ -6,10 +6,12 @@ import axios from "axios";
 import {IllegalArgumentError} from "../exceptions/IllegalArgumentError";
 import {NotificationEndpointError} from "../exceptions/NotificationEndpointError";
 import {getIndexOfFirstAppearanceOfElement, getIndexOfLastAppearanceOfElement} from "../utils/funcs";
-import {DOMEEvent} from "../utils/types";
+import {DOMEEvent, Subscription} from "../utils/types";
 
 const debugLog = debug("DLT_Interface_Service:");
 const errorLog = debug("DLT_Interface_Service:error");
+
+let activeSubscriptions: Map<string, Subscription[]> = new Map();
 
 /**
  * Publish DOME event as a blockchain event.
@@ -175,6 +177,9 @@ export function subscribeToDOMEEvents(
             " > User requests to subscribe to events of type " + eventTypes.join(", ") + " and environment  " + metadataOfInterest.join(", ")
         );
         debugLog(" > Listening to events...");
+
+        let previousActiveSubscriptions = activeSubscriptions.get(ownIss) || [];
+        activeSubscriptions.set(ownIss, [...previousActiveSubscriptions, {eventTypes: eventTypes, metadata: metadataOfInterest}]);
 
         DOMEEventsContract.on(
             "EventDOMEv1",
@@ -511,6 +516,18 @@ async function getAllActiveDOMEBlockchainEventsBetweenDates(DOMEEvents: ethers.E
     }
 
     return activeEvents;
+}
+
+/**
+ * Retrieves the active subscriptions.
+ * @returns An array of active subscriptions
+ */
+export function getActiveSubscriptions() {
+    if (!activeSubscriptions.has(process.env.ISS!)) {
+        return [];
+    }
+
+    return activeSubscriptions.get(process.env.ISS!);
 }
 
 function isAnEventOfInterest(eventMetadata: string[], metadataOfInterest: string[]): boolean {

@@ -1,4 +1,4 @@
-import { subscribeToDOMEEvents, publishDOMEEvent, getActiveDOMEEventsByDate } from "../api/DLTInterface";
+import { subscribeToDOMEEvents, publishDOMEEvent, getActiveDOMEEventsByDate, getActiveSubscriptions } from "../api/DLTInterface";
 import express from "express";
 import debug from "debug";
 import { IllegalArgumentError } from "../exceptions/IllegalArgumentError";
@@ -64,6 +64,19 @@ router.post("/api/v1/subscribe", (req: any, resp: any) => {
         errorLog("Error:\n ", error);
         resp.status(400).send(error.message);
       }
+
+      debugLog("Error:\n ", error);
+      resp.status(400).send("Error connecting to the blockchain node.");
+    }
+  })();
+});
+
+router.get("/api/v1/subscribe", (req: any, resp: any) => {
+  (async () => {
+    debugLog("Entry call from origin: ", req.headers.origin);
+    try {
+      resp.status(200).send(getActiveSubscriptions());
+    } catch (error: any) {
 
       debugLog("Error:\n ", error);
       resp.status(400).send("Error connecting to the blockchain node.");
