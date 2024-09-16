@@ -11,4 +11,4 @@ export type DOMEEvent = {
   }
 
 
-export type Subscription = { eventTypes: string[]; metadata: string[] };
+export type Subscription = { eventTypes: string[]; metadata: string[] ; notificationEndpoint?: string; };
