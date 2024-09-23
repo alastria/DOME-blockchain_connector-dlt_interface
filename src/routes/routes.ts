@@ -1,14 +1,16 @@
-import { subscribeToDOMEEvents, publishDOMEEvent, getActiveDOMEEventsByDate } from "../api/DLTInterface";
+import { subscribeToDOMEEvents, publishDOMEEvent, getActiveDOMEEventsByDate, getActiveSubscriptions } from "../api/DLTInterface";
 import express from "express";
 import debug from "debug";
 import { IllegalArgumentError } from "../exceptions/IllegalArgumentError";
 import { NotificationEndpointError } from "../exceptions/NotificationEndpointError";
+
 
 const router = express.Router();
 const debugLog = debug("Routes: ");
 const errorLog = debug("Routes:error ");
 
 router.get("/health", (req: any, resp: any) => {
+
   const healthCheckResponse = {
     status: "UP",
     checks: [
@@ -34,6 +36,7 @@ router.post("/api/v1/publishEvent", (req: any, resp: any) => {
         req.body.previousEntityHash,
         req.body.rpcAddress ?? process.env.RPC_ADDRESS 
       );
+
       resp.status(201).json(eventTimestamp);
     } catch (error: any) {
       if (error == IllegalArgumentError) {
@@ -53,10 +56,12 @@ router.post("/api/v1/subscribe", (req: any, resp: any) => {
     try {
       subscribeToDOMEEvents(
         req.body.eventTypes,
+        req.body.metadata,
         process.env.RPC_ADDRESS!,
         process.env.ISS!,
         req.body.notificationEndpoint,
       );
+
       resp.status(201).send("OK");
     } catch (error: any) {
       if (error == NotificationEndpointError) {
@@ -70,12 +75,27 @@ router.post("/api/v1/subscribe", (req: any, resp: any) => {
   })();
 });
 
+router.get("/api/v1/subscribe", (req: any, resp: any) => {
+  (async () => {
+    debugLog("Entry call from origin: ", req.headers.origin);
+    try {
+      const subscriptions = await getActiveSubscriptions();
+      console.log(subscriptions);
+      resp.status(200).send(subscriptions);
+    } catch (error: any) {
+
+      debugLog("Error:\n ", error);
+      resp.status(400).send("Error connecting to the blockchain node.");
+    }
+  })();
+});
+
 router.get('/api/v1/events', async (req: any, resp: any) => {
   (async() => {
 
     debugLog("Entry call from origin: ", req.headers.origin);
     try {
-      let activeEvents = await getActiveDOMEEventsByDate(req.query.startDate, req.query.endDate, process.env.RPC_ADDRESS!);
+      let activeEvents = await getActiveDOMEEventsByDate(req.query.startDate, req.query.endDate, req.query.envM, process.env.RPC_ADDRESS!);
       resp.status(200).json(activeEvents);
     } catch (error: any) {
       if (error == IllegalArgumentError) {
