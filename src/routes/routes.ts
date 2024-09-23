@@ -5,11 +5,13 @@ import { IllegalArgumentError } from "../exceptions/IllegalArgumentError";
 import { NotificationEndpointError } from "../exceptions/NotificationEndpointError";
 
 
+
 const router = express.Router();
 const debugLog = debug("Routes: ");
 const errorLog = debug("Routes:error ");
 
 router.get("/health", (req: any, resp: any) => {
+
 
   const healthCheckResponse = {
     status: "UP",
@@ -37,6 +39,7 @@ router.post("/api/v1/publishEvent", (req: any, resp: any) => {
         req.body.rpcAddress ?? process.env.RPC_ADDRESS 
       );
 
+
       resp.status(201).json(eventTimestamp);
     } catch (error: any) {
       if (error == IllegalArgumentError) {
@@ -62,6 +65,7 @@ router.post("/api/v1/subscribe", (req: any, resp: any) => {
         req.body.notificationEndpoint,
       );
 
+
       resp.status(201).send("OK");
     } catch (error: any) {
       if (error == NotificationEndpointError) {
@@ -79,6 +83,9 @@ router.get("/api/v1/subscribe", (req: any, resp: any) => {
   (async () => {
     debugLog("Entry call from origin: ", req.headers.origin);
     try {
+      const subscriptions = await getActiveSubscriptions();
+      console.log(subscriptions);
+      resp.status(200).send(subscriptions);
       const subscriptions = await getActiveSubscriptions();
       resp.status(200).send(subscriptions);
     } catch (error: any) {
