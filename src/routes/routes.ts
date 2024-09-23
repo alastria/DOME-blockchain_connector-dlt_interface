@@ -80,7 +80,6 @@ router.get("/api/v1/subscribe", (req: any, resp: any) => {
     debugLog("Entry call from origin: ", req.headers.origin);
     try {
       const subscriptions = await getActiveSubscriptions();
-      console.log(subscriptions);
       resp.status(200).send(subscriptions);
     } catch (error: any) {
 

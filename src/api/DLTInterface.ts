@@ -12,7 +12,6 @@ import Database from "../database/mariadb";
 const debugLog = debug("DLT_Interface_Service:");
 const errorLog = debug("DLT_Interface_Service:error");
 
-let activeSubscriptions: Map<string, Subscription[]> = new Map();
 const db = Database.getInstance(); // MariaDB instance for storing subscriptions
 
 
