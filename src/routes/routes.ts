@@ -85,8 +85,6 @@ router.get("/api/v1/subscribe", (req: any, resp: any) => {
     try {
       const subscriptions = await getActiveSubscriptions();
       resp.status(200).send(subscriptions);
-      const subscriptions = await getActiveSubscriptions();
-      resp.status(200).send(subscriptions);
     } catch (error: any) {
 
       debugLog("Error:\n ", error);
