@@ -7,7 +7,8 @@ import {IllegalArgumentError} from "../exceptions/IllegalArgumentError";
 import {NotificationEndpointError} from "../exceptions/NotificationEndpointError";
 import {getIndexOfFirstAppearanceOfElement, getIndexOfLastAppearanceOfElement} from "../utils/funcs";
 import {DOMEEvent, Subscription} from "../utils/types";
-import Database from "../database/mariadb";
+import Database from "../database/database";
+import { SubscriptionEntity } from "../database/entities";
 
 const debugLog = debug("DLT_Interface_Service:");
 const errorLog = debug("DLT_Interface_Service:error");
@@ -183,9 +184,15 @@ export function subscribeToDOMEEvents(
         // Add subscription to database
         const subscription: Subscription = {
             eventTypes: eventTypes,
-            metadata: metadataOfInterest
+            metadata: metadataOfInterest,
+            notificationEndpoint: notificationEndpoint
         };
-        db.addSubscription(subscription);
+        const newSubscription = new SubscriptionEntity();
+        newSubscription.subscription = subscription;
+
+        const subscriptionRepo = db.getRepository(SubscriptionEntity);
+        subscriptionRepo.save(newSubscription);
+        console.log('Subscription created:', newSubscription);
 
         DOMEEventsContract.on(
             "EventDOMEv1",
@@ -530,7 +537,16 @@ async function getAllActiveDOMEBlockchainEventsBetweenDates(DOMEEvents: ethers.E
  */
 export function getActiveSubscriptions() {
 
-    return db.getSubscriptions();
+    const subscriptionRepo = db.getRepository(SubscriptionEntity);  // Get the repository for SubscriptionEntity
+
+    try {
+        const subscriptions =  subscriptionRepo.find();  // Fetch all subscriptions
+        console.log('Fetched Subscriptions:', subscriptions);
+        return subscriptions;
+    } catch (error) {
+        console.error('Error fetching subscriptions:', error);
+        throw error;
+    }
 }
 
 function isAnEventOfInterest(eventMetadata: string[], metadataOfInterest: string[]): boolean {
