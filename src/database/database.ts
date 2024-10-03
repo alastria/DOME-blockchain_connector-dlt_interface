@@ -1,5 +1,5 @@
 import { DataSource } from 'typeorm';
-import { SubscriptionEntity } from './entities';
+import { Subscription, EventType, Metadata } from '../models';
 
 const dbHost = process.env.DB_HOST;
 const dbUser = process.env.DB_USER;
@@ -22,7 +22,7 @@ class Database {
         username: dbUser,  // Replace with your MariaDB username
         password: dbPass,  // Replace with your MariaDB password
         database: dbName,  // Replace with your MariaDB database name
-        entities: [SubscriptionEntity],
+        entities: [Subscription, EventType, Metadata],
         synchronize: true,  // Automatically sync schema with database
       });
 

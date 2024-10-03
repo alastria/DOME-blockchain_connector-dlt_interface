@@ -9,6 +9,3 @@ export type DOMEEvent = {
     entityId: string;
     previousEntityHash: string;
   }
-
-
-export type Subscription = { eventTypes: string[]; metadata: string[] ; notificationEndpoint?: string; };
