@@ -1,6 +1,8 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+import "reflect-metadata";
+
 const express = require("express")
 const morgan = require("morgan")
 

@@ -6,12 +6,15 @@ import axios from "axios";
 import {IllegalArgumentError} from "../exceptions/IllegalArgumentError";
 import {NotificationEndpointError} from "../exceptions/NotificationEndpointError";
 import {getIndexOfFirstAppearanceOfElement, getIndexOfLastAppearanceOfElement} from "../utils/funcs";
-import {DOMEEvent, Subscription} from "../utils/types";
+import {DOMEEvent} from "../utils/types";
+import Database from "../database/database";
+import { Subscription, EventType, Metadata } from "../models";
 
 const debugLog = debug("DLT_Interface_Service:");
 const errorLog = debug("DLT_Interface_Service:error");
 
-let activeSubscriptions: Map<string, Subscription[]> = new Map();
+const db = Database.getInstance(); // MariaDB instance for storing subscriptions
+
 
 /**
  * Publish DOME event as a blockchain event.
@@ -178,12 +181,37 @@ export function subscribeToDOMEEvents(
         );
         debugLog(" > Listening to events...");
 
-        let previousActiveSubscriptions = activeSubscriptions.get(ownIss) || [];
-        let newSubscription: Subscription = {eventTypes: eventTypes, metadata: metadataOfInterest};
-        if(notificationEndpoint != undefined) {
-            newSubscription.notificationEndpoint = notificationEndpoint;
+        const newSubscription = new Subscription();
+        newSubscription.notificationEndpoint = notificationEndpoint;
+
+        const subscriptionRepo = db.getRepository(Subscription);
+        subscriptionRepo.save(newSubscription);
+        console.log('Subscription created:', newSubscription);
+
+        // Updating the subscription entry
+        // Get Repos
+        const eventTypeRepo = db.getRepository(EventType);
+        const metadataRepo = db.getRepository(Metadata);
+
+        // Create the eventTypes
+        for (const e of eventTypes) {
+            const newEventType = new EventType();
+            newEventType.subscription = newSubscription;
+            newEventType.type = e;
+
+            eventTypeRepo.save(newEventType);
+            console.log('EventType has been created:', newEventType);
         }
-        activeSubscriptions.set(ownIss, [...previousActiveSubscriptions, newSubscription]);
+
+        // Create the Metadata
+        for (const m of metadataOfInterest) {
+            const newMetadata = new Metadata();
+            newMetadata.subscription = newSubscription;
+            newMetadata.metadata = m;
+
+            metadataRepo.save(newMetadata);
+            console.log('Metadata has been created:', newMetadata);
+        }
 
         DOMEEventsContract.on(
             "EventDOMEv1",
@@ -527,11 +555,19 @@ async function getAllActiveDOMEBlockchainEventsBetweenDates(DOMEEvents: ethers.E
  * @returns An array of active subscriptions
  */
 export function getActiveSubscriptions() {
-    if (!activeSubscriptions.has(process.env.ISS!)) {
-        return [];
-    }
 
-    return activeSubscriptions.get(process.env.ISS!);
+    const subscriptionRepo = db.getRepository(Subscription); // Get the repository for SubscriptionEntity
+
+    try {
+        const subscriptions =  subscriptionRepo.find({
+            relations: ['eventTypes', 'metadata']
+        });  // Fetch all subscriptions with eventTypes and metadata
+        console.log('Fetched Subscriptions:', subscriptions);
+        return subscriptions;
+    } catch (error) {
+        console.error('Error fetching subscriptions:', error);
+        throw error;
+    }
 }
 
 function isAnEventOfInterest(eventMetadata: string[], metadataOfInterest: string[]): boolean {
