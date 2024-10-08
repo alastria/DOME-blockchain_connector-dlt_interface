@@ -7,7 +7,7 @@ export class EventType {
   id!: number;  // Auto-generated primary key
 
   @Column({ type: 'varchar', length: 256 })
-  name!: string;
+  type!: string;
 
   // Each eventType belongs to one subscription
   @ManyToOne(() => Subscription, (subscription) => subscription.eventTypes)

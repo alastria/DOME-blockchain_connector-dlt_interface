@@ -197,7 +197,7 @@ export function subscribeToDOMEEvents(
         for (const e of eventTypes) {
             const newEventType = new EventType();
             newEventType.subscription = newSubscription;
-            newEventType.name = e;
+            newEventType.type = e;
 
             eventTypeRepo.save(newEventType);
             console.log('EventType has been created:', newEventType);
