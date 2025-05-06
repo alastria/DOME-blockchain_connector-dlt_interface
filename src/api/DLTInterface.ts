@@ -454,10 +454,13 @@ export async function getActiveDOMEEventsByDate(
     debugLog("Number of active events is " + allActiveDOMEEvents.length + "\n");
     let finTime = new Date();
 
+    let totalProcessedBlocks = blockNum - parseInt(process.env.DOME_PRODUCTION_BLOCK_NUMBER!);
+
     debugLog("***************************************STATS***************************************");
+    debugLog("Total processed blocks are " + totalProcessedBlocks);
     debugLog("Total blockchain events are " + allDOMEEvents.length);
     debugLog("Processed blockchain events are " + allDOMEEventsBetweenDates.length);
-    debugLog("Processing time was " + (finTime.getTime() - initTime.getTime()) / 1000 / 60);
+    debugLog("Processing time was " + (finTime.getTime() - initTime.getTime()) / 1000 / 60) + " minutes";
     debugLog("***********************************************************************************\n");
 
     return allActiveDOMEEvents;
