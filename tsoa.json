@@ -1,0 +1,13 @@
+{
+  "entryFile": "src/server.ts",
+  "noImplicitAdditionalProperties": "throw-on-extras",
+  "spec": {
+    "outputDirectory": "old",
+    "specVersion": 3,
+    "basePath": "/api",
+    "specFileBaseName": "swagger"
+  },
+  "routes": {
+    "routesDir": "src/routes"
+  }
+}

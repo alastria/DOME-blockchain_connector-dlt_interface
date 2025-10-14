@@ -11,9 +11,10 @@ import { DOMEEvent } from "../utils/types";
 const debugLog = debug("DLT Interface Service: ");
 const errorLog = debug("DLT Interface Service:error ");
 
+
 /**
- * Publish DOME event as a blockchain event.
- *
+ * Publishes DOME event as a blockchain event
+ * 
  * @param eventType the name of the dome event
  * @param dataLocation the storage or location of the data associated with the event.
  * @param relevantMetadata additional information or metadata relevant to the event.
@@ -195,6 +196,31 @@ export function subscribeToDOMEEvents(
     );
   } catch (error) {
     errorLog(" > !! Error subscribing to DOME Events");
+    throw error;
+  }
+}
+
+
+
+export function subscribeToAllDOMEEvents(
+  rpcAddress: string,
+  ownIss: string,
+  notificationEndpoint?: string,
+  handler?: (event: object) => void
+) {
+  if (rpcAddress === null || rpcAddress === undefined) {
+    throw new IllegalArgumentError("The rpc address is null.");
+  }
+  if (ownIss === "") {
+    throw new IllegalArgumentError("The ownIss is blank.");
+  }
+  if (ownIss === null || ownIss === undefined) {
+    throw new IllegalArgumentError("The ownIss is null.");
+  }
+  try{
+
+  }catch(error){
+    errorLog(" > !! Error subscribing to all DOME Events");
     throw error;
   }
 }
