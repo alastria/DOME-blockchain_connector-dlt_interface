@@ -78,6 +78,9 @@ export async function publishDOMEEvent(
       relevantMetadata,
     });
 
+    debugLog("  > Adding netwotk:",process.env.NETWORK);
+    const metadata = [...relevantMetadata, process.env.NETWORK];
+
     const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
 
     const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
@@ -99,7 +102,8 @@ export async function publishDOMEEvent(
       previousEntityHash,
       eventType,
       dataLocation,
-      relevantMetadata
+      // relevantMetadata
+      metadata
     );
     debugLog("  > Transaction waiting to be mined...");
     await tx.wait();
@@ -196,31 +200,6 @@ export function subscribeToDOMEEvents(
     );
   } catch (error) {
     errorLog(" > !! Error subscribing to DOME Events");
-    throw error;
-  }
-}
-
-
-
-export function subscribeToAllDOMEEvents(
-  rpcAddress: string,
-  ownIss: string,
-  notificationEndpoint?: string,
-  handler?: (event: object) => void
-) {
-  if (rpcAddress === null || rpcAddress === undefined) {
-    throw new IllegalArgumentError("The rpc address is null.");
-  }
-  if (ownIss === "") {
-    throw new IllegalArgumentError("The ownIss is blank.");
-  }
-  if (ownIss === null || ownIss === undefined) {
-    throw new IllegalArgumentError("The ownIss is null.");
-  }
-  try{
-
-  }catch(error){
-    errorLog(" > !! Error subscribing to all DOME Events");
     throw error;
   }
 }
@@ -398,7 +377,6 @@ export async function getActiveDOMEEventsByDate(
   return allActiveDOMEEvents;
 }
 
-
 /**
  * Returns all the DOME active blockchain events from the blockchain between given dates  
  * @param DOMEEvents some DOME blockchain events
@@ -478,4 +456,103 @@ async function getAllActiveDOMEBlockchainEventsBetweenDates(DOMEEvents: ethers.E
   }
 
   return activeEvents;
+}
+
+/**
+ * Returns all the DOME active events from the blockchain
+ * 
+ * @param rpcAddress the blockchain node RPC address
+ * @returns a JSON with all the DOME active events from the blockchain
+ */
+export async function getAllDOMEEvents(
+  rpcAddress: string
+): Promise<DOMEEvent[]>{
+  if(rpcAddress === ""){
+    throw new IllegalArgumentError("The RPC address is blank");
+  }
+
+  debugLog(">>>> Getting active events");
+
+  const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
+  const DOMEEventsContract = new ethers.Contract(
+    process.env.DOME_EVENT_CONTRACT_ADDRESS!,
+    process.env.DOME_EVENTS_CONTRACT_ABI!,
+    provider
+  );
+  debugLog(">>>> Connecting to blockchain node...");
+  debugLog("  >> rpcAddress: " + rpcAddress);
+  let blockNumber = await provider.getBlockNumber();
+  debugLog("  >> Blockchain block number is " + blockNumber);
+  let allDOMEEvents = await DOMEEventsContract.queryFilter(
+    "*",
+    parseInt(process.env.DOME_PRODUCTION_BLOCK_NUMBER!),
+    blockNumber
+  );
+  allDOMEEvents = allDOMEEvents.slice(1);
+  let DOMEEvents: DOMEEvent[] = [];
+  allDOMEEvents.forEach((event) => {
+    if(event.args == undefined || event.args!.length == 0){
+      debugLog("Event with no args, passing to next...")
+      return;
+    }
+
+    let eventJson: DOMEEvent = {
+      id: event.args![0],
+      timestamp: event.args![1],
+      eventType: event.args![5],
+      dataLocation: event.args![6],
+      relevantMetadata: event.args![7],
+      entityId: event.args![3],
+      previousEntityHash: event.args![4]
+    };
+
+    debugLog(eventJson);
+    DOMEEvents.push(eventJson);
+  });
+  debugLog(">>>> Events found: " + DOMEEvents.length);
+  return DOMEEvents;
+}
+
+
+/**
+ * Subscribes to all DOME Events
+ * 
+ * @param rpcAddress the blockchain node address to be used for event subscription
+ * @param ownIss the organization identifier hash
+ * @param notificationEndpoint the user's endpoint to be notified to of the events of interest.
+ *                             The notification is sent as a POST
+ * @param handler an optional function to handle the events
+ */
+export async function subscribeToAllEvents(
+  rpcAddress: string,
+  ownIss: string,
+  notificationEndpoint?: string,
+  handler?: (event: object) => void
+){
+  if (rpcAddress === null || rpcAddress === undefined) {
+    throw new IllegalArgumentError("The rpc address is null.");
+  }
+  if (ownIss === "") {
+    throw new IllegalArgumentError("The ownIss is blank.");
+  }
+  if (ownIss === null || ownIss === undefined) {
+    throw new IllegalArgumentError("The ownIss is null.");
+  }
+  try{
+    debugLog(">>>> Retrieving all DOME Events...");
+    const allEvents = await getAllDOMEEvents(rpcAddress);
+    debugLog(">>>> Subscribing to " + allEvents.length + " events");
+    allEvents.forEach(async (event) => {
+      await subscribeToDOMEEvents(
+        [event.eventType],
+        rpcAddress,
+        ownIss,
+        notificationEndpoint,
+        handler
+      );
+    });
+  } catch (error) {
+    errorLog(" > !! Error subscribing to DOME Events");
+    throw error;
+  }
 }

@@ -1,8 +1,9 @@
-import { subscribeToDOMEEvents, publishDOMEEvent, getActiveDOMEEventsByDate } from "../api/DLTInterface";
+import { subscribeToDOMEEvents, publishDOMEEvent, getActiveDOMEEventsByDate, getAllDOMEEvents } from "../api/DLTInterface";
 import express from "express";
 import debug from "debug";
 import { IllegalArgumentError } from "../exceptions/IllegalArgumentError";
 import { NotificationEndpointError } from "../exceptions/NotificationEndpointError";
+import { all } from "axios";
 
 const router = express.Router();
 const debugLog = debug("Routes: ");
@@ -12,7 +13,7 @@ const errorLog = debug("Routes:error ");
 /**
  * @swagger
  * tags:
- *    - name: default
+ *    - name: DLT Adapter
  * components: 
  *    schemas:
  *        v2_publishEvent_body:
@@ -54,9 +55,9 @@ const errorLog = debug("Routes:error ");
  *            additionalProperties: false
  *            properties:
  *                notificationEndpoint:
- *                    type: string
  *                    description: The user's endpoint to be notified of the events of interest.
- *                                The notification is sent as a POST.
+ *                                 The notification is sent as a POST.
+ *                    type: string
  */
 
 /**
@@ -64,6 +65,8 @@ const errorLog = debug("Routes:error ");
  * /health:
  *  get:
  *    description: Healthcheck endpoint
+ *    tags:
+ *      - DLT Adapter
  *    responses:
  *      '200':
  *        description: Auto generated using Swagger Inspector
@@ -97,6 +100,8 @@ router.get("/health", (req: any, resp: any) => {
  * /api/v2/publishEvent:
  *   post:
  *     description: Publishes a DOME Event to the blockchain network set by environment variables through the node RPC Address and with the iss identifier provided. It is not mandatory to provide those two if planning to use the ones declared in the respective environment variables.
+ *     tags:
+ *       - DLT Adapter
  *     requestBody:
  *       content:
  *         application/json:
@@ -134,7 +139,7 @@ router.post("/api/v2/publishEvent", (req: any, resp: any) => {
         req.body.iss ?? process.env.ISS,
         req.body.entityId,
         req.body.previousEntityHash,
-        req.body.rpcAddress ?? process.env.RPC_ADDRESS 
+        req.body.rpcAddress ?? process.env.RPC_ADDRESS
       );
       resp.status(201).json(eventTimestamp);
     } catch (error: any) {
@@ -154,6 +159,8 @@ router.post("/api/v2/publishEvent", (req: any, resp: any) => {
  * /api/v2/subscribe:
  *     post:
  *       description: Subscribes to the DOME Events of the specified type and notifies the  corresponding DOME Events to the specified endpoint.
+ *       tags:
+ *         - DLT Adapter
  *       requestBody:
  *         content:
  *           application/json:
@@ -164,19 +171,7 @@ router.post("/api/v2/publishEvent", (req: any, resp: any) => {
  *                 value: "{\r\n   \"eventTypes\": [\"ProductAdded1\", \"ProductAdded2\"],\r\n     \"notificationEndpoint\": \"http://localhost:8080/api/v1/testSubscribedUser\"\r\n}"
  *       responses:
  *         '200':
- *           description: Auto generated using Swagger Inspector
- *           content:
- *             text/html; charset=utf-8:
- *               schema:
- *                 type: string
- *               example: OK.
- *         '400':
- *           description: Auto generated using Swagger Inspector
- *           content:
- *             text/html; charset=utf-8:
- *               schema:
- *                 type: string
- *               example: Error connecting to the blockchain node.
+ *           description: OK
  *       servers:
  *         - url: http://localhost:8080
  */
@@ -207,6 +202,8 @@ router.post("/api/v2/subscribe", (req: any, resp: any) => {
  * @swagger
  * /api/v2/events:
  *   get:
+ *     tags:
+ *       - DLT Adapter
  *     parameters:
  *       - in: query
  *         name: startDate
@@ -279,14 +276,16 @@ router.get('/api/v2/events', async (req: any, resp: any) => {
  *    post:
  *        description: Subscribes to all DOME events and notifies to endpoint
  *        tags:
- *            - default
+ *            - DLT Adapter
  *        operationId: subscribeToAllDOMEEvents
  *        requestBody:
- *            required: true
- *            content:
- *                application/json:
- *                    schema:
- *                        $ref: '#/components/schemas/v2_subscribeToAll_body'
+ *          content:
+ *            application/json:
+ *              schema:
+ *                $ref: '#/components/schemas/v2_subscribeToAll_body'
+ *              examples:
+ *               '0':
+ *                 value: "{\r\n   \"notificationEndpoint\": \"http://localhost:8080/api/v1/testSubscribedUser\"\r\n}"
  *        responses:
  *            200:
  *                description: OK
@@ -295,7 +294,8 @@ router.get('/api/v2/subscribeToAll', async (req: any, resp: any) => {
   (async() => {
     debugLog("Entry call from origin: ", req.headers.origin);
     try{
-      resp.status(200)
+      let allEvents = await getAllDOMEEvents(process.env.RPC_ADDRESS!);
+      resp.status(200).json(allEvents);
     }catch (error: any){
       errorLog("Error: \n", error);
       resp.status(400).send(error.message);
