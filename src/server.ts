@@ -4,6 +4,8 @@ dotenv.config();
 const express = require("express")
 const morgan = require("morgan")
 
+const swaggerUi = require('swagger-ui-express')
+const swaggerSpec = require('../swaggerSpec')
 
 import router from "./routes/routes"
 
@@ -52,6 +54,8 @@ router.use((req: any, res: any, next: any) => {
 
 /** Routes */
 app.use("/", router)
+
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 
 /** Error handling */
