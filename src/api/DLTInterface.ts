@@ -79,6 +79,9 @@ export async function publishDOMEEvent(
             relevantMetadata,
         });
 
+        debugLog("  > Adding network: ", process.env.NETWORK);
+        const metadata = [...relevantMetadata, process.env.NETWORK];
+
         const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
         debugLog("  > Connecting to blockchain node with address: " + rpcAddress);
 
@@ -103,7 +106,7 @@ export async function publishDOMEEvent(
             previousEntityHash,
             eventType,
             dataLocation,
-            relevantMetadata
+            metadata
         );
         debugLog("  > Transaction waiting to be mined...");
         await tx.wait();
