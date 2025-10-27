@@ -79,11 +79,16 @@ export async function publishDOMEEvent(
             relevantMetadata,
         });
 
-        debugLog("  > Adding network: ", process.env.NETWORK);
-        const metadata = [...relevantMetadata, process.env.NETWORK];
+
 
         const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
         debugLog("  > Connecting to blockchain node with address: " + rpcAddress);
+
+        const chainId = (await provider.getNetwork()).chainId;
+        debugLog("  > Chain ID: " + chainId);
+
+        debugLog("  > Adding network: " + chainId);
+        const metadata = [...relevantMetadata, chainId];
 
         const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
         debugLog("  > Ethereum Public Key of event publisher: ", wallet.publicKey);
