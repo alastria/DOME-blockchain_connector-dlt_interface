@@ -1,4 +1,4 @@
-const { connectToNode, subscribeToDOMEEvents, publishDOMEEvent } = require('../src/api/DLTInterface');
+const { connectToNode, subscribeToDOMEEvents, publishDOMEEvent, subscribeToAllDOMEEvents } = require('../src/api/DLTInterface');
 const ethers = require('ethers');
 import dotenv from "dotenv";
 dotenv.config();
@@ -489,6 +489,171 @@ it('valid case: active event in upper boundary IS included', async () => {
     await expect(getActiveDOMEEventsByDate(initialTime.valueOf(), finTime.valueOf(), metadata[0], "")).rejects.toThrow(IllegalArgumentError);
   }, 60000);
 
+});
+
+describe('DOME all events subscription', () => {
+  let entityIdOne: string;
+  let entityIdTwo: string;
+  let entityIdThree: string;
+  let entityIdFour: string;
+  let entityIdFive: string;
+
+  let eventTypeOne: any;
+  let eventTypeTwo: any;
+  let eventTypeThree: any;
+  let eventTypeFour: any;
+  let eventTypeFive: any;
+
+  let metadata: string[];
+  let metadata2: string[];
+
+  beforeAll(() => {
+    metadata = ['sbx'];
+    metadata2 = ['prd'];
+  });
+
+  beforeEach(() => {
+    entityIdOne = randomBytes(20).toString('hex');
+    entityIdTwo = randomBytes(20).toString('hex');
+    entityIdThree = randomBytes(20).toString('hex');
+    entityIdFour = randomBytes(20).toString('hex');
+    entityIdFive = randomBytes(20).toString('hex');
+
+    eventTypeOne = {
+      origin: iss,
+      entityIDHash: "0x" + createHash('sha256').update(entityIdOne).digest('hex'),
+      previousEntityHash: "0x743c956500000000001000000070000000600000000000300000000050000000",
+      eventType: 'eventType1',
+      dataLocation: 'dataLocation1',
+      metadata: metadata,
+    };
+
+    eventTypeTwo = {
+      origin: iss,
+      entityIDHash: "0x" + createHash('sha256').update(entityIdTwo).digest('hex'),
+      previousEntityHash: "0x843c956500000000001000000070000000600000000000300000000050000000",
+      eventType: 'eventType2',
+      dataLocation: 'dataLocation2',
+      metadata: metadata2,
+    };
+
+    eventTypeThree = {
+      origin: iss,
+      entityIDHash: "0x" + createHash('sha256').update(entityIdThree).digest('hex'),
+      previousEntityHash: "0x943c956500000000001000000070000000600000000000300000000050000000",
+      eventType: 'eventType3',
+      dataLocation: 'dataLocation3',
+      metadata: metadata,
+    };
+
+    eventTypeFour = {
+      origin: iss,
+      entityIDHash: "0x" + createHash('sha256').update(entityIdFour).digest('hex'),
+      previousEntityHash: "0xa43c956500000000001000000070000000600000000000300000000050000000",
+      eventType: 'eventType4',
+      dataLocation: 'dataLocation4',
+      metadata: metadata,
+    };
+
+    eventTypeFive = {
+      origin: iss,
+      entityIDHash: "0x" + createHash('sha256').update(entityIdFive).digest('hex'),
+      previousEntityHash: "0xb43c956500000000001000000070000000600000000000300000000050000000",
+      eventType: 'eventType5',
+      dataLocation: 'dataLocation5',
+      metadata: metadata,
+    };
+  });
+
+  it('valid case: should receive all event types regardless of eventType', async () => {
+    let receivedEvents = new Set<string>();
+    let receivedEventTypes = new Set<string>();
+    
+    subscribeToAllDOMEEvents(rpcAddress, ownIss, notificationEndpoint, (event: any) => {
+      receivedEvents.add(event.entityIDHash);
+    });
+
+    await publishDOMEEvent(eventTypeOne.eventType, eventTypeOne.dataLocation, eventTypeOne.metadata, iss, eventTypeOne.entityIDHash, eventTypeOne.previousEntityHash, rpcAddress);
+    await publishDOMEEvent(eventTypeTwo.eventType, eventTypeTwo.dataLocation, eventTypeTwo.metadata, iss, eventTypeTwo.entityIDHash, eventTypeTwo.previousEntityHash, rpcAddress);
+    await publishDOMEEvent(eventTypeThree.eventType, eventTypeThree.dataLocation, eventTypeThree.metadata, iss, eventTypeThree.entityIDHash, eventTypeThree.previousEntityHash, rpcAddress);
+    await publishDOMEEvent(eventTypeFour.eventType, eventTypeFour.dataLocation, eventTypeFour.metadata, iss, eventTypeFour.entityIDHash, eventTypeFour.previousEntityHash, rpcAddress);
+    await publishDOMEEvent(eventTypeFive.eventType, eventTypeFive.dataLocation, eventTypeFive.metadata, iss, eventTypeFive.entityIDHash, eventTypeFive.previousEntityHash, rpcAddress);
+    
+    await sleep(15000);
+
+    expect(receivedEvents).toContain(eventTypeOne.entityIDHash);
+    expect(receivedEvents).toContain(eventTypeTwo.entityIDHash);
+    expect(receivedEvents).toContain(eventTypeThree.entityIDHash);
+    expect(receivedEvents).toContain(eventTypeFour.entityIDHash);
+    expect(receivedEvents).toContain(eventTypeFive.entityIDHash);
+
+    expect(receivedEvents).toContain(eventTypeOne.entityIDHash);
+    expect(receivedEvents).toContain(eventTypeTwo.entityIDHash);
+    expect(receivedEvents).toContain(eventTypeThree.entityIDHash);
+    expect(receivedEvents).toContain(eventTypeFour.entityIDHash);
+    expect(receivedEvents).toContain(eventTypeFive.entityIDHash);
+  }, 80000);
+
+  it('valid case: should not receive events published by ownIss', async () => {
+    let entityIdOwnIss = randomBytes(20).toString('hex');
+    let ownIssEvent = {
+      origin: ownIss,
+      entityIDHash: "0x" + createHash('sha256').update(entityIdOwnIss).digest('hex'),
+      previousEntityHash: "0xc43c956500000000001000000070000000600000000000300000000050000000",
+      eventType: 'eventType1',
+      dataLocation: 'dataLocation1',
+      metadata: metadata,
+    };
+
+    let receivedEvents = new Set<string>();
+    
+    subscribeToAllDOMEEvents(rpcAddress, ownIss, notificationEndpoint, (event: any) => {
+      receivedEvents.add(event.entityIDHash);
+    });
+
+    await publishDOMEEvent(eventTypeOne.eventType, eventTypeOne.dataLocation, eventTypeOne.metadata, iss, eventTypeOne.entityIDHash, eventTypeOne.previousEntityHash, rpcAddress);
+    await publishDOMEEvent(ownIssEvent.eventType, ownIssEvent.dataLocation, ownIssEvent.metadata, ownIssEvent.origin, ownIssEvent.entityIDHash, ownIssEvent.previousEntityHash, rpcAddress);
+    await sleep(15000);
+
+    expect(receivedEvents).toContain(eventTypeOne.entityIDHash);
+    expect(receivedEvents).not.toContain(ownIssEvent.entityIDHash);
+  }, 80000);
+
+  it('invalid case: blank rpcAddress', async () => {
+    expect(() => {
+      subscribeToAllDOMEEvents("", ownIss, notificationEndpoint, (event: any) => {});
+    }).toThrow(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: null rpcAddress', async () => {
+    expect(() => {
+      subscribeToAllDOMEEvents(null, ownIss, notificationEndpoint, (event: any) => {});
+    }).toThrow(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: undefined rpcAddress', async () => {
+    expect(() => {
+      subscribeToAllDOMEEvents(undefined, ownIss, notificationEndpoint, (event: any) => {});
+    }).toThrow(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: blank ownIss', async () => {
+    expect(() => {
+      subscribeToAllDOMEEvents(rpcAddress, "", notificationEndpoint, (event: any) => {});
+    }).toThrow(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: null ownIss', async () => {
+    expect(() => {
+      subscribeToAllDOMEEvents(rpcAddress, null, notificationEndpoint, (event: any) => {});
+    }).toThrow(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: undefined ownIss', async () => {
+    expect(() => {
+      subscribeToAllDOMEEvents(rpcAddress, undefined, notificationEndpoint, (event: any) => {});
+    }).toThrow(IllegalArgumentError);
+  }, 30000);
 });
 
 
