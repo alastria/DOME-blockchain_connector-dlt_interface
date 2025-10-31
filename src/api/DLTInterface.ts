@@ -298,6 +298,11 @@ export function subscribeToAllDOMEEvents(
                     relevantMetadata: metadata,
                 };
 
+                if (eventContent.publisherAddress === ownIss) {
+                    debugLog(" > This event is not of interest for the user. It was published by the user itself.");
+                    return;
+                }
+
                 if (notificationEndpoint) {
                     notifyEndpointDOMEEventsHandler(eventContent, notificationEndpoint);
                 }

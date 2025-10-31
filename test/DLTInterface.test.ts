@@ -594,6 +594,31 @@ describe('DOME all events subscription', () => {
     expect(receivedEvents).toContain(eventTypeFive.entityIDHash);
   }, 80000);
 
+  it('valid case: should not receive events published by ownIss', async () => {
+    let entityIdOwnIss = randomBytes(20).toString('hex');
+    let ownIssEvent = {
+      origin: ownIss,
+      entityIDHash: "0x" + createHash('sha256').update(entityIdOwnIss).digest('hex'),
+      previousEntityHash: "0xc43c956500000000001000000070000000600000000000300000000050000000",
+      eventType: 'eventType1',
+      dataLocation: 'dataLocation1',
+      metadata: metadata,
+    };
+
+    let receivedEvents = new Set<string>();
+    
+    subscribeToAllDOMEEvents(rpcAddress, ownIss, notificationEndpoint, (event: any) => {
+      receivedEvents.add(event.entityIDHash);
+    });
+
+    await publishDOMEEvent(eventTypeOne.eventType, eventTypeOne.dataLocation, eventTypeOne.metadata, iss, eventTypeOne.entityIDHash, eventTypeOne.previousEntityHash, rpcAddress);
+    await publishDOMEEvent(ownIssEvent.eventType, ownIssEvent.dataLocation, ownIssEvent.metadata, ownIssEvent.origin, ownIssEvent.entityIDHash, ownIssEvent.previousEntityHash, rpcAddress);
+    await sleep(15000);
+
+    expect(receivedEvents).toContain(eventTypeOne.entityIDHash);
+    expect(receivedEvents).not.toContain(ownIssEvent.entityIDHash);
+  }, 80000);
+
   it('invalid case: blank rpcAddress', async () => {
     expect(() => {
       subscribeToAllDOMEEvents("", ownIss, notificationEndpoint, (event: any) => {});
