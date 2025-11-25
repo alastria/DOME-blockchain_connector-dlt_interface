@@ -79,8 +79,16 @@ export async function publishDOMEEvent(
             relevantMetadata,
         });
 
+
+
         const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
         debugLog("  > Connecting to blockchain node with address: " + rpcAddress);
+
+        const chainId = (await provider.getNetwork()).chainId;
+        debugLog("  > Chain ID: " + chainId);
+
+        debugLog("  > Adding network: " + chainId);
+        const metadata = [...relevantMetadata, chainId];
 
         const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
         debugLog("  > Ethereum Public Key of event publisher: ", wallet.publicKey);
@@ -103,7 +111,7 @@ export async function publishDOMEEvent(
             previousEntityHash,
             eventType,
             dataLocation,
-            relevantMetadata
+            metadata
         );
         debugLog("  > Transaction waiting to be mined...");
         await tx.wait();
@@ -188,15 +196,15 @@ export function subscribeToDOMEEvents(
         DOMEEventsContract.on(
             "EventDOMEv1",
             (
-                index,
-                timestamp,
-                publisherAddress,
-                authorAddress,
-                entityIDHash,
-                previousEntityHash,
-                eventType,
-                dataLocation,
-                metadata
+                index: any,
+                timestamp: any,
+                publisherAddress: any,
+                authorAddress: any,
+                entityIDHash: any,
+                previousEntityHash: any,
+                eventType: any,
+                dataLocation: any,
+                metadata: any
             ) => {
                 let parsedId = BigNumber.from(index._hex).toNumber();
                 let parsedTimestamp = BigNumber.from(timestamp._hex).toNumber();
@@ -217,6 +225,89 @@ export function subscribeToDOMEEvents(
         );
     } catch (error) {
         errorLog(" > !! Error subscribing to DOME Events");
+        throw error;
+    }
+}
+
+/**
+ * Subscribe to all DOME Events.
+ * 
+ * @param rpcAddress the blockchain node address to be used for event subscription.
+ * @param metadataOfInterest the environment of interest for the user.
+ * @param notificationEndpoint the user's endpoint to be notified to of the events of interest.
+ *                             The notification is sent as a POST.
+ * @param handler an optional function to handle the events.
+ * @param ownIss the organization identifier hash
+ */
+export function subscribeToAllDOMEEvents(
+    rpcAddress: string,
+    ownIss: string,
+    notificationEndpoint?: string,
+    handler?: (event: object) => void
+){
+    if (rpcAddress === "") {
+        throw new IllegalArgumentError("The rpc address is blank.");
+    }
+    if (rpcAddress === null || rpcAddress === undefined) {
+        throw new IllegalArgumentError("The rpc address is null.");
+    }
+    if(ownIss === null || ownIss === undefined) {
+        throw new IllegalArgumentError("The ownIss is null.");
+    }
+    if (ownIss === "") {
+        throw new IllegalArgumentError("The ownIss is blank.");
+    }
+    try{
+        debugLog(">>> Subscribing to all DOME Events...");
+
+        const provider = new ethers.providers.JsonRpcProvider(rpcAddress);
+        const DOMEEventsContract = new ethers.Contract(
+            process.env.DOME_EVENTS_CONTRACT_ADDRESS!,
+            process.env.DOME_EVENTS_CONTRACT_ABI!,
+            provider
+        );
+
+        debugLog("  > Contract with address " + process.env.DOME_EVENTS_CONTRACT_ADDRESS! + " loaded");
+        debugLog("  > User requests to subscribe to all events");
+        debugLog("  > Listening to events...");
+        
+        DOMEEventsContract.on(
+            "EventDOMEv1",
+            (
+                index: any,
+                timestamp: any,
+                publisherAddress: any,
+                authorAddress: any,
+                entityIDHash: any,
+                previousEntityHash: any,
+                eventType: any,
+                dataLocation: any,
+                metadata: any
+            ) => {
+                let parsedId = BigNumber.from(index._hex).toNumber();
+                let parsedTimestamp = BigNumber.from(timestamp._hex).toNumber();
+                const eventContent = {
+                    id: parsedId,
+                    ethereumAddress: authorAddress,
+                    publisherAddress: publisherAddress,
+                    entityIDHash: entityIDHash,
+                    previousEntityHash: previousEntityHash,
+                    eventType: eventType,
+                    timestamp: parsedTimestamp,
+                    dataLocation: dataLocation,
+                    relevantMetadata: metadata,
+                };
+
+                if (notificationEndpoint) {
+                    notifyEndpointDOMEEventsHandler(eventContent, notificationEndpoint);
+                }
+                if (handler) {
+                    handler(eventContent);
+                }
+            }
+        );
+    } catch (error) {
+        errorLog(" !! Error subscribing to all DOME Events");
         throw error;
     }
 }
