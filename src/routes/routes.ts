@@ -94,6 +94,22 @@ router.get("/health", (req: any, resp: any) => {
 });
 
 /**
+ * Metrics
+ */
+import Prometheus from 'prom-client';
+Prometheus.collectDefaultMetrics({
+  gcDurationBuckets: [0.001, 0.01, 0.1, 1, 2, 5], 
+});
+router.get("/metrics", async (req: any, resp: any) => {
+  try {
+    resp.set('Content-Type', Prometheus.register.contentType);
+    resp.end(await Prometheus.register.metrics());
+  } catch (exception) {
+    resp.status(500).end(exception);
+  }
+});
+
+/**
  * @swagger
  * /api/v2/publishEvent:
  *  post:
