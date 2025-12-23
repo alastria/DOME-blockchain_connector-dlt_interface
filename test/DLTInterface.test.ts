@@ -1,4 +1,4 @@
-const { connectToNode, subscribeToDOMEEvents, publishDOMEEvent, subscribeToAllDOMEEvents } = require('../src/api/DLTInterface');
+const { connectToNode, subscribeToDOMEEvents, publishDOMEEvent, subscribeToAllDOMEEvents, getActiveSubscriptions } = require('../src/api/DLTInterface');
 const ethers = require('ethers');
 import dotenv from "dotenv";
 dotenv.config();
@@ -8,7 +8,7 @@ import { Set } from "typescript";
 import { sleep } from "../src/utils/funcs";
 import { IllegalArgumentError } from "../src/exceptions/IllegalArgumentError";
 import { getActiveDOMEEventsByDate } from "../src/api/DLTInterface";
-import { DOMEEvent } from "../src/utils/types";
+import { DOMEEvent, Subscription } from "../src/utils/types";
 
 const rpcAddress = process.env.RPC_ADDRESS;
 const notificationEndpoint = undefined;
@@ -23,13 +23,19 @@ describe('DOME events subscription', () => {
 
   let correctEventTypeOne: any;
   let correctEventTypeTwo: any;
+  let correctEventTypeDev: any;
+  let correctEventTypePrd: any;
   let ownIssAsOriginEvent: any;
 
   let metadata: string[];
+  let metadataDev: string[];
+  let metadataPrd: string[];
 
   beforeAll(() => {
     eventTypesOfInterest = ['eventType1', 'eventType2'];
     metadata = ['sbx'];
+    metadataDev= ['dev'];
+    metadataPrd = ['prd'];
   });
 
   beforeEach(() => {
@@ -55,6 +61,24 @@ describe('DOME events subscription', () => {
       metadata: metadata,
     };
 
+    correctEventTypeDev = {
+      origin: iss,
+      entityIDHash: "0x" + createHash('sha256').update(entityIdTwo).digest('hex'),
+      previousEntityHash: "0x843c956500000000001000000070000000600000000000300000000050000000",
+      eventType: 'eventType2',
+      dataLocation: correctEventTypeOne.dataLocation,
+      metadata: metadataDev,
+    };
+
+    correctEventTypePrd = {
+      origin: iss,
+      entityIDHash: "0x" + createHash('sha256').update(entityIdTwo).digest('hex'),
+      previousEntityHash: "0x843c956500000000001000000070000000600000000000300000000050000000",
+      eventType: 'eventType2',
+      dataLocation: correctEventTypeOne.dataLocation,
+      metadata: metadataPrd,
+    };
+
     ownIssAsOriginEvent = {
       origin: ownIss,
       entityIDHash: "0x" + createHash('sha256').update(entityIdThree).digest('hex'),
@@ -77,6 +101,18 @@ describe('DOME events subscription', () => {
     expect(entityIDHashesOfReceivedEvents).toContain(correctEventTypeOne.entityIDHash);
     expect(entityIDHashesOfReceivedEvents).toContain(correctEventTypeTwo.entityIDHash);
     expect(entityIDHashesOfReceivedEvents).not.toContain(ownIssAsOriginEvent.entityIDHash);
+  }, 80000);
+
+  it('valid case: should subscribe to DOME events on DEV environment', async () => {
+
+    let entityIDHashesOfReceivedEvents = new Set<string>();
+    subscribeToDOMEEvents(eventTypesOfInterest, metadataDev, rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)});
+    await publishDOMEEvent(correctEventTypeOne.eventType, correctEventTypeOne.dataLocation, correctEventTypeOne.metadata, iss, correctEventTypeOne.entityIDHash, correctEventTypeOne.previousEntityHash, rpcAddress);
+    await publishDOMEEvent(correctEventTypeDev.eventType, correctEventTypeDev.dataLocation, correctEventTypeDev.metadata, iss, correctEventTypeDev.entityIDHash, correctEventTypeDev.previousEntityHash, rpcAddress);
+    await sleep(10000);
+
+    expect(entityIDHashesOfReceivedEvents).toContain(correctEventTypeDev.entityIDHash);
+    expect(entityIDHashesOfReceivedEvents).not.toContain(correctEventTypeOne.entityIDHash);
   }, 80000);
 
   it('invalid case: no event types selected', async () => {
@@ -122,6 +158,18 @@ describe('DOME events subscription', () => {
   it('invalid case: null ownIss', async () => {
     let entityIDHashesOfReceivedEvents = new Set<string>();
     expect(() => subscribeToDOMEEvents(eventTypesOfInterest, metadata, rpcAddress, null, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: metadata not set (therefore no env selected)', async () => {
+
+    let entityIDHashesOfReceivedEvents = new Set<string>();
+    expect(() => subscribeToDOMEEvents(eventTypesOfInterest, rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
+  }, 30000);
+
+  it('invalid case: metadata is blank (therefore no env selected)', async () => {
+
+    let entityIDHashesOfReceivedEvents = new Set<string>();
+    expect(() => subscribeToDOMEEvents(eventTypesOfInterest, "", rpcAddress, ownIss, notificationEndpoint, (event: any) => {eventSubscriptionValidCaseDOMEEventsHandler(event, eventTypesOfInterest, ownIss, entityIDHashesOfReceivedEvents)})).toThrowError(IllegalArgumentError);
   }, 30000);
 
 });
@@ -656,6 +704,33 @@ describe('DOME all events subscription', () => {
   }, 30000);
 });
 
+describe('DOME events active subscriptions retrieval', () => {
+  let eventTypesOfInterest: string[];
+  let entityIdOne: string;
+  let entityIdTwo: string;
+  let entityIdThree: string; 
+
+  let correctEventTypeOne: any;
+  let correctEventTypeTwo: any;
+  let ownIssAsOriginEvent: any;
+
+  let metadata: string[];
+
+  beforeAll(() => {
+    eventTypesOfInterest = ['eventType1', 'eventType2'];
+    metadata = ['sbx'];
+  });
+
+  it('valid case: should retrieve a subscription list with 1 subscription and retrieve an empty list previously', async () => {
+    expect(getActiveSubscriptions()).toEqual([]);
+    let expectedActiveSubscriptions: Subscription[] = [{eventTypes: eventTypesOfInterest, metadata: metadata}]
+    subscribeToDOMEEvents(eventTypesOfInterest, metadata, rpcAddress, iss);
+    let activeSubscriptions = getActiveSubscriptions();
+
+
+    expect(activeSubscriptions).toEqual(expectedActiveSubscriptions)
+  }, 80000);
+})
 
 
 /**
