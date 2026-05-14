@@ -56,3 +56,4 @@ coverage
 .scannerwork
 .vscode
 build
+sonar-project.properties

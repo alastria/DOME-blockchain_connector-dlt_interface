@@ -210,6 +210,75 @@ describe('DOME events publication', () => {
     expect(entityIDHashesOfReceivedEvents).toContain(correctEventTypeOne.entityIDHash);
   }, 60000);
 
+  it('valid case: publishes multiple DOME events concurrently (high throughput)', async () => {
+    const entityIdOne = randomBytes(20).toString('hex');
+    const entityIdTwo = randomBytes(20).toString('hex');
+    const entityIdThree = randomBytes(20).toString('hex');
+    const entityIdFour = randomBytes(20).toString('hex');
+    const entityIdFive = randomBytes(20).toString('hex');
+    const previousEntityHash = "0x743c956500000000001000000070000000600000000000300000000050000000";
+
+    const concurrentEventOne = {
+      eventType: 'eventType1',
+      dataLocation: 'dataLocation1',
+      metadata: metadata,
+      entityIDHash: "0x" + createHash('sha256').update(entityIdOne).digest('hex'),
+      previousEntityHash: previousEntityHash,
+    };
+
+    const concurrentEventTwo = {
+      eventType: 'eventType2',
+      dataLocation: 'dataLocation2',
+      metadata: metadata,
+      entityIDHash: "0x" + createHash('sha256').update(entityIdTwo).digest('hex'),
+      previousEntityHash: previousEntityHash,
+    };
+
+    const concurrentEventThree = {
+      eventType: 'eventType1',
+      dataLocation: 'dataLocation3',
+      metadata: metadata,
+      entityIDHash: "0x" + createHash('sha256').update(entityIdThree).digest('hex'),
+      previousEntityHash: previousEntityHash,
+    };
+
+    const concurrentEventFour = {
+      eventType: 'eventType2',
+      dataLocation: 'dataLocation4',
+      metadata: metadata,
+      entityIDHash: "0x" + createHash('sha256').update(entityIdFour).digest('hex'),
+      previousEntityHash: previousEntityHash,
+    };
+
+    const concurrentEventFive = {
+      eventType: 'eventType1',
+      dataLocation: 'dataLocation5',
+      metadata: metadata,
+      entityIDHash: "0x" + createHash('sha256').update(entityIdFive).digest('hex'),
+      previousEntityHash: previousEntityHash,
+    };
+
+    // The five publishes are fired together (no await between them) to
+    // reproduce the production burst of POST /api/v1/publishEvent requests
+    // that hit the service within ~1s and raced on the signer's nonce. If
+    // publishDOMEEvent does not serialise transactions per signer the second
+    // and following calls will be rejected by the node with
+    // REPLACEMENT_UNDERPRICED and Promise.all will surface that error here.
+    const publishedTimestamps = await Promise.all([
+      publishDOMEEvent(concurrentEventOne.eventType, concurrentEventOne.dataLocation, concurrentEventOne.metadata, iss, concurrentEventOne.entityIDHash, concurrentEventOne.previousEntityHash, rpcAddress),
+      publishDOMEEvent(concurrentEventTwo.eventType, concurrentEventTwo.dataLocation, concurrentEventTwo.metadata, iss, concurrentEventTwo.entityIDHash, concurrentEventTwo.previousEntityHash, rpcAddress),
+      publishDOMEEvent(concurrentEventThree.eventType, concurrentEventThree.dataLocation, concurrentEventThree.metadata, iss, concurrentEventThree.entityIDHash, concurrentEventThree.previousEntityHash, rpcAddress),
+      publishDOMEEvent(concurrentEventFour.eventType, concurrentEventFour.dataLocation, concurrentEventFour.metadata, iss, concurrentEventFour.entityIDHash, concurrentEventFour.previousEntityHash, rpcAddress),
+      publishDOMEEvent(concurrentEventFive.eventType, concurrentEventFive.dataLocation, concurrentEventFive.metadata, iss, concurrentEventFive.entityIDHash, concurrentEventFive.previousEntityHash, rpcAddress),
+    ]);
+
+    expect(publishedTimestamps.length).toBe(5);
+    publishedTimestamps.forEach((timestamp: number) => {
+      expect(typeof timestamp).toBe('number');
+      expect(timestamp).toBeGreaterThan(0);
+    });
+  }, 120000);
+
   it('invalid case: blank eventType', async () => {
     const entityIdOne = randomBytes(20).toString('hex');
     correctEventTypeOne.entityIDHash = "0x" + createHash('sha256').update(entityIdOne).digest('hex');

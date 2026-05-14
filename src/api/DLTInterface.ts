@@ -4,7 +4,6 @@ import {BigNumber, ethers} from "ethers";
 import axios from "axios";
 
 import {IllegalArgumentError} from "../exceptions/IllegalArgumentError";
-import {NotificationEndpointError} from "../exceptions/NotificationEndpointError";
 import {getIndexOfFirstAppearanceOfElement, getIndexOfLastAppearanceOfElement} from "../utils/funcs";
 import {DOMEEvent, Subscription} from "../utils/types";
 
@@ -12,6 +11,7 @@ const debugLog = debug("DLT_Interface_Service:");
 const errorLog = debug("DLT_Interface_Service:error");
 
 let activeSubscriptions: Map<string, Subscription[]> = new Map();
+let publishQueue: Promise<number> = Promise.resolve(0);
 
 /**
  * Publish DOME event as a blockchain event.
@@ -104,19 +104,31 @@ export async function publishDOMEEvent(
         debugLog("  > Ethereum Remittent: ", iss);
 
         debugLog("  > Publishing event to blockchain node...");
-        const tx = await domeEventsContractWithSigner.emitNewEvent(
-            iss,
-            wallet.address.toString(),
-            entityIDHash,
-            previousEntityHash,
-            eventType,
-            dataLocation,
-            metadata
-        );
-        debugLog("  > Transaction waiting to be mined...");
-        await tx.wait();
-        debugLog("  > Transaction executed:\n" + JSON.stringify(tx));
-        return (await provider.getBlock((await provider.getTransaction(tx.hash)).blockNumber!)).timestamp;
+
+        const publishTx = async () => {
+            try {
+                const tx = await domeEventsContractWithSigner.emitNewEvent(
+                    iss,
+                    wallet.address.toString(),
+                    entityIDHash,
+                    previousEntityHash,
+                    eventType,
+                    dataLocation,
+                    metadata
+                );
+                debugLog("  > Transaction waiting to be mined...");
+                await tx.wait();
+                debugLog("  > Transaction executed:\n" + JSON.stringify(tx));
+                return (await provider.getBlock((await provider.getTransaction(tx.hash)).blockNumber!)).timestamp;
+            } catch (error) {
+                errorLog(" > !! Error in publishDOMEEvent");
+                throw error;
+            }
+        };
+
+        const currentPublish = publishQueue.then(publishTx, publishTx);
+        publishQueue = currentPublish.catch(() => 0);
+        return currentPublish;
     } catch (error) {
         errorLog(" > !! Error in publishDOMEEvent");
         throw error;
