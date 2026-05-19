@@ -142,7 +142,7 @@ router.get("/metrics", async (req: any, resp: any) => {
  *    servers:
  *      - url: http://localhost:8080
  */
-router.post("/api/v2/publishEvent", (req: any, resp: any) => {
+router.post("/api/v1/publishEvent", (req: any, resp: any) => {
   (async () => {
     debugLog("Entry call from origin: ", req.headers.origin);
     try {
@@ -201,7 +201,7 @@ router.post("/api/v2/publishEvent", (req: any, resp: any) => {
  *    servers:
  *      - url: http://localhost:8080
  */
-router.post("/api/v2/subscribe", (req: any, resp: any) => {
+router.post("/api/v1/subscribe", (req: any, resp: any) => {
   (async () => {
     debugLog("Entry call from origin: ", req.headers.origin);
     try {
@@ -250,7 +250,7 @@ router.post("/api/v2/subscribe", (req: any, resp: any) => {
  *    servers:
  *      - url: http://localhost:8080
  */
-router.get("/api/v2/subscribe", (req: any, resp: any) => {
+router.get("/api/v1/subscribe", (req: any, resp: any) => {
   (async () => {
     debugLog("Entry call from origin: ", req.headers.origin);
     try {
@@ -293,7 +293,7 @@ router.get("/api/v2/subscribe", (req: any, resp: any) => {
  *    servers:
  *      - url: http://localhost:8080
  */
-router.post("/api/v2/subscribe/all", (req: any, resp: any) => {
+router.post("/api/v1/subscribe/all", (req: any, resp: any) => {
   (async () => {
     debugLog("Entry call from origin: ", req.headers.origin);
     try {
@@ -374,7 +374,7 @@ router.post("/api/v2/subscribe/all", (req: any, resp: any) => {
  *    servers:
  *      - url: http://localhost:8080
  */
-router.get('/api/v2/events', async (req: any, resp: any) => {
+router.get('/api/v1/events', async (req: any, resp: any) => {
   (async() => {
 
     debugLog("Entry call from origin: ", req.headers.origin);
