@@ -685,9 +685,11 @@ describe('DOME all events subscription', () => {
   it('valid case: should receive all event types regardless of eventType', async () => {
     let receivedEvents = new Set<string>();
     let receivedEventTypes = new Set<string>();
+    let receivedEventsByEntityIdHash = new Map<string, any>();
     
     subscribeToAllDOMEEvents(rpcAddress, ownIss, notificationEndpoint, (event: any) => {
       receivedEvents.add(event.entityIDHash);
+      receivedEventsByEntityIdHash.set(event.entityIDHash, event);
     });
 
     await publishDOMEEvent(eventTypeOne.eventType, eventTypeOne.dataLocation, eventTypeOne.metadata, iss, eventTypeOne.entityIDHash, eventTypeOne.previousEntityHash, rpcAddress);
@@ -709,6 +711,16 @@ describe('DOME all events subscription', () => {
     expect(receivedEvents).toContain(eventTypeThree.entityIDHash);
     expect(receivedEvents).toContain(eventTypeFour.entityIDHash);
     expect(receivedEvents).toContain(eventTypeFive.entityIDHash);
+
+    for (const publishedEvent of [eventTypeOne, eventTypeTwo, eventTypeThree, eventTypeFour, eventTypeFive]) {
+      const receivedEvent = receivedEventsByEntityIdHash.get(publishedEvent.entityIDHash);
+      expect(receivedEvent.entityIDHash).toBe(publishedEvent.entityIDHash);
+      expect(receivedEvent.previousEntityHash).toBe(publishedEvent.previousEntityHash);
+      expect(receivedEvent.eventType).toBe(publishedEvent.eventType);
+      expect(receivedEvent.dataLocation).toBe(publishedEvent.dataLocation);
+      expect(receivedEvent.relevantMetadata.slice(0, publishedEvent.metadata.length)).toEqual(publishedEvent.metadata);
+      expect(receivedEvent.publisherAddress).toBe(publishedEvent.origin);
+    }
   }, 80000);
 
   it('valid case: should not receive events published by ownIss', async () => {
