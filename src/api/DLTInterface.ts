@@ -88,7 +88,10 @@ export async function publishDOMEEvent(
         debugLog("  > Chain ID: " + chainId);
 
         debugLog("  > Adding network: " + chainId);
-        const metadata = [...relevantMetadata, chainId];
+        const metadata = (chainId !== null && chainId !== undefined)
+            ? [...relevantMetadata, String(chainId)]
+            : [...relevantMetadata];
+   
 
         const wallet = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
         debugLog("  > Ethereum Public Key of event publisher: ", wallet.publicKey);
@@ -102,6 +105,15 @@ export async function publishDOMEEvent(
 
         debugLog("  > Ethereum Contract: ", domeEventsContractWithSigner.address);
         debugLog("  > Ethereum Remittent: ", iss);
+
+        debugLog("  > Final data content prior publish call:", {
+            iss,
+            entityIDHash,
+            previousEntityHash,
+            eventType,
+            dataLocation,
+            metadata,
+        });
 
         debugLog("  > Publishing event to blockchain node...");
 

@@ -719,6 +719,11 @@ describe('DOME all events subscription', () => {
       expect(receivedEvent.eventType).toBe(publishedEvent.eventType);
       expect(receivedEvent.dataLocation).toBe(publishedEvent.dataLocation);
       expect(receivedEvent.relevantMetadata.slice(0, publishedEvent.metadata.length)).toEqual(publishedEvent.metadata);
+      receivedEvent.relevantMetadata.forEach((metadataElement: any) => {
+        expect(metadataElement).not.toBeNull();
+        expect(metadataElement).not.toBeUndefined();
+        expect(metadataElement).not.toBe('');
+      });
       expect(receivedEvent.publisherAddress).toBe(publishedEvent.origin);
     }
   }, 80000);
